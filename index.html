@@ -505,7 +505,7 @@ const wrap = () => { const w = setW(); if (!w) return; const sl = track.scrollLe
 track.addEventListener('scroll', wrap, { passive: true });
 const toReel = () => { track.scrollLeft = setW(); target = epos = track.scrollLeft; autoPos = null; };
 const startLoop = () => { toReel(); requestAnimationFrame(autoTick); };
-const AUTO = 38; /* px per second */
+const AUTO = 46; /* px per second */
 function autoTick(t){
   const dt = Math.min(.05, (t - (lastT || t)) / 1000); lastT = t;
   const paused = reduce || view !== 'home' || document.hidden || inTrack || dragX !== null || easing || t < autoHold;
@@ -826,7 +826,9 @@ function drawWall(now, dt){
   if (touch) blob(W * .5, H * .3, 320 * fl, .22);
   litX.globalCompositeOperation = 'source-over'; litX.clearRect(0, 0, litC.width, litC.height);
   litX.save(); litX.scale(dpr, dpr); litX.drawImage(stone, cover.x, cover.y, cover.w, cover.h); litX.restore();
+  litX.globalCompositeOperation = 'multiply'; litX.fillStyle = 'rgb(255,206,150)'; litX.fillRect(0, 0, litC.width, litC.height); /* warm the lit stone like firelight */
   litX.globalCompositeOperation = 'destination-in'; litX.drawImage(lightC, 0, 0, litC.width, litC.height);
+  litX.globalCompositeOperation = 'lighter'; litX.globalAlpha = .26; litX.drawImage(lightC, 0, 0, litC.width, litC.height); litX.globalAlpha = 1; /* a touch of orange glow in the air */
   wx.globalCompositeOperation = 'source-over'; wx.fillStyle = '#07090B'; wx.fillRect(0, 0, wall.width, wall.height);
   wx.save(); wx.scale(dpr, dpr); wx.globalAlpha = AMB; wx.drawImage(stone, cover.x, cover.y, cover.w, cover.h); wx.restore();
   wx.globalAlpha = 1; wx.globalCompositeOperation = 'lighter'; wx.drawImage(litC, 0, 0); wx.globalCompositeOperation = 'source-over';
