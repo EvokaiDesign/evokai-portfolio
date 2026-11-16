@@ -399,7 +399,8 @@ body.case #proj .ptop nav a{color:rgba(236,230,216,.78)} body.case #proj .ptop n
 .cflow{display:grid; gap:clamp(70px,12vh,150px)}
 .cb{position:relative}
 .cb figure{margin:0; overflow:hidden; border-radius:3px; background:#0E1114; position:relative}
-.cb figure img{display:block; width:100%; height:auto; transform:scale(1.14); will-change:transform; cursor:zoom-in}
+.cb figure img{display:block; width:100%; height:auto; cursor:zoom-in}
+.cb figure{will-change:transform}
 .cb figure.rv{clip-path:inset(14% 0 0 0); opacity:0; transition:clip-path 1.4s cubic-bezier(.16,1,.3,1), opacity .9s ease}
 .cb figure.rv.in{clip-path:inset(0 0 0 0); opacity:1}
 .cb-full figure{width:100%}
@@ -426,6 +427,43 @@ body.case #proj .deck{margin-top:clamp(90px,14vh,170px)}
   .chero .cover{flex-direction:column; align-items:flex-start} .chero .cact{align-items:flex-start; flex-direction:row}
 }
 @media (prefers-reduced-motion: reduce){ .cb figure img{transform:none} .cb figure.rv{clip-path:none; opacity:1} .tx{opacity:1; transform:none} }
+
+/* ---- per-project gradient background (fixed, grainy, drifts as you scroll) ---- */
+#cGrad{position:fixed; inset:0; z-index:-1; display:none; overflow:hidden; background:var(--g0,#07090B); --k:0}
+body.case #cGrad{display:block}
+#cGrad i{position:absolute; width:var(--s,70vmax); height:var(--s,70vmax); left:var(--x); top:var(--y); border-radius:50%; background:radial-gradient(circle at 50% 50%, var(--c) 0%, color-mix(in srgb, var(--c) 55%, transparent) 32%, transparent 68%); filter:blur(30px); transform:translate(-50%,-50%) translate(calc(var(--dx,0) * var(--k) * 1vw), calc(var(--dy,0) * var(--k) * 1vh)) scale(var(--sc,1)); animation:gdrift var(--t,26s) ease-in-out infinite alternate}
+#cGrad i:nth-child(2){animation-delay:-7s} #cGrad i:nth-child(3){animation-delay:-13s} #cGrad i:nth-child(4){animation-delay:-19s}
+@keyframes gdrift{from{scale:1; rotate:0deg} to{scale:1.18; rotate:14deg}}
+#cGrad::after{content:""; position:absolute; inset:-50%; opacity:.22; mix-blend-mode:overlay; pointer-events:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.2 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+body.case #proj, body.on-contact #proj{background:transparent}
+body.case, body.on-contact{background:#07090B}
+/* inverted text: always readable over light and dark parts of the gradient */
+body.case .cintro .tx, body.case .ctext p, body.case .cquote blockquote, body.case .cquote cite,
+body.case #proj .pmore .lab, body.case #proj .pmore .allw, body.case #proj .card b, body.case #proj .card span,
+body.case #proj .pfoot .talk, body.case #proj .fbar, body.case #proj .deckhead,
+body.on-contact .chead, body.on-contact .crows a, body.on-contact #proj .fbar{color:#fff; mix-blend-mode:difference}
+body.case .cintro .ckick, body.case .cquote cite{color:#fff}
+body.case #proj .ptop{background:none!important; mix-blend-mode:difference} body.case #proj .ptop nav a, body.case #proj .ptop nav a[aria-current]{color:#fff}
+body.on-contact #proj .ptop nav a{color:#fff} body.on-contact #proj .ptop nav{mix-blend-mode:difference}
+body.case #proj .card:hover b{color:#fff}
+
+/* ---- Contact: flame-band background, links stepping down the light ---- */
+#cBg{position:fixed; inset:0; z-index:-1; display:none; background:#000 url(media/contact-bg.webp) center/cover no-repeat}
+body.on-contact #cBg{display:block}
+body.on-contact .cgrid2{display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,520px); grid-template-areas:"head form" "rows form"; column-gap:clamp(40px,6vw,120px); row-gap:clamp(20px,4vh,44px); align-items:start; min-height:calc(100svh - 72px - 120px); margin-top:clamp(30px,6vh,70px); padding-bottom:clamp(40px,8vh,90px)}
+body.on-contact .chead{padding-left:clamp(0px,2vw,30px)}
+body.on-contact .chead .clead{color:#fff; opacity:.8; margin-bottom:0}
+body.on-contact .crows{border:0; display:grid; gap:clamp(8px,1.6vh,16px); padding-left:clamp(60px,10vw,180px)}
+body.on-contact .crows li{border:0}
+body.on-contact .crows li:nth-child(1){margin-left:0} body.on-contact .crows li:nth-child(2){margin-left:4.5vw} body.on-contact .crows li:nth-child(3){margin-left:9vw} body.on-contact .crows li:nth-child(4){margin-left:13.5vw} body.on-contact .crows li:nth-child(5){margin-left:18vw}
+body.on-contact #proj .crows a{display:inline-grid; grid-template-columns:22px auto auto; white-space:nowrap; align-items:center; gap:14px; padding:8px 0; font-size:clamp(17px,1.5vw,22px); font-family:var(--f-display); font-weight:500; letter-spacing:-.01em}
+body.on-contact #proj .crows .lab{display:none}
+body.on-contact .crows .ic{background:none; color:inherit; width:22px; height:22px} body.on-contact .crows .ic svg{width:18px; height:18px}
+body.on-contact .crows .ar{color:inherit; opacity:.7}
+body.on-contact .crows a:hover{color:#fff} body.on-contact .crows a:hover .ar{color:inherit; opacity:1}
+body.on-contact .cform2{grid-area:form; align-self:center; padding:clamp(18px,2vw,28px); border-radius:14px; background:rgba(12,7,4,.62); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,.12)}
+body.on-contact .cform2 input, body.on-contact .cform2 textarea{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.1)}
+@media (max-width:900px){ body.on-contact .cgrid2{grid-template-columns:1fr; grid-template-areas:"head" "rows" "form"} body.on-contact .crows{padding-left:0} body.on-contact .crows li:nth-child(n){margin-left:calc((var(--i,0)) * 0px)} }
 </style>
 </head>
 <body>
@@ -455,6 +493,7 @@ body.case #proj .deck{margin-top:clamp(90px,14vh,170px)}
 
 
 <div id="proj" aria-live="polite">
+  <div id="cGrad" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div id="cBg" aria-hidden="true"></div>
   <div class="pw">
     <header class="ptop">
       <a class="mark" href="#" aria-label="Evokai, home"><img src="media/logo-small.png" alt="Evokai" width="480" height="130"></a>
@@ -613,6 +652,19 @@ function mountPlayer(el, p){
   });
 }
 let io = null;
+
+/* per-project gradients, picked from each film's own colours: base + four light sources (colour, x, y, size, drift) */
+const GRAD = {
+  'reel':             ['#0d0310', [['#7b2cff','18%','30%','80vmax',-20,30], ['#ff4fa0','85%','20%','70vmax',15,40], ['#ff9a3c','60%','85%','75vmax',-25,-30], ['#2a0a6b','30%','80%','60vmax',20,-20]]],
+  'infinite-chances': ['#020a02', [['#1fae3c','15%','25%','85vmax',25,35], ['#b6ff4a','88%','55%','60vmax',-20,30], ['#0b4a16','55%','90%','80vmax',-15,-35], ['#ff2f7a','92%','12%','40vmax',-25,25]]],
+  'sans-chaines':     ['#f1dcc3', [['#fcd2a2','20%','20%','80vmax',20,30], ['#2a1d16','90%','40%','70vmax',-25,30], ['#c98a52','40%','90%','80vmax',15,-30], ['#fff3e0','70%','10%','60vmax',-15,25]]],
+  'combustion':       ['#080100', [['#ff4d1a','20%','30%','85vmax',25,30], ['#ffb340','85%','70%','70vmax',-20,-30], ['#ffe9c2','70%','15%','45vmax',-30,30], ['#7c1d0a','30%','90%','70vmax',20,-20]]],
+  'ummy':             ['#f3eff4', [['#ffb3c7','15%','25%','75vmax',25,30], ['#9fd2ff','85%','30%','70vmax',-25,30], ['#b4f2c4','30%','90%','70vmax',20,-30], ['#ffe08a','85%','85%','60vmax',-20,-25]]],
+  'hero':             ['#07020b', [['#b8607e','20%','25%','80vmax',25,30], ['#5a2790','85%','40%','75vmax',-20,30], ['#1b3a9a','35%','90%','70vmax',20,-30], ['#ff7a4d','90%','90%','50vmax',-25,-20]]],
+  'evokai':           ['#0b0806', [['#ff5a1f','20%','30%','80vmax',25,30], ['#ffcf7a','85%','25%','55vmax',-25,30], ['#6b2a14','40%','90%','80vmax',15,-30], ['#ebe4d2','92%','85%','40vmax',-20,-25]]]
+};
+function setGrad(slug){ const g = GRAD[slug] || GRAD.evokai, el = $('#cGrad'); el.style.setProperty('--g0', g[0]); el.style.setProperty('--k', 0);
+  [...el.children].forEach((b, i) => { const [c, x, y, sz, dx, dy] = g[1][i]; Object.assign(b.style, { '--c': c }); b.style.setProperty('--c', c); b.style.setProperty('--x', x); b.style.setProperty('--y', y); b.style.setProperty('--s', sz); b.style.setProperty('--dx', dx); b.style.setProperty('--dy', dy); b.style.setProperty('--t', (22 + i * 5) + 's'); }); }
 function ytBg(id){ return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1`; }
 function mountHero(p){
   const h = $('#cHero'), STILLS = ['infinite-chances','sans-chaines','combustion','evokai','ummy'];
@@ -633,7 +685,7 @@ function mountHero(p){
 function renderProject(slug){
   const p = bySlug[slug], g = (GAL[slug] || []).slice();
   document.title = `${p.title} — Evokai`;
-  mountHero(p);
+  mountHero(p); setGrad(slug);
   // split the write-up: a “quote — who” line becomes a big quote, the first paragraph opens, the rest sit between pictures
   const info = (p.info || DRAFT).slice(); let quote = null;
   const qi = info.findIndex(t => /^[“"]/.test(t) && / — /.test(t)); if (qi > -1) { const [q, who] = info.splice(qi, 1)[0].split(' — '); quote = { q: q.replace(/^[“"]|[”"]$/g, ''), who }; }
@@ -681,7 +733,8 @@ function renderProject(slug){
     document.body.classList.toggle('scrolled', y > 40);
     if (h && !h.classList.contains('playing') && y < vh * 1.2) { const k = Math.min(1, y / vh); h.querySelector('.cbg').style.transform = `translateY(${y * .35}px) scale(${1 + k * .06})`; const c = h.querySelector('.cover'); c.style.transform = `translateY(${y * .15}px)`; c.style.opacity = String(1 - k * 1.4); }
     if (reduce) return;
-    document.querySelectorAll('#cFlow figure img').forEach(im => { const r = im.parentElement.getBoundingClientRect(); if (r.bottom < -100 || r.top > vh + 100) return; const t = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2); im.style.transform = `translateY(${(t * 6).toFixed(2)}%) scale(1.14)`; });
+    document.querySelectorAll('#cFlow figure').forEach(f => { const r = f.getBoundingClientRect(); if (r.bottom < -200 || r.top > vh + 200) return; const t = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2); f.style.translate = `0 ${(t * 28).toFixed(1)}px`; });
+    const bg = $('#cGrad'); if (bg) { const k = y / Math.max(1, document.documentElement.scrollHeight - vh); bg.style.setProperty('--k', k.toFixed(4)); }
   };
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(run); } }, { passive: true });
   addEventListener('resize', run);
