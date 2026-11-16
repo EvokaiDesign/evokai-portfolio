@@ -435,37 +435,18 @@ body.case #cGrad{display:block}
 #cGrad i:nth-child(2){animation-delay:-7s} #cGrad i:nth-child(3){animation-delay:-13s} #cGrad i:nth-child(4){animation-delay:-19s}
 @keyframes gdrift{from{scale:1; rotate:0deg} to{scale:1.18; rotate:14deg}}
 #cGrad::after{content:""; position:absolute; inset:-50%; opacity:.22; mix-blend-mode:overlay; pointer-events:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.2 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
-body.case #proj, body.on-contact #proj{background:transparent}
-body.case, body.on-contact{background:#07090B}
+body.case #proj{background:transparent}
+body.case{background:#07090B}
 /* inverted text: always readable over light and dark parts of the gradient */
 body.case .cintro .tx, body.case .ctext p, body.case .cquote blockquote, body.case .cquote cite,
 body.case #proj .pmore .lab, body.case #proj .pmore .allw, body.case #proj .card b, body.case #proj .card span,
-body.case #proj .fbar, body.case #proj .deckhead,
-body.on-contact .chead, body.on-contact .crows a, body.on-contact #proj .fbar{color:#fff; mix-blend-mode:difference}
+body.case #proj .fbar, body.case #proj .deckhead{color:#fff; mix-blend-mode:difference}
 body.case .cintro .ckick, body.case .cquote cite{color:#fff}
 body.case #proj .ptop{background:none!important; position:absolute; height:72px; z-index:auto}
 body.case #proj .ptop .mark{position:fixed; top:22px; left:clamp(20px,1.6vw,28px); z-index:21}
 body.case #proj .ptop nav{position:fixed; top:0; right:clamp(20px,1.6vw,28px); height:72px; align-items:center; z-index:21; mix-blend-mode:difference} body.case #proj .ptop nav a, body.case #proj .ptop nav a[aria-current]{color:#fff}
-body.on-contact #proj .ptop nav a{color:#fff} body.on-contact #proj .ptop nav{mix-blend-mode:difference}
 body.case #proj .card:hover b{color:#fff}
 
-/* ---- Contact: flame-band background, links stepping down the light ---- */
-#cBg{position:fixed; inset:0; z-index:-1; display:none; background:#000 url(media/contact-wallp.webp) center/cover no-repeat}
-body.on-contact #cBg{display:block}
-body.on-contact .cgrid2{display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,520px); grid-template-areas:"head form" "rows form"; column-gap:clamp(40px,6vw,120px); row-gap:clamp(20px,4vh,44px); align-items:start; min-height:calc(100svh - 72px - 120px); margin-top:clamp(30px,6vh,70px); padding-bottom:clamp(40px,8vh,90px)}
-body.on-contact .chead{padding-left:clamp(0px,2vw,30px)}
-body.on-contact .chead .clead{color:#fff; opacity:.8; margin-bottom:0}
-body.on-contact .crows{border:0; display:grid; gap:clamp(8px,1.6vh,16px); padding-left:clamp(60px,10vw,180px)}
-body.on-contact .crows li{border:0}
-body.on-contact .crows li:nth-child(1){margin-left:0} body.on-contact .crows li:nth-child(2){margin-left:4.5vw} body.on-contact .crows li:nth-child(3){margin-left:9vw} body.on-contact .crows li:nth-child(4){margin-left:13.5vw} body.on-contact .crows li:nth-child(5){margin-left:18vw}
-body.on-contact #proj .crows a{display:inline-grid; grid-template-columns:22px auto auto; white-space:nowrap; align-items:center; gap:14px; padding:8px 0; font-size:clamp(17px,1.5vw,22px); font-family:var(--f-display); font-weight:500; letter-spacing:-.01em}
-body.on-contact #proj .crows .lab{display:none}
-body.on-contact .crows .ic{background:none; color:inherit; width:22px; height:22px} body.on-contact .crows .ic svg{width:18px; height:18px}
-body.on-contact .crows .ar{color:inherit; opacity:.7}
-body.on-contact .crows a:hover{color:#fff} body.on-contact .crows a:hover .ar{color:inherit; opacity:1}
-body.on-contact .cform2{grid-area:form; align-self:center; padding:clamp(18px,2vw,28px); border-radius:14px; background:rgba(12,7,4,.62); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,.12)}
-body.on-contact .cform2 input, body.on-contact .cform2 textarea{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.1)}
-@media (max-width:900px){ body.on-contact .cgrid2{grid-template-columns:1fr; grid-template-areas:"head" "rows" "form"} body.on-contact .crows{padding-left:0} body.on-contact .crows li:nth-child(n){margin-left:calc((var(--i,0)) * 0px)} }
 </style>
 </head>
 <body>
@@ -495,7 +476,7 @@ body.on-contact .cform2 input, body.on-contact .cform2 textarea{background:rgba(
 
 
 <div id="proj" aria-live="polite">
-  <div id="cGrad" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div id="cBg" aria-hidden="true"></div>
+  <div id="cGrad" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="pw">
     <header class="ptop">
       <a class="mark" href="#" aria-label="Evokai, home"><img src="media/logo-small.png" alt="Evokai" width="480" height="130"></a>
