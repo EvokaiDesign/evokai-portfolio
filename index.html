@@ -496,6 +496,49 @@ body.wallpage .cform2 input, body.wallpage .cform2 textarea{background:rgba(10,1
 body.wallpage .cform2 textarea{flex:1; min-height:0; resize:none}
 body.wallpage .csend{height:auto; padding:.85em 0; font-size:calc(var(--fs) * .7); margin-top:auto; border-radius:8px}
 body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:13px}
+
+/* ===================== PHONE VERSION (≤760px) — desktop untouched ===================== */
+@media (max-width:760px){
+  /* ember backdrop instead of the stone walls */
+  body.on-about #proj::before, body.on-contact #proj::before{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:radial-gradient(90% 45% at 85% -5%, rgba(255,110,30,.26), transparent 70%), radial-gradient(80% 40% at 0% 105%, rgba(255,70,20,.16), transparent 70%), #07090B}
+  body.on-about #proj::after, body.on-contact #proj::after{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.16; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.2 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+  /* About */
+  .agrid2{display:flex!important; flex-direction:column; gap:0; padding-top:36px!important}
+  .agrid2 .aleft{display:contents}
+  #proj h1.ah{order:1; display:flex; align-items:flex-end; justify-content:flex-start; text-align:left; gap:.18em; font-size:clamp(48px,14vw,64px)!important; background:linear-gradient(90deg,#FF4D1A,#FF9A3C 55%,#FFD58A); -webkit-background-clip:text; background-clip:text; color:transparent}
+  #proj h1.ah em{background:none; -webkit-text-fill-color:transparent}
+  #proj h1.ah::after{content:""; width:.62em; height:1.25em; margin-left:.1em; background:url(media/fig-glow2.png) center/contain no-repeat; filter:drop-shadow(0 0 6px rgba(255,130,40,.8)) drop-shadow(0 0 18px rgba(255,90,20,.45)); animation:figpulse 3.6s ease-in-out infinite}
+  @keyframes figpulse{0%,100%{opacity:.85; transform:translateY(0)} 50%{opacity:1; transform:translateY(-3px)}}
+  .aphoto2{order:2; width:100%!important; max-width:none!important; margin-top:28px!important; border:0!important; border-radius:16px!important; box-shadow:0 24px 50px -20px rgba(0,0,0,.9), 0 0 0 1px rgba(255,140,60,.12)}
+  #aBio{order:3; margin-top:30px; padding:0!important}
+  #aBio p{font-size:16px!important; line-height:1.68!important; color:rgba(236,230,216,.84); margin:0 0 1.05em!important}
+  .abar{display:none!important}
+  body.on-about #proj .pfoot{display:block!important; margin-top:56px!important}
+  body.on-about #proj .pfoot .talk{font-size:clamp(34px,10vw,44px)!important; line-height:1.05!important; padding-bottom:.1em}
+  /* Contact */
+  .cgrid2{display:flex!important; flex-direction:column; align-items:stretch!important; gap:34px!important; margin-top:36px!important; padding:0 0 48px!important}
+  #proj h1.ch{font-size:clamp(40px,11.5vw,52px)!important; line-height:1.02; max-width:none!important}
+  .clead{margin:16px 0 0!important; font-size:16px!important; color:rgba(236,230,216,.78)!important}
+  .crows{display:grid; gap:10px; border:0!important}
+  .crows li{border:0!important; display:block; width:100%}
+  #proj .crows a{width:100%; box-sizing:border-box; display:grid!important; grid-template-columns:40px 1fr!important; gap:14px!important; align-items:center; padding:12px 14px!important; border-radius:14px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.06); font-family:var(--f-display); font-weight:500; font-size:16px!important; transition:background .3s, border-color .3s, box-shadow .3s}
+  #proj .crows .lab, #proj .crows .ar{display:none!important}
+  #proj .crows .ic{width:40px!important; height:40px!important; border-radius:12px!important; background:rgba(255,120,40,.12)!important; color:#FF9A3C!important}
+  #proj .crows .ic svg{width:18px!important; height:18px!important; stroke-width:1.8}
+  #proj .crows a:active, #proj .crows a:focus-visible{background:rgba(255,110,30,.14); border-color:rgba(255,140,60,.45); box-shadow:0 0 24px rgba(255,100,30,.25)}
+  .cform2{display:grid; gap:12px}
+  .cform2 input, .cform2 textarea{border-radius:12px!important; background:rgba(255,255,255,.04)!important; border-color:rgba(255,255,255,.08)!important; font-size:16px!important; padding:16px 18px!important}
+  .cform2 textarea{min-height:140px}
+  .csend{height:58px!important; border-radius:14px!important; font-size:17px!important}
+  /* Project pages: a solid bar so the menu never collides with the text */
+  body.case #proj .ptop{position:fixed!important; top:0; left:0; right:0; height:60px!important; z-index:30; background:rgba(7,9,11,.72)!important; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); display:flex; align-items:center; justify-content:space-between; padding-inline:16px!important}
+  body.case #proj .ptop .mark, body.case #proj .ptop nav{position:static!important; height:auto!important; mix-blend-mode:normal!important}
+  body.case #proj .ptop nav a{color:rgba(236,230,216,.82)!important} body.case #proj .ptop nav a[aria-current]{color:#fff!important}
+  .chero h1.ctitle{font-size:clamp(44px,13vw,64px)}
+  .cintro{padding-top:70px}
+}
 </style>
 </head>
 <body>
@@ -924,7 +967,7 @@ function layoutWall(){
 const litC = document.createElement('canvas'), litX = litC.getContext('2d');   // the image, masked by light
 const lightC = document.createElement('canvas'), lightX = lightC.getContext('2d'); // low-res light map
 const LS = 4; // light map downscale
-let W = 0, H = 0, dpr = 1, cover = null;
+let W = 0, H = 0, dpr = 1, cover = null, phoneFade = null, phoneWordY = 0;
 function size(){
   dpr = Math.min(devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
   wall.width = litC.width = Math.round(W * dpr); wall.height = litC.height = Math.round(H * dpr);
@@ -934,6 +977,17 @@ function size(){
     if (!stone.naturalWidth) return; const iw = stone.naturalWidth, ih = stone.naturalHeight, s = Math.max(W / iw, H / ih);
     cover = { w: iw * s, h: ih * s, x: (W - iw * s) / 2, y: Math.min(0, Math.max(H - ih * s, H / 2 - 745 * s)) };
     layoutWall(); return;
+  }
+  phoneFade = null;
+  if (stone.naturalWidth && W < 760) {
+    const iw = stone.naturalWidth, k = iw / 2576, S = Math.min(W * .94 / 1690, H * .5 / 900), s = S / k;
+    const wordY = H * .27; phoneWordY = wordY;
+    cover = { w: iw * s, h: stone.naturalHeight * s, x: W / 2 - 1315 * S, y: wordY - 510 * S };
+    const tW = Math.min(W * .8, 420), tH = tW * 9 / 16, top = Math.max(cover.y + 1150 * S, wordY + 140);
+    const r = document.documentElement.style;
+    r.setProperty('--nL', '0px'); r.setProperty('--nW', W + 'px'); r.setProperty('--nT', top + 'px'); r.setProperty('--tW', tW + 'px'); r.setProperty('--capGap', '12px');
+    phoneFade = { t0: cover.y, t1: cover.y + 140 * S, b0: cover.y + 1000 * S, b1: cover.y + 1300 * S };
+    return;
   }
   if (stone.naturalWidth) {
     const iw = stone.naturalWidth, ih = stone.naturalHeight, s = Math.max(W / iw, H / ih), k = iw / 2576; // k: map source-pixel landmarks onto this file
@@ -956,7 +1010,8 @@ const mouse = { x: innerWidth / 2, y: innerHeight * .4, on: false, overRail: fal
 const head = { x: mouse.x, y: mouse.y, vx: 0, vy: 0 }, prev = { x: mouse.x, y: mouse.y };
 const zoneBoxes = () => { const inP = document.body.classList.contains('in-proj'); return [navBox(), (document.querySelector(inP ? '#proj .fbar .soc' : '#homeFoot .soc') || { getBoundingClientRect: () => null }).getBoundingClientRect()].filter(r => r && r.width); };
 const navBox = () => { const n = document.querySelector(document.body.classList.contains('in-proj') ? '#proj .ptop nav' : 'header.top nav'); return n ? n.getBoundingClientRect() : null; };
-addEventListener('pointermove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.on = true; mouse.overRail = !!e.target.closest('.rail'); const nearNav = zoneBoxes().some(nr => nr && e.clientX > nr.left - 28 && e.clientX < nr.right + 28 && e.clientY > nr.top - 22 && e.clientY < nr.bottom + 22);
+addEventListener('pointerdown', e => { if (touch) { mouse.x = e.clientX; mouse.y = e.clientY; mouse.on = true; mouse.t = performance.now(); } }, { passive: true });
+addEventListener('pointermove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.on = true; mouse.t = performance.now(); mouse.overRail = !!e.target.closest('.rail'); const nearNav = zoneBoxes().some(nr => nr && e.clientX > nr.left - 28 && e.clientX < nr.right + 28 && e.clientY > nr.top - 22 && e.clientY < nr.bottom + 22);
   mouse.tiny = nearNav || (!mouse.overRail && !!e.target.closest('a:not(#wallLink), button, input, textarea, label, #figGlow')); document.body.classList.toggle('on-wall', e.target.id === 'wallLink'); }, { passive: true });
 document.addEventListener('mouseleave', () => mouse.on = false);
 const AMB = .07, MAXP = 64, MAXE = 16;
@@ -1066,7 +1121,7 @@ function drawWall(now, dt){
   if (live > 0) { const R = (tiny ? 170 : small ? 260 : 560) * fl, s = tiny ? .3 : small ? .45 : 1; blob(head.x, head.y - R * .22, R, .19 * live * s); blob(head.x, head.y - R * .1, R * .45, .2 * live * s * fl); }
   for (let i = 0; i < pts.length; i += 4) { const p = pts[i]; blob(p.x, p.y, 110 + p.r * 5, .045 * (1 - p.age)); }
   for (const e of embers) blob(e.x, e.y, 80 + e.r * 10, .12 * (1 - e.age));
-  if (touch) blob(W * .5, H * .3, 320 * fl, .22);
+  if (touch) { if (phoneFade) { blob(W * (.5 + .36 * Math.sin(t * .42)), phoneWordY + 20 * Math.sin(t * .7), 230 * fl, .3); if (mouse.on && now - (mouse.t || 0) < 1400) blob(mouse.x, mouse.y, 200 * fl, .28 * (1 - (now - mouse.t) / 1400)); } else blob(W * .5, H * .3, 320 * fl, .22); }
   if (wallOn) document.querySelectorAll('#figGlow, #vContact .crows a').forEach(el => { const on = el.matches(':hover') || el.matches(':focus-visible'); el._g = (el._g || 0) + ((on ? 1 : 0) - (el._g || 0)) * .12; if (el._g < .01) return;
     const r = el.getBoundingClientRect(), big = el.id === 'figGlow';
     if (big) { blob(r.left + r.width * .55, r.top + r.height * .45, r.height * .75 * fl, .2 * el._g); blob(r.left + r.width * .7, r.top + r.height * .1, r.width * .9, .16 * el._g); }
@@ -1078,6 +1133,9 @@ function drawWall(now, dt){
   wx.globalCompositeOperation = 'source-over'; wx.fillStyle = '#07090B'; wx.fillRect(0, 0, wall.width, wall.height);
   wx.save(); wx.scale(dpr, dpr); wx.globalAlpha = AMB; wx.drawImage(stone, cover.x, cover.y, cover.w, cover.h); wx.restore();
   wx.globalAlpha = 1; wx.globalCompositeOperation = 'lighter'; wx.drawImage(litC, 0, 0); wx.globalCompositeOperation = 'source-over';
+  if (phoneFade && wallKey === 'home') { const f = phoneFade, d = dpr;
+    let g = wx.createLinearGradient(0, f.b0 * d, 0, f.b1 * d); g.addColorStop(0, 'rgba(7,9,11,0)'); g.addColorStop(1, '#07090B'); wx.fillStyle = g; wx.fillRect(0, f.b0 * d, wall.width, (f.b1 - f.b0) * d + 1); wx.fillStyle = '#07090B'; wx.fillRect(0, f.b1 * d, wall.width, wall.height);
+    g = wx.createLinearGradient(0, f.t0 * d, 0, f.t1 * d); g.addColorStop(0, '#07090B'); g.addColorStop(1, 'rgba(7,9,11,0)'); wx.fillStyle = g; wx.fillRect(0, f.t0 * d, wall.width, (f.t1 - f.t0) * d); wx.fillStyle = '#07090B'; wx.fillRect(0, 0, wall.width, Math.max(0, f.t0 * d)); }
 }
 if (!touch && !reduce) initFire();
 let last = performance.now(), useTimer = false, alive = false;
