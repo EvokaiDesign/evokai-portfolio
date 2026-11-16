@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Evokai Stone Homepage</title>
+<title>Evokai Portfolio</title>
+<meta name="description" content="Evokai — portfolio of Fernando Cuen Pérez, visual designer and animator in Madrid: motion design, 3D, animation and branding.">
+<meta property="og:title" content="Evokai Portfolio">
+<meta property="og:description" content="Motion design, 3D, animation and branding by Fernando Cuen Pérez.">
+<meta property="og:image" content="https://evokai-portfolio.pages.dev/media/reel/poster.jpg">
+<meta name="theme-color" content="#07090B">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Jost:wght@400;500&display=swap">
@@ -825,7 +830,7 @@ function show(slug){
     document.body.classList.toggle('case', v === 'vProject');
     if (v === 'vProject') renderProject(slug); else document.title = (slug === 'about' ? 'About' : 'Contact') + ' — Evokai';
     view = slug; document.body.classList.add('in-proj'); stop(hov); hov = null;
-  } else { view = 'home'; document.body.classList.remove('in-proj', 'case'); document.title = 'Evokai'; }
+  } else { view = 'home'; document.body.classList.remove('in-proj', 'case'); document.title = 'Evokai Portfolio'; }
   const here = slug && !PAGES.includes(slug) && !(bySlug[slug] || {}).reel ? 'home' : (slug || 'home');
   document.querySelectorAll('[data-nav]').forEach(n => n.dataset.nav === here ? n.setAttribute('aria-current', 'page') : n.removeAttribute('aria-current'));
   window.scrollTo(0, 0); if (window.caseScrollRun) requestAnimationFrame(window.caseScrollRun);
