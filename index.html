@@ -486,23 +486,25 @@ jobs.push(document.fonts ? document.fonts.ready.then(step) : Promise.resolve(ste
 const floor = new Promise(r => setTimeout(r, reduce ? 0 : 1500)), cap = new Promise(r => setTimeout(r, 6000));
 Promise.race([Promise.all([Promise.all(jobs), floor]), cap]).then(async () => {
   $('#barFill').style.width = '100%'; $('#pct').textContent = 'Loading · 100%';
-  await new Promise(r => setTimeout(r, 250)); route(true); $('#loader').classList.add('out'); document.body.classList.add('ready'); preloadFx();
+  await new Promise(r => setTimeout(r, 250)); route(true); toReel(); $('#loader').classList.add('out'); document.body.classList.add('ready'); preloadFx();
 });
 
 /* ---------- Carousel ---------- */
 const track = $('#track'); const tileW = () => (track.querySelector('.tile').offsetWidth + 14);
 let target = 0, easing = false;
 const maxScroll = () => track.scrollWidth - track.clientWidth;
-const ease = () => { const d = target - track.scrollLeft; if (Math.abs(d) < .5) { track.scrollLeft = target; easing = false; return; } track.scrollLeft += d * (reduce ? 1 : .16); requestAnimationFrame(ease); };
+let epos = 0; /* float position: scrollLeft rounds to whole pixels, so small steps would never land */
+const ease = () => { const d = target - epos; if (Math.abs(d) < .5) { epos = target; track.scrollLeft = target; easing = false; return; } epos += d * (reduce ? 1 : .16); track.scrollLeft = epos; requestAnimationFrame(ease); };
 const setW = () => track.children[1].offsetLeft - track.children[0].offsetLeft;
-const scrollTo_ = v => { target = v; if (!easing) { easing = true; requestAnimationFrame(ease); } };
+const scrollTo_ = v => { target = v; if (!easing) { easing = true; epos = track.scrollLeft; requestAnimationFrame(ease); } };
 /* Infinite loop: three identical sets; keep the view inside the middle one by jumping exactly one set width */
 let autoPos = null, autoHold = 0, inTrack = false, lastT = 0;
 const wrap = () => { const w = setW(); if (!w) return; const sl = track.scrollLeft; let shift = 0;
   if (sl < w * .5) shift = w; else if (sl > w * 1.5) shift = -w;
-  if (shift) { track.scrollLeft = sl + shift; target += shift; if (dragX !== null) dragS += shift; if (autoPos !== null) autoPos += shift; } };
+  if (shift) { track.scrollLeft = sl + shift; target += shift; epos += shift; if (dragX !== null) dragS += shift; if (autoPos !== null) autoPos += shift; } };
 track.addEventListener('scroll', wrap, { passive: true });
-const startLoop = () => { track.scrollLeft = setW(); target = track.scrollLeft; requestAnimationFrame(autoTick); };
+const toReel = () => { track.scrollLeft = setW(); target = epos = track.scrollLeft; autoPos = null; };
+const startLoop = () => { toReel(); requestAnimationFrame(autoTick); };
 const AUTO = 38; /* px per second */
 function autoTick(t){
   const dt = Math.min(.05, (t - (lastT || t)) / 1000); lastT = t;
