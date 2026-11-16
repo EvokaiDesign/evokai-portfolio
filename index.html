@@ -361,6 +361,71 @@ body.on-about #proj .fbar{margin-top:clamp(28px,4vh,44px)}
 #fx.busy{pointer-events:auto}
 #veil{position:fixed; inset:0; z-index:199; background:#050607; opacity:0; pointer-events:none; transition:opacity .28s ease}
 #veil.on{opacity:1}
+
+/* ===== Case-study layout (DixonBaxi-style test) ===== */
+body.case #proj{overflow-x:clip}
+body.case #proj .ptop{position:fixed; top:0; left:0; right:0; z-index:20; padding-inline:clamp(20px,1.6vw,28px); background:linear-gradient(rgba(7,9,11,.55), rgba(7,9,11,0)); transition:background .4s}
+body.case.scrolled #proj .ptop{background:linear-gradient(rgba(7,9,11,.85), rgba(7,9,11,0))}
+body.case #proj .ptop nav a{color:rgba(236,230,216,.78)} body.case #proj .ptop nav a:hover{color:#fff}
+.chero{position:relative; width:100vw; margin-left:calc(50% - 50vw); height:100svh; min-height:520px; overflow:hidden; background:#000}
+.chero .cbg{position:absolute; inset:0; will-change:transform}
+.chero .cbg img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.chero .cbg iframe{position:absolute; left:50%; top:50%; width:max(100vw, 177.78svh); height:max(100svh, 56.25vw); transform:translate(-50%,-50%); border:0; pointer-events:none; opacity:0; transition:opacity 1.2s ease}
+.chero .cbg iframe.on{opacity:1}
+.chero .cshade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 55%, rgba(0,0,0,.6) 100%); pointer-events:none}
+.chero .cover{position:absolute; left:0; right:0; bottom:0; display:flex; justify-content:space-between; align-items:flex-end; gap:24px; padding:0 clamp(20px,1.6vw,28px) clamp(24px,5vh,48px); will-change:transform,opacity}
+.chero h1.ctitle{margin:0; font-family:var(--f-display); font-weight:600; font-size:clamp(52px,10.5vw,190px); line-height:.86; letter-spacing:-.055em; text-transform:uppercase; color:#fff; max-width:11ch}
+.chero .cact{display:flex; flex-direction:column; align-items:flex-end; gap:16px; flex:none; padding-bottom:.6vw}
+.cplay{display:inline-flex; align-items:center; gap:12px; padding:14px 22px 14px 16px; border-radius:99px; background:rgba(7,9,11,.45); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.28); color:#fff; font-size:14px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; transition:background .35s, border-color .35s, transform .5s cubic-bezier(.2,.8,.2,1)}
+.cplay svg{width:14px; height:14px; fill:currentColor; display:block}
+.cplay:hover{background:linear-gradient(135deg,#FF4D1A,#FF9A3C); border-color:transparent; transform:translateY(-2px)}
+.cscroll{font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:rgba(236,230,216,.7); display:flex; align-items:center; gap:10px}
+.cscroll i{width:1px; height:34px; background:linear-gradient(rgba(236,230,216,0), rgba(236,230,216,.8)); animation:cdrop 2s ease-in-out infinite}
+@keyframes cdrop{0%{transform:scaleY(0); transform-origin:top} 50%{transform:scaleY(1); transform-origin:top} 51%{transform-origin:bottom} 100%{transform:scaleY(0); transform-origin:bottom}}
+.chero.playing .cbg{transform:none!important} .chero.playing .cbg iframe{width:100%; height:100%; pointer-events:auto; opacity:1}
+.chero.playing .cover, .chero.playing .cshade{display:none}
+.cclose{position:absolute; top:84px; right:clamp(20px,1.6vw,28px); z-index:3; width:44px; height:44px; border-radius:50%; display:none; place-items:center; background:rgba(7,9,11,.55); border:1px solid rgba(255,255,255,.25); color:#fff; font-size:20px}
+.chero.playing .cclose{display:grid}
+
+.cintro{display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:clamp(32px,6vw,110px); padding:clamp(90px,16vh,180px) 0 clamp(70px,12vh,140px)}
+.cintro .ckick{display:block; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--ember2); margin-bottom:22px}
+.cintro h2{margin:0; font-family:var(--f-display); font-weight:600; font-size:clamp(40px,5.4vw,92px); line-height:.92; letter-spacing:-.045em; text-transform:uppercase}
+.cintro .cbody{margin-top:clamp(28px,5vh,48px); max-width:58ch}
+.cintro .cbody p{margin:0 0 1.1em; font-size:clamp(15px,1.12vw,18px); line-height:1.62; color:rgba(236,230,216,.82)}
+.cmeta{align-self:end; display:grid; gap:26px; padding-bottom:6px}
+.cmeta div span{display:block; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--fg2); margin-bottom:6px}
+.cmeta div p{margin:0; font-size:clamp(15px,1.1vw,17px); line-height:1.45}
+
+.cflow{display:grid; gap:clamp(70px,12vh,150px)}
+.cb{position:relative}
+.cb figure{margin:0; overflow:hidden; border-radius:3px; background:#0E1114; position:relative}
+.cb figure img{display:block; width:100%; height:auto; transform:scale(1.14); will-change:transform; cursor:zoom-in}
+.cb figure.rv{clip-path:inset(14% 0 0 0); opacity:0; transition:clip-path 1.4s cubic-bezier(.16,1,.3,1), opacity .9s ease}
+.cb figure.rv.in{clip-path:inset(0 0 0 0); opacity:1}
+.cb-full figure{width:100%}
+.cb-left figure{width:min(62%, 980px)}
+.cb-right figure{width:min(62%, 980px); margin-left:auto}
+.cb-plL figure, .cb-plR figure{width:min(38%, 560px)}
+.cb-plR figure{margin-left:auto}
+.cb-pair{display:grid; grid-template-columns:1fr 1fr; gap:clamp(14px,1.6vw,28px); align-items:start}
+.cb-pair figure:nth-child(2){margin-top:clamp(80px,18vh,220px)}
+.cb-pair.pp{grid-template-columns:minmax(0,.8fr) minmax(0,.8fr); padding-inline:8%}
+.cb-tess{display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:clamp(14px,1.6vw,28px); align-items:start}
+.cb-tess .col{display:grid; gap:clamp(14px,1.6vw,28px); margin-top:clamp(60px,14vh,180px)}
+.ctext{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(32px,6vw,110px)}
+.ctext p{grid-column:2; margin:0; font-family:var(--f-display); font-weight:500; font-size:clamp(20px,1.9vw,30px); line-height:1.32; letter-spacing:-.015em; color:var(--fg)}
+.cquote{padding:clamp(30px,6vh,80px) 0}
+.cquote blockquote{margin:0; font-family:var(--f-display); font-weight:600; font-size:clamp(34px,4.6vw,78px); line-height:1; letter-spacing:-.04em; text-transform:uppercase; max-width:16ch}
+.cquote cite{display:block; margin-top:28px; font-style:normal; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--ember2)}
+.tx{opacity:0; transform:translateY(40px); transition:opacity 1s ease, transform 1.3s cubic-bezier(.16,1,.3,1)} .tx.in{opacity:1; transform:none}
+body.case #proj .deck{margin-top:clamp(90px,14vh,170px)}
+@media (max-width:820px){
+  .cintro, .ctext{grid-template-columns:1fr} .ctext p{grid-column:1} .cmeta{align-self:start}
+  .cb-left figure, .cb-right figure{width:88%} .cb-plL figure, .cb-plR figure{width:70%}
+  .cb-pair, .cb-tess{grid-template-columns:1fr} .cb-pair figure:nth-child(2), .cb-tess .col{margin-top:0} .cb-pair.pp{padding-inline:0}
+  .chero .cover{flex-direction:column; align-items:flex-start} .chero .cact{align-items:flex-start; flex-direction:row}
+}
+@media (prefers-reduced-motion: reduce){ .cb figure img{transform:none} .cb figure.rv{clip-path:none; opacity:1} .tx{opacity:1; transform:none} }
 </style>
 </head>
 <body>
@@ -396,15 +461,10 @@ body.on-about #proj .fbar{margin-top:clamp(28px,4vh,44px)}
       <nav aria-label="Main"><a href="#" data-nav="home">Work</a><a href="#reel" data-nav="reel">Reel</a><a href="#about" data-nav="about">About</a><a href="#contact" data-nav="contact">Contact</a></nav>
     </header>
     <main class="view" id="vProject">
-      <h1 id="pTitle" class="ptitle"></h1>
-      <div class="pgrid">
-        <div class="pleft">
-          <div class="blk2"><span class="lab2">Info:</span><div id="pDesc"></div></div>
-          <div class="metas2" id="pMeta"></div>
-        </div>
-        <div class="phero player" id="pHero"></div>
-      </div>
-      <div class="pgal3" id="pGal"></div>
+      <section class="chero" id="cHero"></section>
+      <section class="cintro" id="cIntro"></section>
+      <div class="cflow" id="cFlow"></div>
+      <div class="phero player" id="pHero" hidden></div>
       <section class="deck" id="pDeck" hidden><div class="deckhead"><span class="lab">Presentation:</span><span class="deckctl"><span id="deckN">1 / 24</span><button type="button" class="dbtn" id="deckPrev" aria-label="Previous page">←</button><button type="button" class="dbtn" id="deckNext" aria-label="Next page">→</button></span></div><div class="strip" id="pStrip"></div></section>
       <section class="pmore"><span class="lab">More works:</span><div class="mgrid" id="pMore"></div><a class="allw" href="#">See all works →</a></section>
     </main>
@@ -553,41 +613,93 @@ function mountPlayer(el, p){
   });
 }
 let io = null;
+function ytBg(id){ return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1`; }
+function mountHero(p){
+  const h = $('#cHero'), STILLS = ['infinite-chances','sans-chaines','combustion','evokai','ummy'];
+  const poster = `media/${p.slug}/${STILLS.includes(p.slug) ? 'still' : 'poster'}.jpg`;
+  h.classList.remove('playing');
+  h.innerHTML = `<div class="cbg"><img src="${poster}" alt="" width="1920" height="1080">${PREVIEW ? '' : `<iframe src="${ytBg(p.yt)}" title="" tabindex="-1" aria-hidden="true" allow="autoplay; encrypted-media"></iframe>`}</div>
+    <div class="cshade"></div>
+    <div class="cover"><h1 class="ctitle">${esc(p.title)}</h1><div class="cact"><button type="button" class="cplay"><svg viewBox="0 0 24 24"><path d="M6.5 4.5l13 7.5-13 7.5z"/></svg>${p.reel ? 'Play reel' : 'Play film'}</button><span class="cscroll"><i></i>Scroll</span></div></div>
+    <button type="button" class="cclose" aria-label="Close film">×</button>`;
+  const f = h.querySelector('.cbg iframe'); if (f) f.addEventListener('load', () => setTimeout(() => f.classList.add('on'), 1400), { once: true });
+  h.querySelector('.cplay').addEventListener('click', () => {
+    if (PREVIEW) { window.open(`https://youtu.be/${p.yt}`, '_blank', 'noopener'); return; }
+    h.classList.add('playing'); window.scrollTo({ top: 0, behavior: 'smooth' });
+    h.querySelector('.cbg').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${p.yt}?autoplay=1&rel=0&playsinline=1&color=white" title="${esc(p.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  });
+  h.querySelector('.cclose').addEventListener('click', () => mountHero(p));
+}
 function renderProject(slug){
-  const p = bySlug[slug], g = GAL[slug] || [];
+  const p = bySlug[slug], g = (GAL[slug] || []).slice();
   document.title = `${p.title} — Evokai`;
-  $('#pTitle').textContent = p.title;
-  $('#pDesc').innerHTML = (p.info || DRAFT).map(t => `<p>${esc(t)}</p>`).join('');
-  const blk = (k, v) => v ? `<div class="blk2"><span class="lab2">${k}:</span><p>${v}</p></div>` : '';
-  $('#pMeta').innerHTML = blk('Made with', p.tools && esc(p.tools)) + blk('Music', p.music && esc(p.music)) + blk('Credits', p.credits && esc(p.credits));
-  mountPlayer($('#pHero'), p);
-  // gallery: landscape frames run full width, consecutive portraits pair up
-  let html = '', i = 0; const im = (x, n) => `<img class="reveal" loading="lazy" src="media/${slug}/${x[0]}" width="${x[1]}" height="${x[2]}" alt="${esc(p.title)}, still ${n}">`;
-  g.forEach((x, k) => html += im(x, k + 1));
-  $('#pGal').innerHTML = html;
+  mountHero(p);
+  // split the write-up: a “quote — who” line becomes a big quote, the first paragraph opens, the rest sit between pictures
+  const info = (p.info || DRAFT).slice(); let quote = null;
+  const qi = info.findIndex(t => /^[“"]/.test(t) && / — /.test(t)); if (qi > -1) { const [q, who] = info.splice(qi, 1)[0].split(' — '); quote = { q: q.replace(/^[“"]|[”"]$/g, ''), who }; }
+  const intro = info.splice(0, 1), rest = info;
+  const meta = [['Year', p.year], ['Role', p.ctx], ['Made with', p.tools], ['Music', p.music], ['Credits', p.credits]].filter(x => x[1]);
+  $('#cIntro').innerHTML = `<div><span class="ckick tx">${esc((p.tags || []).join(' · '))}</span><h2 class="tx">${esc(p.title)}.</h2><div class="cbody tx">${intro.map(t => `<p>${esc(t)}</p>`).join('')}</div></div>
+    <div class="cmeta tx">${meta.map(([k, v]) => `<div><span>${k}</span><p>${esc(v)}</p></div>`).join('')}</div>`;
+  // pictures: a rhythm of layouts, like a printed case study
+  const fig = x => `<figure class="rv"><img loading="lazy" draggable="false" src="media/${slug}/${x[0]}" width="${x[1]}" height="${x[2]}" alt="${esc(p.title)}, still"></figure>`;
+  const port = x => x[2] > x[1] * 1.05;
+  const LAND = ['full', 'pair', 'right', 'tess', 'left', 'full', 'pair', 'left', 'right'];
+  let blocks = [], li = 0, side = 0;
+  while (g.length) {
+    const x = g[0];
+    if (port(x)) { if (g[1] && port(g[1])) { blocks.push(`<section class="cb cb-pair pp">${fig(g.shift())}${fig(g.shift())}</section>`); } else { blocks.push(`<section class="cb ${side++ % 2 ? 'cb-plR' : 'cb-plL'}">${fig(g.shift())}</section>`); } continue; }
+    let k = LAND[li++ % LAND.length];
+    const landAhead = n => g.slice(0, n).every(y => !port(y)) && g.length >= n;
+    if (k === 'tess' && !landAhead(3)) k = 'full';
+    if (k === 'pair' && !landAhead(2)) k = 'full';
+    if (k === 'tess') blocks.push(`<section class="cb cb-tess">${fig(g.shift())}<div class="col">${fig(g.shift())}${fig(g.shift())}</div></section>`);
+    else if (k === 'pair') blocks.push(`<section class="cb cb-pair">${fig(g.shift())}${fig(g.shift())}</section>`);
+    else blocks.push(`<section class="cb cb-${k}">${fig(g.shift())}</section>`);
+  }
+  // weave the remaining text and the quote between the pictures
+  const out = []; let ti = 0;
+  blocks.forEach((b, i) => { out.push(b); if (i % 2 === 1 && ti < rest.length) out.push(`<section class="ctext"><p class="tx">${esc(rest[ti++])}</p></section>`); if (quote && i === Math.min(2, blocks.length - 1)) { out.push(`<section class="cquote"><blockquote class="tx">“${esc(quote.q)}”</blockquote><cite class="tx">${esc(quote.who)}</cite></section>`); quote = null; } });
+  while (ti < rest.length) out.push(`<section class="ctext"><p class="tx">${esc(rest[ti++])}</p></section>`);
+  if (quote) out.push(`<section class="cquote"><blockquote class="tx">“${esc(quote.q)}”</blockquote><cite class="tx">${esc(quote.who)}</cite></section>`);
+  $('#cFlow').innerHTML = out.join('');
   $('#pDeck').hidden = !p.deck; $('#pStrip').scrollLeft = 0;
   $('#pStrip').innerHTML = p.deck ? Array.from({ length: p.deck }, (_, k) => `<img loading="lazy" draggable="false" src="media/${slug}/book/${String(k + 1).padStart(2, '0')}.webp" width="1600" height="899" alt="${esc(p.title)} presentation, page ${k + 1}">`).join('') : '';
   if (p.deck) deckCount();
-  // more projects: the next three, wrapping around, so every page leads somewhere else
-  const live = P.filter(q => !q.soon && !q.reel), at = live.findIndex(q => q.slug === slug);
+  const live = P.filter(q => !q.soon && !q.reel), at = Math.max(0, live.findIndex(q => q.slug === slug));
   $('#pMore').innerHTML = [1, 2, 3].map(n => live[(at + n) % live.length]).map(q => `<a class="card" href="#${q.slug}"><div class="m"><img src="media/${q.slug}/poster.jpg" alt="" width="1280" height="720"><video muted loop playsinline preload="none" src="media/${q.slug}/loop.mp4"></video></div><b>${esc(q.title)}</b><span>${esc((q.tags || []).join(' · '))}</span></a>`).join('');
   if (io) io.disconnect();
-  const els = document.querySelectorAll('#proj .reveal');
-  if ('IntersectionObserver' in window && !reduce) { io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' }); els.forEach(el => io.observe(el)); }
+  const els = document.querySelectorAll('#proj .rv, #proj .tx, #proj .reveal');
+  if ('IntersectionObserver' in window && !reduce) { io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' }); els.forEach(el => io.observe(el)); }
   else els.forEach(el => el.classList.add('in'));
 }
+/* scroll: the hero drifts away, pictures settle into their frames */
+(function caseScroll(){
+  let ticking = false;
+  const run = () => { ticking = false; if (!document.body.classList.contains('case')) return;
+    const y = scrollY, vh = innerHeight, h = $('#cHero');
+    document.body.classList.toggle('scrolled', y > 40);
+    if (h && !h.classList.contains('playing') && y < vh * 1.2) { const k = Math.min(1, y / vh); h.querySelector('.cbg').style.transform = `translateY(${y * .35}px) scale(${1 + k * .06})`; const c = h.querySelector('.cover'); c.style.transform = `translateY(${y * .15}px)`; c.style.opacity = String(1 - k * 1.4); }
+    if (reduce) return;
+    document.querySelectorAll('#cFlow figure img').forEach(im => { const r = im.parentElement.getBoundingClientRect(); if (r.bottom < -100 || r.top > vh + 100) return; const t = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2); im.style.transform = `translateY(${(t * 6).toFixed(2)}%) scale(1.14)`; });
+  };
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(run); } }, { passive: true });
+  addEventListener('resize', run);
+  window.caseScrollRun = run;
+})();
 function show(slug){
-  $('#pHero').innerHTML = ''; // stops any film that was playing
+  $('#pHero').innerHTML = ''; $('#cHero').innerHTML = ''; // stops any film that was playing
   document.body.classList.toggle('on-contact', slug === 'contact'); document.body.classList.toggle('on-about', slug === 'about');
   if (slug) {
     const v = PAGES.includes(slug) ? (slug === 'about' ? 'vAbout' : 'vContact') : 'vProject';
     document.querySelectorAll('#proj .view').forEach(m => m.classList.toggle('on', m.id === v));
+    document.body.classList.toggle('case', v === 'vProject');
     if (v === 'vProject') renderProject(slug); else document.title = (slug === 'about' ? 'About' : 'Contact') + ' — Evokai';
     view = slug; document.body.classList.add('in-proj'); stop(hov); hov = null;
-  } else { view = 'home'; document.body.classList.remove('in-proj'); document.title = 'Evokai'; }
+  } else { view = 'home'; document.body.classList.remove('in-proj', 'case'); document.title = 'Evokai'; }
   const here = slug && !PAGES.includes(slug) && !(bySlug[slug] || {}).reel ? 'home' : (slug || 'home');
   document.querySelectorAll('[data-nav]').forEach(n => n.dataset.nav === here ? n.setAttribute('aria-current', 'page') : n.removeAttribute('aria-current'));
-  window.scrollTo(0, 0);
+  window.scrollTo(0, 0); if (window.caseScrollRun) requestAnimationFrame(window.caseScrollRun);
 }
 
 /* ---------- Image viewer: click any still or presentation page ---------- */
@@ -596,8 +708,8 @@ const lbShow = i => { lbI = (i + lbSet.length) % lbSet.length; const im = lbSet[
 const lbOpen = (set, i) => { lbSet = set; lb.hidden = false; lbShow(i); document.documentElement.style.overflow = 'hidden'; $('#lbClose').focus({ preventScroll: true }); };
 const lbClose = () => { lb.hidden = true; lbImg.removeAttribute('src'); document.documentElement.style.overflow = ''; };
 document.addEventListener('click', e => {
-  const im = e.target.closest('.pgal3 img, #pStrip img'); if (!im || view === 'home') return;
-  const set = [...im.parentElement.querySelectorAll('img')]; lbOpen(set, set.indexOf(im));
+  const im = e.target.closest('.pgal3 img, #pStrip img, #cFlow figure img'); if (!im || view === 'home') return;
+  const set = im.closest('#cFlow') ? [...document.querySelectorAll('#cFlow figure img')] : [...im.parentElement.querySelectorAll('img')]; lbOpen(set, set.indexOf(im));
 });
 lb.addEventListener('click', e => { if (e.target === lb || e.target === lbImg || e.target.id === 'lbClose') lbClose(); });
 $('#lbPrev').addEventListener('click', e => { e.stopPropagation(); lbShow(lbI - 1); });
