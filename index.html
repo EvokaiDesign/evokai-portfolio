@@ -461,28 +461,29 @@ body.wallpage .agrid2, body.wallpage .cgrid2{display:block!important; min-height
 body.wallpage #proj .pfoot{display:block!important; margin:0!important; padding:0!important}
 body.wallpage.on-contact #proj .pfoot .talk{display:none!important}
 /* About */
-body.wallpage #proj h1.ah{display:block; font-size:var(--fs); white-space:nowrap; padding-left:.32em}
+body.wallpage #proj h1.ah{display:block; font-size:var(--fs); white-space:nowrap; padding-left:.32em; background:linear-gradient(90deg,#FF4D1A,#FF9A3C 55%,#FFD58A); -webkit-background-clip:text; background-clip:text; color:transparent}
+body.wallpage #proj h1.ah em{background:none; color:transparent; -webkit-text-fill-color:transparent}
 body.wallpage #aBio{display:flex; flex-direction:column; justify-content:center; padding:0 4% 0 4%; max-width:none}
 body.wallpage #aBio p{font-size:var(--fs)!important; line-height:1.55!important; margin:0 0 .75em!important; color:rgba(236,230,216,.82)}
 body.wallpage #aBio p:last-child{margin-bottom:0!important}
 body.wallpage #proj .pfoot .talk{display:block!important; font-size:var(--fs)!important; white-space:nowrap; padding:0 0 0 .4em!important; max-width:none!important}
 body.wallpage .aphoto2{border:0; border-radius:2px; max-width:none!important; aspect-ratio:auto!important; justify-self:auto; box-shadow:inset 0 0 40px rgba(0,0,0,.6), 0 18px 30px -18px rgba(0,0,0,.9)}
 body.wallpage .aphoto2 img{object-position:50% 30%}
-#figGlow{display:none; pointer-events:auto; filter:drop-shadow(0 0 10px rgba(255,120,30,.95)) drop-shadow(0 0 34px rgba(255,90,20,.7)); opacity:0; transition:opacity .45s ease}
-#figGlow i{position:absolute; inset:0; background:linear-gradient(0deg,#FF3D12 0%,#FF7A22 38%,#FFB347 70%,#FFE8A8 100%); -webkit-mask:url(media/fig-mask.png) 0 0/100% 100% no-repeat; mask:url(media/fig-mask.png) 0 0/100% 100% no-repeat; opacity:.92}
+#figGlow{display:none; pointer-events:auto; filter:drop-shadow(0 0 5px rgba(255,130,40,.85)) drop-shadow(0 0 22px rgba(255,90,20,.5)); opacity:0; transition:opacity .45s ease}
+#figGlow i{position:absolute; inset:0; background:url(media/fig-lit.png) 0 0/100% 100% no-repeat}
 body.wallpage.on-about #figGlow{display:block}
 #figGlow.on{opacity:1}
 /* Contact */
-body.wallpage .chead{display:flex; flex-direction:column; justify-content:center; padding:0 6% 0 6%}
-body.wallpage #proj h1.ch{font-size:var(--fs); line-height:1}
-body.wallpage .chead .clead{font-size:calc(var(--fs) * .3); margin:.9em 0 0}
+body.wallpage .chead{display:flex; flex-direction:column; justify-content:center; padding:0 5%}
+body.wallpage #proj h1.ch{font-size:var(--fs); line-height:1.04; max-width:none; margin:0}
+body.wallpage .chead .clead{font-size:calc(var(--fs) * .32); margin:1.4em 0 0; max-width:none; letter-spacing:.01em; line-height:1.5}
 body.wallpage .crows{display:flex; flex-direction:column; justify-content:center; gap:calc(var(--fs) * .5); padding:0 7%; border:0!important}
 body.wallpage .crows li{border:0!important}
-body.wallpage #proj .crows a{display:inline-grid; grid-template-columns:calc(var(--fs) * 1.1) auto calc(var(--fs) * .9); align-items:center; gap:calc(var(--fs) * .7); padding:0; font-family:var(--f-display); font-weight:600; font-size:var(--fs); letter-spacing:-.01em; white-space:nowrap;
+body.wallpage #proj .crows a{display:inline-grid; grid-template-columns:calc(var(--fs) * 1.1) auto calc(var(--fs) * .9); align-items:center; gap:calc(var(--fs) * .7); padding:0; font-family:var(--f-display); font-weight:500; font-size:var(--fs); letter-spacing:0; white-space:nowrap;
   color:rgba(196,205,218,.62); text-shadow:0 1px 0 rgba(255,255,255,.10), 0 -1px 1px rgba(0,0,0,.95); transition:color .35s, text-shadow .35s}
 body.wallpage #proj .crows .lab{display:none!important}
 body.wallpage #proj .crows .ic{width:calc(var(--fs) * 1.1); height:calc(var(--fs) * 1.1); background:none; color:inherit; filter:drop-shadow(0 1px 0 rgba(255,255,255,.1)) drop-shadow(0 -1px 1px rgba(0,0,0,.95)); transition:color .35s, filter .35s}
-body.wallpage #proj .crows .ic svg{width:100%; height:100%}
+body.wallpage #proj .crows .ic svg{width:100%; height:100%; stroke-width:1.7} body.wallpage #proj .crows .ic svg[fill="currentColor"]{transform:scale(.86)}
 body.wallpage #proj .crows .ar{color:inherit; font-size:.8em; opacity:.7}
 body.wallpage #proj .crows a .v{background:linear-gradient(90deg,#FF4D1A,#FF9A3C 55%,#FFD58A) 0 0/0% 100% no-repeat; -webkit-background-clip:text; background-clip:text}
 body.wallpage #proj .crows a:hover, body.wallpage #proj .crows a:focus-visible{color:#FFB347; text-shadow:0 0 14px rgba(255,120,30,.75), 0 0 34px rgba(255,80,20,.45)}
@@ -491,7 +492,7 @@ body.wallpage .cform2{display:flex!important; flex-direction:column; gap:calc(va
 body.wallpage .cform2 > *{width:100%; max-width:none; box-sizing:border-box}
 body.wallpage .cform2 input, body.wallpage .cform2 textarea{background:rgba(10,12,15,.72); border-color:rgba(236,230,216,.07); font-size:calc(var(--fs) * .62); padding:.9em 1.1em}
 body.wallpage .cform2 textarea{flex:1; min-height:0; resize:none}
-body.wallpage .csend{height:auto; padding:.85em 0; font-size:calc(var(--fs) * .7); margin-top:auto; border-radius:6px 6px 0 0}
+body.wallpage .csend{height:auto; padding:.85em 0; font-size:calc(var(--fs) * .7); margin-top:auto; border-radius:8px}
 body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:13px}
 </style>
 </head>
@@ -906,14 +907,14 @@ function layoutWall(){
   const L = WL[wallKey]; if (!L || !cover) return; const s = cover.w / 2576;
   if (wallKey === 'about') {
     const h = $('#proj h1.ah'), bio = $('#aBio'), talk = $('#pfoot .talk'), ph = $('#aPhoto'), fg = $('#figGlow');
-    place(h, L.A, [0, 30, 0, 20]); h.style.lineHeight = h.style.height; fit(h, (L.A[3] - L.A[1]) * s * .5, 18, () => h.scrollWidth > h.clientWidth + 1);
+    place(h, L.A, [56, 30, 0, 20]); h.style.lineHeight = h.style.height; fit(h, (L.A[3] - L.A[1]) * s * .58, 18, () => h.scrollWidth > h.clientWidth + 1);
     place(bio, L.B, [24, 0, 24, 0]); fit(bio, 22 * s / .74, 10, () => bio.scrollHeight > bio.clientHeight + 1);
     place(talk, L.C, [0, 30, 4, 20]); talk.style.lineHeight = talk.style.height; fit(talk, (L.C[3] - L.C[1]) * s * .62, 14, () => talk.scrollWidth > talk.clientWidth + 1);
-    place(ph, L.D, [26, 26, 26, 26]);
+    place(ph, L.D, [46, 26, 0, 26]);
     place(fg, L.F);
   } else {
     const hd = $('#vContact .chead'), rows = $('#vContact .crows'), form = $('#cForm');
-    place(hd, L.A, [10, 0, 10, 0]); fit(hd, (L.A[3] - L.A[1]) * s * .26, 16, () => hd.scrollHeight > hd.clientHeight + 1 || $('#proj h1.ch').scrollWidth > hd.clientWidth);
+    place(hd, L.A, [10, 0, 10, 0]); const ch = $('#proj h1.ch'); fit(hd, (L.A[3] - L.A[1]) * s * .3, 16, () => hd.scrollHeight > hd.clientHeight + 1 || ch.getBoundingClientRect().height > parseFloat(hd.style.getPropertyValue('--fs')) * 2.3);
     place(rows, L.T, [30, 0, 30, 0]); fit(rows, (L.T[3] - L.T[1]) * s / 9.5, 12, () => rows.scrollHeight > rows.clientHeight + 1 || [...rows.querySelectorAll('a')].some(a => a.getBoundingClientRect().right > rows.getBoundingClientRect().right - 8));
     place(form, L.B, [0, 0, 0, 0]); form.style.setProperty('--fs', Math.max(18, Math.min(34, (L.B[3] - L.B[1]) * s * .07)) + 'px');
   }
