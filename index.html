@@ -826,9 +826,8 @@ function drawWall(now, dt){
   if (touch) blob(W * .5, H * .3, 320 * fl, .22);
   litX.globalCompositeOperation = 'source-over'; litX.clearRect(0, 0, litC.width, litC.height);
   litX.save(); litX.scale(dpr, dpr); litX.drawImage(stone, cover.x, cover.y, cover.w, cover.h); litX.restore();
-  litX.globalCompositeOperation = 'multiply'; litX.fillStyle = 'rgb(255,206,150)'; litX.fillRect(0, 0, litC.width, litC.height); /* warm the lit stone like firelight */
+  litX.globalCompositeOperation = 'color'; litX.globalAlpha = .55; litX.fillStyle = 'rgb(255,120,40)'; litX.fillRect(0, 0, litC.width, litC.height); litX.globalAlpha = 1; /* orange firelight, same brightness */
   litX.globalCompositeOperation = 'destination-in'; litX.drawImage(lightC, 0, 0, litC.width, litC.height);
-  litX.globalCompositeOperation = 'lighter'; litX.globalAlpha = .26; litX.drawImage(lightC, 0, 0, litC.width, litC.height); litX.globalAlpha = 1; /* a touch of orange glow in the air */
   wx.globalCompositeOperation = 'source-over'; wx.fillStyle = '#07090B'; wx.fillRect(0, 0, wall.width, wall.height);
   wx.save(); wx.scale(dpr, dpr); wx.globalAlpha = AMB; wx.drawImage(stone, cover.x, cover.y, cover.w, cover.h); wx.restore();
   wx.globalAlpha = 1; wx.globalCompositeOperation = 'lighter'; wx.drawImage(litC, 0, 0); wx.globalCompositeOperation = 'source-over';
