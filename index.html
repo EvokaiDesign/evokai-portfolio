@@ -440,10 +440,12 @@ body.case, body.on-contact{background:#07090B}
 /* inverted text: always readable over light and dark parts of the gradient */
 body.case .cintro .tx, body.case .ctext p, body.case .cquote blockquote, body.case .cquote cite,
 body.case #proj .pmore .lab, body.case #proj .pmore .allw, body.case #proj .card b, body.case #proj .card span,
-body.case #proj .pfoot .talk, body.case #proj .fbar, body.case #proj .deckhead,
+body.case #proj .fbar, body.case #proj .deckhead,
 body.on-contact .chead, body.on-contact .crows a, body.on-contact #proj .fbar{color:#fff; mix-blend-mode:difference}
 body.case .cintro .ckick, body.case .cquote cite{color:#fff}
-body.case #proj .ptop{background:none!important; mix-blend-mode:difference} body.case #proj .ptop nav a, body.case #proj .ptop nav a[aria-current]{color:#fff}
+body.case #proj .ptop{background:none!important; position:absolute; height:72px; z-index:auto}
+body.case #proj .ptop .mark{position:fixed; top:22px; left:clamp(20px,1.6vw,28px); z-index:21}
+body.case #proj .ptop nav{position:fixed; top:0; right:clamp(20px,1.6vw,28px); height:72px; align-items:center; z-index:21; mix-blend-mode:difference} body.case #proj .ptop nav a, body.case #proj .ptop nav a[aria-current]{color:#fff}
 body.on-contact #proj .ptop nav a{color:#fff} body.on-contact #proj .ptop nav{mix-blend-mode:difference}
 body.case #proj .card:hover b{color:#fff}
 
