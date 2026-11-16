@@ -18,7 +18,7 @@
 }
 *{box-sizing:border-box} html,body{margin:0}
 body{background:var(--bg); color:var(--fg); font:400 16px/1.5 var(--f-body); -webkit-font-smoothing:antialiased; overflow-x:hidden; min-height:100dvh; cursor:none}
-a,button{cursor:none}
+a,button,[role=link]{cursor:none}
 img,video{max-width:100%} [hidden]{display:none!important}
 a{color:inherit; text-decoration:none} button{font:inherit; color:inherit; background:none; border:0; padding:0}
 :focus-visible{outline:2px solid var(--ember); outline-offset:4px}
@@ -888,6 +888,13 @@ $('#cForm').addEventListener('submit', e => {
 
 function route(instant){ const s = cur(); if ((s || 'home') === view) return; if (instant) show(s); else transition(() => show(s)); }
 addEventListener('hashchange', () => route(false));
+/* Internal links carry no href, so browsers don't pop up the link address at the bottom of the screen */
+function stripHref(root){ (root.querySelectorAll ? root : document).querySelectorAll('a[href^="#"]').forEach(a => { a.dataset.href = a.getAttribute('href'); a.removeAttribute('href'); if (!a.hasAttribute('tabindex')) a.tabIndex = a.closest('.tset[aria-hidden]') ? -1 : 0; a.setAttribute('role', 'link'); }); }
+stripHref(document);
+new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; if (n.matches && n.matches('a[href^="#"]')) stripHref(n.parentNode); else stripHref(n); }))).observe(document.body, { childList: true, subtree: true });
+const goHref = h => { if (h === '#') { if (location.hash) location.hash = ''; else route(false); } else if (location.hash !== h) location.hash = h; };
+document.addEventListener('click', e => { const a = e.target.closest('a[data-href]'); if (!a || e.defaultPrevented) return; e.preventDefault(); goHref(a.dataset.href); });
+document.addEventListener('keydown', e => { if (e.key !== 'Enter') return; const a = e.target.closest && e.target.closest('a[data-href]'); if (a) { e.preventDefault(); goHref(a.dataset.href); } });
 // in-page links that are not routes
 document.addEventListener('click', e => { const a = e.target.closest('[data-to]'); if (a) { e.preventDefault(); $('#' + a.dataset.to).scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); } });
 // home's "Contact" and other non-project hashes must not trigger a route
