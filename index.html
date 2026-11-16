@@ -698,7 +698,7 @@ const GRAD = {
 };
 function setGrad(slug){ const g = GRAD[slug] || GRAD.evokai, el = $('#cGrad'); el.style.setProperty('--g0', g[0]); el.style.setProperty('--k', 0);
   [...el.children].forEach((b, i) => { const [c, x, y, sz, dx, dy] = g[1][i]; Object.assign(b.style, { '--c': c }); b.style.setProperty('--c', c); b.style.setProperty('--x', x); b.style.setProperty('--y', y); b.style.setProperty('--s', sz); b.style.setProperty('--dx', dx); b.style.setProperty('--dy', dy); b.style.setProperty('--t', (22 + i * 5) + 's'); }); }
-function ytBg(id){ return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1`; }
+function ytBg(id){ return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=0`; }
 function mountHero(p){
   const h = $('#cHero'), STILLS = ['infinite-chances','sans-chaines','combustion','evokai','ummy'];
   const poster = `media/${p.slug}/${STILLS.includes(p.slug) ? 'still' : 'poster'}.jpg`;
