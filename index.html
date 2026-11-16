@@ -48,6 +48,7 @@ nav{display:flex; gap:clamp(14px,3vw,30px); font-size:14px; font-weight:500; let
 .rail .head{display:flex; justify-content:space-between; align-items:center; gap:16px; height:var(--headH,40px); padding-inline:14px; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--fg2)}
 .track{display:flex; gap:14px; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x proximity; padding:0 14px; scrollbar-width:none; overscroll-behavior-x:contain; -webkit-mask:linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent); mask:linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent)}
 .track::-webkit-scrollbar{display:none}
+.tset{display:flex; gap:14px; flex:none}
 .tile{flex:none; width:var(--tW,320px); scroll-snap-align:start; display:flex; flex-direction:column; gap:var(--capGap,10px)}
 .tile .media{box-shadow:0 10px 18px -8px rgba(0,0,0,.8)}
 .tile .media{position:relative; aspect-ratio:16/9; overflow:hidden; background:#0E1114; border:1px solid var(--line); border-radius:6px; transform:translateZ(0)}
@@ -146,6 +147,7 @@ body.in-proj #proj{display:block} body.in-proj #page, body.in-proj #wall, body.i
 #page > footer{align-items:baseline}
 #page > footer .soc{display:flex; gap:20px} #page > footer .soc a{transition:color .3s}
 #page > footer .soc a:hover{color:var(--ember2)}
+.soc{align-items:center} .soc a.si{display:grid; place-items:center; width:20px; height:20px; transition:color .3s, transform .4s cubic-bezier(.2,.8,.2,1)} .soc a.si svg{width:18px; height:18px; display:block} .soc a.si:hover{color:var(--ember2); transform:translateY(-2px)}
 
 /* Video player: poster + play button; plays the YouTube film in place */
 .player{position:relative; aspect-ratio:16/9; background:#000; border-radius:4px; overflow:hidden}
@@ -466,10 +468,12 @@ const DRAFT = ['Placeholder: two or three sentences on what this project is, who
 const P = [{"slug": "reel", "title": "Demo Reel", "yt": "UeAljsXohXs", "local": "media/reel/reel.mp4", "year": "2026", "reel": true, "tags": ["Motion Design", "Animation"], "info": ["The culmination of all my past projects."], "tools": "After Effects, Procreate Dreams", "music": "“Magic What We Do (Surreal Montage)” — Ludwig Göransson feat. Miles Caton. Written by Ludwig Göransson & Raphael Saadiq. Produced by Ludwig Göransson. From Sinners (2025)."}, {"slug": "infinite-chances", "title": "Infinite Chances", "yt": "Kcz53-mWlhk", "year": "2025", "tags": ["3D Animation", "Motion Design", "2D Animation"], "info": ["“As long as I live, there are INFINITE CHANCES.” — Monkey D. Luffy", "This is the sentence that changed my life forever, a sentence that reminded me that, while I’m still breathing, it ain’t over. While I’m still breathing, anything is possible. I hope to one day inspire people as much as Luffy has inspired me. So for my first big project, I dedicate it to him and to his author, Eiichiro Oda."], "ctx": "Final project for Art Direction class", "tools": "Blender, After Effects, Procreate, Procreate Dreams, ElevenLabs", "music": "“Timefracture” by Bad History"}, {"slug": "sans-chaines", "title": "Sans Chaînes", "yt": "RmzZugM8DuE", "year": "2025", "deck": 24, "tags": ["Art Direction", "Branding", "Packaging", "3D"], "info": ["This is Sans Chaînes. French for “without chains”. A bold name considering the design choices surrounding this fragrance, but that’s exactly what I was going for.", "The idea I wanted to convey is that, once you use this elixir of liberation, you remove all things chaining you down and limiting who you are. Be who you want to be, regardless of what everybody else tells you. Free yourself. Become one without chains."], "ctx": "Art Direction project: design a perfume and the brand that produces it", "tools": "Blender, After Effects, Photoshop, Illustrator, InDesign, Procreate", "music": "“Broken Bones” by KALEO. My thanks go completely to them: this song is what inspired the project."}, {"slug": "combustion", "title": "Combustion", "yt": "D0YkVO-vL1o", "year": "2025", "tags": ["2D Animation", "Motion Design", "Event Identity"], "info": ["A cultural event that brings together dance, music and fire, exploring the human connection between the sound and the flame."], "ctx": "Project for Proyectos III", "tools": "Procreate Dreams, Procreate, After Effects, Illustrator, Photoshop, Figma", "music": "“FIRE” by Barns Courtney", "credits": "Made with Marina Mesa"}, {"slug": "ummy", "title": "Ummy", "yt": "Qcadwb03Z1M", "year": "2025", "tags": ["Branding", "Character Design", "Motion Design"], "info": ["Ummys are functional vitamin gummies disguised as “tiny helpers for big minds,” designed for the chaotic, high-speed lives of Gen Z creatives who want self-care without the boring clinical vibe. Positioned as “micro-pulses of well-being,” they aren’t just supplements: they are adorable, edible characters meant to guide you through your daily mental rollercoaster. The “Calm” gummy pulls you back from the “edge of collapse,” the “Focus” treat feeds your inner “hyper-precise mini artist,” and the “Creativity” flavor sparks a “controlled internal rave”.", "With a soft, “frosted glass” aesthetic that mimics clearing away brain fog, Ummys turn taking your Ashwagandha or B12 into a tasty, aesthetic ritual that feels less like a chore and more like a warm hug for your brain."], "ctx": "Project for Proyectos III", "tools": "Procreate Dreams, Gemini, Nano Banana, After Effects, Photoshop, Figma", "credits": "Made with Marta Carril"}, {"slug": "hero", "title": "Hero", "yt": "VpLTjYeB6qw", "year": "2025", "tags": ["Video Editing", "Post-production", "Motion Graphics"], "info": ["A tribute to all those heroes that inspired me to keep going."], "ctx": "Final project for Postproduction class", "tools": "Premiere Pro, After Effects", "music": "“Holding Out for a Hero” — Jennifer Saunders, from the Shrek 2 soundtrack"}, {"slug": "evokai", "title": "Evokai Style Guide", "yt": "a5KPRoC_Wcs", "year": "2024", "tags": ["Visual Identity", "Branding", "3D", "Motion Design"], "info": ["The EVOKAI style guide was a defining project in my development as an artist. Rather than simply building a brand, I created a visual identity that represented my own evolution: a commitment to growth, experimentation and continuous improvement. Before starting it, I didn’t have much discipline or direction in my creative life, and I rarely pushed myself beyond the basics.", "Evokai changed that. What began as a style guide quickly became a personal milestone: I pushed myself beyond my comfort zone, teaching myself Blender and After Effects from scratch so I could produce a full presentation video that brought the concept to life. Looking back, the work itself was only the starting point; the real value of this project was proving to myself that I could adapt, learn fast, and rise to a creative challenge without being asked. Evokai became the symbol of that shift — the moment I stopped just making things and started becoming the artist I wanted to be."], "tools": "Blender, After Effects, Photoshop, Illustrator, InDesign"}, {"slug": "letterboxd", "title": "Letterboxd", "soon": true}, {"slug": "extra", "title": "Extra", "soon": true}];
 let view = 'home';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-$('#track').innerHTML = P.map(p => p.soon
+const tileHTML = P.map(p => p.soon
   ? `<div class="tile soon"><div class="media">Coming soon</div><div class="cap"><b>${esc(p.title)}</b></div></div>`
   : `<a class="tile" href="#${p.slug}" data-slug="${p.slug}"><div class="media"><img src="media/${p.slug}/poster.jpg" alt="" width="1280" height="720"><video muted loop playsinline preload="none" src="media/${p.slug}/loop.mp4"></video></div>
      <div class="cap"><b>${esc(p.title)}</b>${p.badge ? `<span class="${p.badge === 'New work' ? 'new' : ''}">${esc(p.badge)}</span>` : ''}</div></a>`).join('');
+$('#track').innerHTML = `<div class="tset">${tileHTML}</div><div class="tset" aria-hidden="true">${tileHTML}</div><div class="tset" aria-hidden="true">${tileHTML}</div>`;
+document.querySelectorAll('.tset[aria-hidden] a').forEach(a => a.tabIndex = -1);
 
 /* ---------- Loader: real preloading with a floor so the logo gets its moment ---------- */
 const jobs = []; let done = 0;
@@ -477,7 +481,7 @@ const step = () => { done++; const pct = Math.round(done / jobs.length * 100); $
 const loadImg = src => new Promise(r => { const i = new Image(); i.onload = i.onerror = () => { step(); r(i); }; i.src = src; });
 const loadVid = v => new Promise(r => { const d = () => { step(); r(); }; v.preload = 'metadata'; v.addEventListener('loadedmetadata', d, { once: true }); v.addEventListener('error', d, { once: true }); setTimeout(d, 2500); });
 jobs.push(loadImg('media/stone.webp')); jobs.push(loadImg('media/logo.png')); P.filter(p => !p.soon).forEach(p => jobs.push(loadImg(`media/${p.slug}/poster.jpg`)));
-document.querySelectorAll('.tile video').forEach(v => jobs.push(loadVid(v)));
+document.querySelectorAll('.tset:first-child .tile video').forEach(v => jobs.push(loadVid(v)));
 jobs.push(document.fonts ? document.fonts.ready.then(step) : Promise.resolve(step()));
 const floor = new Promise(r => setTimeout(r, reduce ? 0 : 1500)), cap = new Promise(r => setTimeout(r, 6000));
 Promise.race([Promise.all([Promise.all(jobs), floor]), cap]).then(async () => {
@@ -490,19 +494,37 @@ const track = $('#track'); const tileW = () => (track.querySelector('.tile').off
 let target = 0, easing = false;
 const maxScroll = () => track.scrollWidth - track.clientWidth;
 const ease = () => { const d = target - track.scrollLeft; if (Math.abs(d) < .5) { track.scrollLeft = target; easing = false; return; } track.scrollLeft += d * (reduce ? 1 : .16); requestAnimationFrame(ease); };
-const scrollTo_ = v => { target = Math.max(0, Math.min(maxScroll(), v)); if (!easing) { easing = true; requestAnimationFrame(ease); } };
-addEventListener('wheel', e => { if (touch || view !== 'home') return; let d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX; if (e.deltaMode === 1) d *= 40; if (e.deltaMode === 2) d *= innerWidth; if (!easing) target = track.scrollLeft; scrollTo_(target + d); e.preventDefault(); }, { passive: false });
+const setW = () => track.children[1].offsetLeft - track.children[0].offsetLeft;
+const scrollTo_ = v => { target = v; if (!easing) { easing = true; requestAnimationFrame(ease); } };
+/* Infinite loop: three identical sets; keep the view inside the middle one by jumping exactly one set width */
+let autoPos = null, autoHold = 0, inTrack = false, lastT = 0;
+const wrap = () => { const w = setW(); if (!w) return; const sl = track.scrollLeft; let shift = 0;
+  if (sl < w * .5) shift = w; else if (sl > w * 1.5) shift = -w;
+  if (shift) { track.scrollLeft = sl + shift; target += shift; if (dragX !== null) dragS += shift; if (autoPos !== null) autoPos += shift; } };
+track.addEventListener('scroll', wrap, { passive: true });
+const startLoop = () => { track.scrollLeft = setW(); target = track.scrollLeft; requestAnimationFrame(autoTick); };
+const AUTO = 38; /* px per second */
+function autoTick(t){
+  const dt = Math.min(.05, (t - (lastT || t)) / 1000); lastT = t;
+  const paused = reduce || view !== 'home' || document.hidden || inTrack || dragX !== null || easing || t < autoHold;
+  if (paused) autoPos = null;
+  else { if (autoPos === null) autoPos = track.scrollLeft; autoPos += AUTO * dt; track.scrollLeft = autoPos; }
+  requestAnimationFrame(autoTick);
+}
+const holdAuto = ms => autoHold = performance.now() + ms;
+addEventListener('wheel', e => { if (touch || view !== 'home') return; let d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX; if (e.deltaMode === 1) d *= 40; if (e.deltaMode === 2) d *= innerWidth; if (!easing) target = track.scrollLeft; scrollTo_(target + d); holdAuto(1500); e.preventDefault(); }, { passive: false });
 if (!touch) track.style.scrollSnapType = 'none';
 let dragX = null, dragS = 0, moved = false;
-track.addEventListener('pointerdown', e => { if (touch) return; dragX = e.clientX; dragS = track.scrollLeft; moved = false; });
+track.addEventListener('pointerdown', e => { holdAuto(2500); if (touch) return; dragX = e.clientX; dragS = track.scrollLeft; moved = false; });
 track.addEventListener('pointermove', e => { if (dragX === null) return; const d = e.clientX - dragX; if (Math.abs(d) > 6) { moved = true; track.setPointerCapture(e.pointerId); } track.scrollLeft = dragS - d; });
 const endDrag = () => { dragX = null; };
 track.addEventListener('pointerup', endDrag); track.addEventListener('pointercancel', endDrag);
 track.addEventListener('click', e => { if (moved) { e.preventDefault(); moved = false; } }, true);
 let hov = null; const play = t => { if (!t) return; t.classList.add('playing'); const v = t.querySelector('video'); v.preload = 'auto'; v.play().catch(() => {}); }, stop = t => { if (!t) return; t.classList.remove('playing'); t.querySelector('video').pause(); };
 const setHov = t => { if (t === hov) return; stop(hov); hov = t; play(t); };
-if (!touch) { track.addEventListener('pointerover', e => setHov(e.target.closest('a.tile'))); track.addEventListener('pointerleave', () => setHov(null)); }
-else { const pick = () => { let best = null, bd = 1e9; track.querySelectorAll('a.tile').forEach(t => { const r = t.getBoundingClientRect(); const d = Math.abs(r.left + r.width / 2 - innerWidth / 2); if (d < bd) { bd = d; best = t; } }); setHov(best); }; track.addEventListener('scroll', pick, { passive: true }); setTimeout(pick, 1800); }
+if (!touch) { track.addEventListener('pointerover', e => { inTrack = true; setHov(e.target.closest('a.tile')); }); track.addEventListener('pointerleave', () => { inTrack = false; setHov(null); }); }
+else { const pick = () => { let best = null, bd = 1e9; track.querySelectorAll('a.tile').forEach(t => { const r = t.getBoundingClientRect(); const d = Math.abs(r.left + r.width / 2 - innerWidth / 2); if (d < bd) { bd = d; best = t; } }); setHov(best); }; track.addEventListener('scroll', pick, { passive: true }); setTimeout(pick, 1800); track.addEventListener('touchstart', () => holdAuto(3000), { passive: true }); track.addEventListener('touchmove', () => holdAuto(3000), { passive: true }); }
+startLoop();
 
 
 /* ---------- Project pages + routing (#slug) ---------- */
@@ -600,10 +622,11 @@ addEventListener('pointerup', () => { if (dkX === null) return; dkX = null; setT
 strip.addEventListener('click', e => { if (dkMoved > 6) { e.stopPropagation(); e.preventDefault(); dkMoved = 0; } }, true);
 
 /* Contact rows + socials, filled from LINKS */
+
 const SOC = [['Instagram', LINKS.instagram], ['YouTube', LINKS.youtube], ['LinkedIn', LINKS.linkedin]];
-document.querySelectorAll('[data-soc]').forEach(s => s.innerHTML = SOC.map(([n, l]) => `<a href="${l.url}" target="_blank" rel="noopener">${n}</a>`).join(''));
 const ROWS = [['Email', `mailto:${LINKS.email}`, LINKS.email], ['Phone', `tel:${LINKS.phone.tel}`, LINKS.phone.label]].concat(SOC.map(([n, l]) => [n, l.url, l.handle]));
 const ICONS = {"Email": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 7 9 6 9-6\"/></svg>", "Phone": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"><path d=\"M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z\"/></svg>", "Instagram": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/></svg>", "YouTube": "<svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M10 8.5v7l6-3.5z\"/><rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/></svg>", "LinkedIn": "<svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><rect x=\"3\" y=\"9\" width=\"4\" height=\"12\"/><circle cx=\"5\" cy=\"4.5\" r=\"2.3\"/><path d=\"M10 9h4v2c.7-1.3 2.2-2.3 4-2.3 3 0 4 2 4 5V21h-4v-6.5c0-1.6-.6-2.5-1.9-2.5S14 13 14 14.6V21h-4z\"/></svg>"};
+document.querySelectorAll('[data-soc]').forEach(s => s.innerHTML = SOC.map(([n, l]) => `<a class="si" href="${l.url}" target="_blank" rel="noopener" aria-label="${n}" title="${n}">${ICONS[n]}</a>`).join(''));
 document.querySelectorAll('[data-clinks]').forEach(u => u.innerHTML = ROWS.map(([n, h, v]) => `<li><a href="${h}"${h.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}><span class="ic" aria-hidden="true">${ICONS[n] || ''}</span><span class="lab">${n}</span><span class="v">${esc(v)}</span><span class="ar" aria-hidden="true">↗</span></a></li>`).join(''));
 document.querySelectorAll('[data-links]').forEach(u => u.innerHTML = [['Mail', `mailto:${LINKS.email}`]].concat(SOC.map(([n, l]) => [n, l.url])).map(([n, h]) => `<li><a href="${h}"${h.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${n}</a></li>`).join(''));
 document.querySelectorAll('[data-mail]').forEach(a => { a.href = `mailto:${LINKS.email}`; a.textContent = LINKS.email; });
@@ -687,7 +710,9 @@ addEventListener('resize', size); stone.onload = size; size();
 // Fire: a fluid metaball flame on the GPU, posterized into flat bands with organic holes (cel-animation fire)
 const mouse = { x: innerWidth / 2, y: innerHeight * .4, on: false, overRail: false };
 const head = { x: mouse.x, y: mouse.y, vx: 0, vy: 0 }, prev = { x: mouse.x, y: mouse.y };
-addEventListener('pointermove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.on = true; mouse.overRail = !!e.target.closest('.rail'); mouse.tiny = !mouse.overRail && !!e.target.closest('a:not(#wallLink), button, input, textarea, label'); document.body.classList.toggle('on-wall', e.target.id === 'wallLink'); }, { passive: true });
+const navBox = () => { const n = document.querySelector(document.body.classList.contains('in-proj') ? '#proj .ptop nav' : 'header.top nav'); return n ? n.getBoundingClientRect() : null; };
+addEventListener('pointermove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.on = true; mouse.overRail = !!e.target.closest('.rail'); const nr = navBox(); const nearNav = nr && e.clientX > nr.left - 28 && e.clientX < nr.right + 28 && e.clientY > nr.top - 22 && e.clientY < nr.bottom + 22;
+  mouse.tiny = nearNav || (!mouse.overRail && !!e.target.closest('a:not(#wallLink), button, input, textarea, label')); document.body.classList.toggle('on-wall', e.target.id === 'wallLink'); }, { passive: true });
 document.addEventListener('mouseleave', () => mouse.on = false);
 const AMB = .07, MAXP = 64, MAXE = 16;
 const fc = $('#flame'), pts = [], embers = [];
