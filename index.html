@@ -1176,7 +1176,7 @@ function size(){
     const top = Math.max(cover.y + 1150 * S, wordY + 120), room = H - top - (touch && W <= 1100 ? 84 : 0) - 120 - 40, tW = Math.max(200, Math.min(W * .8, 420, room * 16 / 9)), tH = tW * 9 / 16;
     const r = document.documentElement.style;
     r.setProperty('--nL', '0px'); r.setProperty('--nW', W + 'px'); r.setProperty('--nT', top + 'px'); r.setProperty('--tW', tW + 'px'); r.setProperty('--capGap', '12px');
-    phoneFade = { t0: cover.y, t1: cover.y + 140 * S, b0: cover.y + 1000 * S, b1: cover.y + 1300 * S };
+    phoneFade = { t0: cover.y + 120 * S, t1: cover.y + 300 * S, b0: cover.y + 640 * S, b1: cover.y + 790 * S };
     return;
   }
   if (stone.naturalWidth) {
