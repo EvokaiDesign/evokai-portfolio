@@ -950,7 +950,8 @@ function mountHero(p){
     <div class="cshade"></div>
     <div class="cover"><h1 class="ctitle">${esc(p.title)}</h1><div class="cact"><button type="button" class="cplay"><svg viewBox="0 0 24 24"><path d="M6.5 4.5l13 7.5-13 7.5z"/></svg>${p.reel ? 'Play reel' : 'Play film'}</button>${navigator.share ? '<button type="button" class="cshare"><svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Share</button>' : ''}<span class="cscroll"><i></i>Scroll</span></div></div>
     <button type="button" class="cclose" aria-label="Close film">×</button>`;
-  const f = h.querySelector('.cbg iframe'); if (f) f.addEventListener('load', () => setTimeout(() => f.classList.add('on'), 1400), { once: true });
+  const f = h.querySelector('.cbg iframe'); if (f && touch) { const src = f.src; f.removeAttribute('src'); setTimeout(() => { if (f.isConnected) f.src = src; }, 2500); }
+  if (f) f.addEventListener('load', () => setTimeout(() => f.classList.add('on'), 1400), { once: true });
   h.querySelector('.cplay').addEventListener('click', () => {
     if (PREVIEW) { window.open(`https://youtu.be/${p.yt}`, '_blank', 'noopener'); return; }
     h.classList.add('playing'); window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -971,7 +972,8 @@ function renderProject(slug){
   $('#cIntro').innerHTML = `<div><span class="ckick tx">${esc((p.tags || []).join(' · '))}</span><h2 class="tx">${esc(p.title)}.</h2><div class="cbody tx">${intro.map(t => `<p>${esc(t)}</p>`).join('')}</div></div>
     <div class="cmeta tx">${meta.map(([k, v]) => `<div><span>${k}</span><p>${esc(v)}</p></div>`).join('')}</div>`;
   // pictures: a rhythm of layouts, like a printed case study
-  const fig = x => `<figure class="rv"><img loading="lazy" draggable="false" src="media/${slug}/${x[0]}" width="${x[1]}" height="${x[2]}" alt="${esc(p.title)}, still"></figure>`;
+  let nFig = 0;
+  const fig = x => { const m = x[0].replace('.webp', '-m.webp'); return `<figure class="rv"><img loading="${nFig++ < 2 ? 'eager' : 'lazy'}" decoding="async" draggable="false" src="media/${slug}/${x[0]}" srcset="media/${slug}/${m} 800w, media/${slug}/${x[0]} ${x[1]}w" sizes="(max-width: 760px) 66vw, 62vw" width="${x[1]}" height="${x[2]}" alt="${esc(p.title)}, still"></figure>`; };
   const port = x => x[2] > x[1] * 1.05;
   const LAND = ['full', 'pair', 'right', 'tess', 'left', 'full', 'pair', 'left', 'right'];
   let blocks = [], li = 0, side = 0;
@@ -993,7 +995,7 @@ function renderProject(slug){
   if (quote) out.push(`<section class="cquote"><blockquote class="tx">“${esc(quote.q)}”</blockquote><cite class="tx">${esc(quote.who)}</cite></section>`);
   $('#cFlow').innerHTML = out.join('');
   $('#pDeck').hidden = !p.deck; $('#pStrip').scrollLeft = 0;
-  $('#pStrip').innerHTML = p.deck ? Array.from({ length: p.deck }, (_, k) => `<img loading="lazy" draggable="false" src="media/${slug}/book/${String(k + 1).padStart(2, '0')}.webp" width="1600" height="899" alt="${esc(p.title)} presentation, page ${k + 1}">`).join('') : '';
+  $('#pStrip').innerHTML = p.deck ? Array.from({ length: p.deck }, (_, k) => `<img loading="lazy" decoding="async" draggable="false" src="media/${slug}/book/${String(k + 1).padStart(2, '0')}.webp" srcset="media/${slug}/book/${String(k + 1).padStart(2, '0')}-m.webp 800w, media/${slug}/book/${String(k + 1).padStart(2, '0')}.webp 1600w" sizes="(max-width: 760px) 66vw, 900px" width="1600" height="899" alt="${esc(p.title)} presentation, page ${k + 1}">`).join('') : '';
   if (p.deck) deckCount();
   const live = P.filter(q => !q.soon && !q.reel), at = Math.max(0, live.findIndex(q => q.slug === slug));
   $('#pMore').innerHTML = [1, 2, 3].map(n => live[(at + n) % live.length]).map(q => `<a class="card" href="#${q.slug}"><div class="m"><img src="media/${q.slug}/poster.jpg" alt="" width="1280" height="720"><video muted loop playsinline preload="none" src="media/${q.slug}/loop.mp4"></video></div><b>${esc(q.title)}</b><span>${esc((q.tags || []).join(' · '))}</span></a>`).join('');
@@ -1040,7 +1042,7 @@ function show(slug){
 
 /* ---------- Image viewer: click any still or presentation page ---------- */
 const lb = $('#lb'), lbImg = $('#lbImg'); let lbSet = [], lbI = 0;
-const lbShow = i => { lbI = (i + lbSet.length) % lbSet.length; const im = lbSet[lbI]; lbImg.src = im.currentSrc || im.src; lbImg.alt = im.alt; $('#lbN').textContent = `${lbI + 1} / ${lbSet.length}`; };
+const lbShow = i => { lbI = (i + lbSet.length) % lbSet.length; const im = lbSet[lbI]; lbImg.src = im.getAttribute('src'); lbImg.alt = im.alt; $('#lbN').textContent = `${lbI + 1} / ${lbSet.length}`; };
 const lbOpen = (set, i) => { lbSet = set; lb.hidden = false; document.body.classList.add('lb-open'); lbShow(i); document.documentElement.style.overflow = 'hidden'; $('#lbClose').focus({ preventScroll: true }); };
 const lbClose = () => { lb.hidden = true; document.body.classList.remove('lb-open'); lbImg.removeAttribute('src'); document.documentElement.style.overflow = ''; };
 document.addEventListener('click', e => {
@@ -1246,11 +1248,11 @@ const zoneBoxes = () => { const inP = document.body.classList.contains('in-proj'
 const navBox = () => { const n = document.querySelector(document.body.classList.contains('in-proj') ? '#proj .ptop nav' : 'header.top nav'); return n ? n.getBoundingClientRect() : null; };
 const touchAt = (x, y, start) => { mouse.x = x; mouse.y = y; mouse.on = true; mouse.t = performance.now(); if (start) { head.x = prev.x = x; head.y = prev.y = y; head.vx = head.vy = 0; } };
 addEventListener('touchmove', e => { if ((view === 'home' || wallOn) && e.cancelable && !e.target.closest('.track, input, textarea, .strip')) e.preventDefault(); }, { passive: false });
-let dragDone = false; try { dragDone = sessionStorage.getItem('evkDrag') === '1'; } catch (e) {}
+let dragDone = false;
 if (touch && !reduce && !dragDone) setTimeout(() => { if (!dragDone) document.body.classList.add('show-hint'); }, 900);
 let dragStart = null;
 if (touch) {
-  addEventListener('touchmove', e => { if (dragDone || !dragStart) return; const t = e.touches[0]; if (Math.hypot(t.clientX - dragStart[0], t.clientY - dragStart[1]) > 40) { dragDone = true; document.body.classList.remove('show-hint'); try { sessionStorage.setItem('evkDrag', '1'); } catch (er) {} } }, { passive: true });
+  addEventListener('touchmove', e => { if (dragDone || !dragStart) return; const t = e.touches[0]; if (Math.hypot(t.clientX - dragStart[0], t.clientY - dragStart[1]) > 40) { dragDone = true; document.body.classList.remove('show-hint');  } }, { passive: true });
   addEventListener('touchstart', e => { const t0 = e.touches[0]; dragStart = [t0.clientX, t0.clientY]; }, { passive: true });
   addEventListener('touchstart', e => { const t = e.touches[0]; touchAt(t.clientX, t.clientY, true); mouse.overRail = !!(e.target.closest && e.target.closest('.rail')); mouse.tiny = !!(e.target.closest && e.target.closest('.tabbar, header, nav, button, input, textarea')); }, { passive: true });
   addEventListener('touchmove', e => { const t = e.touches[0]; touchAt(t.clientX, t.clientY, false); }, { passive: true });
