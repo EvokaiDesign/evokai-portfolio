@@ -76,7 +76,7 @@ nav{display:flex; gap:clamp(14px,3vw,30px); font-size:14px; font-weight:500; let
 
 /* Cursor flame */
 #flame{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:5}
-@media (hover:none){ #flame{display:none} }
+
 
 /* Loader */
 #loader{position:fixed; inset:0; z-index:100; background:#050607; display:grid; place-items:center; align-content:center; gap:22px; color:var(--fg); transition:opacity .6s ease, visibility .6s}
@@ -493,8 +493,8 @@ body.wallpage #proj .crows .ic{width:calc(var(--fs) * 1.1); height:calc(var(--fs
 body.wallpage #proj .crows .ic svg{width:100%; height:100%; stroke-width:1.7} body.wallpage #proj .crows .ic svg[fill="currentColor"]{transform:scale(.86)}
 body.wallpage #proj .crows .ar, #vContact .crows .ar{display:none!important}
 body.wallpage #proj .crows a .v{background:linear-gradient(90deg,#FF4D1A,#FF9A3C 55%,#FFD58A) 0 0/0% 100% no-repeat; -webkit-background-clip:text; background-clip:text}
-body.wallpage #proj .crows a:hover, body.wallpage #proj .crows a:focus-visible{color:#FFB347; text-shadow:0 0 14px rgba(255,120,30,.75), 0 0 34px rgba(255,80,20,.45)}
-body.wallpage #proj .crows a:hover .ic, body.wallpage #proj .crows a:focus-visible .ic{color:#FF9A3C; filter:drop-shadow(0 0 8px rgba(255,120,30,.9)) drop-shadow(0 0 20px rgba(255,80,20,.6))}
+body.wallpage #proj .crows a:hover, body.wallpage #proj .crows a.tap, body.wallpage #proj .crows a:focus-visible{color:#FFB347; text-shadow:0 0 14px rgba(255,120,30,.75), 0 0 34px rgba(255,80,20,.45)}
+body.wallpage #proj .crows a:hover .ic, body.wallpage #proj .crows a.tap .ic, body.wallpage #proj .crows a:focus-visible .ic{color:#FF9A3C; filter:drop-shadow(0 0 8px rgba(255,120,30,.9)) drop-shadow(0 0 20px rgba(255,80,20,.6))}
 body.wallpage .cform2{display:flex!important; flex-direction:column; gap:calc(var(--fs) * .55); padding:calc(var(--fs) * 1.1) calc(var(--fs) * 1.1) 0!important; max-width:none!important}
 body.wallpage .cform2 > *{width:100%; max-width:none; box-sizing:border-box}
 body.wallpage .cform2 input, body.wallpage .cform2 textarea{background:rgba(10,12,15,.72); border-color:rgba(236,230,216,.07); font-size:calc(var(--fs) * .62); padding:.9em 1.1em}
@@ -503,7 +503,7 @@ body.wallpage .csend{height:auto; padding:.85em 0; font-size:calc(var(--fs) * .7
 body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:13px}
 
 /* ===================== PHONE VERSION (≤760px) — desktop untouched ===================== */
-@media (max-width:760px){
+@media (max-width:760px), (hover:none) and (max-width:1100px) and (orientation:portrait){
   /* ember backdrop instead of the stone walls */
   body.on-about #proj::before, body.on-contact #proj::before{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
     background:radial-gradient(90% 45% at 85% -5%, rgba(255,110,30,.26), transparent 70%), radial-gradient(80% 40% at 0% 105%, rgba(255,70,20,.16), transparent 70%), #07090B}
@@ -551,6 +551,90 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
 #cGrad.flames::before{content:""; position:absolute; inset:0; background:radial-gradient(38% 55% at 50% 48%, rgba(226,214,255,.30), rgba(120,70,190,.10) 55%, transparent 80%)}
 #cGrad.img .gimg{display:block; left:0; top:0; width:100vw; height:calc(100vw * var(--ar, 4.65)); background:var(--src) top center/100% 100% no-repeat; will-change:transform;
   transform:translateY(calc(var(--k) * (100vh - 100vw * var(--ar, 4.65))))}
+
+/* ---------- Legal ---------- */
+.legal{max-width:760px; padding:clamp(40px,8vh,90px) 0 clamp(40px,8vh,80px)}
+.legal h1{font-family:var(--f-display); font-weight:600; font-size:clamp(44px,6vw,84px); letter-spacing:-.04em; margin:0; background:linear-gradient(90deg,#FF4D1A,#FF9A3C 55%,#FFD58A); -webkit-background-clip:text; background-clip:text; color:transparent; width:max-content}
+.legal h1:focus{outline:none}
+.legal .lupd{color:var(--fg2); font-size:13px; margin:14px 0 30px}
+.legal .ltoc{display:flex; flex-wrap:wrap; gap:8px 18px; margin:0 0 50px; font-size:14px}
+.legal .ltoc a{color:var(--fg2); cursor:pointer; border-bottom:1px solid rgba(236,230,216,.15); padding-bottom:2px} .legal .ltoc a:hover{color:var(--ember2)}
+.legal section{margin:0 0 46px; scroll-margin-top:90px}
+.legal h2{font-family:var(--f-display); font-weight:600; font-size:clamp(22px,2vw,28px); letter-spacing:-.02em; margin:0 0 14px}
+.legal p{font-size:15.5px; line-height:1.7; color:rgba(236,230,216,.82); margin:0 0 1em}
+.legal a{color:var(--fg)} .legal a:hover{color:var(--ember2)}
+.legal .lid{display:grid; grid-template-columns:110px 1fr; gap:8px 18px; margin:18px 0 20px; font-size:15px}
+.legal .lid dt{color:var(--fg2); font-size:12px; letter-spacing:.14em; text-transform:uppercase; padding-top:3px} .legal .lid dd{margin:0}
+body.on-legal #proj .pfoot .talk{display:none}
+.flegal{color:inherit; opacity:.75; text-decoration:none} .flegal:hover{opacity:1; color:var(--ember2)}
+#homeFoot .hfr{display:flex; align-items:center; gap:22px} #homeFoot .flegal{font-size:12px; letter-spacing:.06em}
+
+/* ---------- Accessibility ---------- */
+:focus-visible{outline:2px solid #FF9A3C; outline-offset:3px; border-radius:3px}
+.skip{position:fixed; left:12px; top:-60px; z-index:100; padding:10px 16px; border-radius:8px; border:0; background:#ECE6D8; color:#07090B; font:600 14px var(--f-display); transition:top .2s}
+.skip:focus{top:12px}
+.tabbar, .toast{display:none}
+.toast{position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom)); transform:translate(-50%,20px); z-index:80; padding:11px 18px; border-radius:99px; background:rgba(20,16,14,.9); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); color:#ECE6D8; font:500 14px var(--f-display); border:1px solid rgba(255,140,60,.3); opacity:0; pointer-events:none; transition:opacity .3s, transform .4s cubic-bezier(.2,.8,.2,1)}
+.toast.on{display:block; opacity:1; transform:translate(-50%,0)}
+
+/* ---------- Touch devices (phones + tablets) — never applies on a computer with a mouse ---------- */
+@media (hover:none){
+  .tile, .tile *, .card, .card *, .cb figure, .cb figure *{-webkit-touch-callout:none; -webkit-user-select:none; user-select:none}
+  .tile img, .tile video, .card img, .card video{pointer-events:none}
+  .tile:active .media{transform:scale(.97); transition:transform .15s}
+  .tile .media{transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+}
+@media (hover:none) and (max-width:1100px){
+  /* app-style tab bar */
+  .tabbar{display:grid; grid-template-columns:repeat(4,1fr); position:fixed; left:12px; right:12px; bottom:calc(10px + env(safe-area-inset-bottom)); z-index:60; height:64px; border-radius:22px; padding:0 6px;
+    background:rgba(14,12,11,.72); -webkit-backdrop-filter:blur(18px) saturate(1.3); backdrop-filter:blur(18px) saturate(1.3); border:1px solid rgba(255,255,255,.08); box-shadow:0 18px 40px -12px rgba(0,0,0,.8)}
+  .tabbar a{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:rgba(236,230,216,.62); font:500 11px var(--f-display); letter-spacing:.02em; text-decoration:none; border-radius:16px; -webkit-tap-highlight-color:transparent; transition:color .25s}
+  .tabbar svg{width:23px; height:23px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+  .tabbar a[aria-current]{color:#FF9A3C} .tabbar a[aria-current] svg{transform:translateY(-2px); filter:drop-shadow(0 0 8px rgba(255,120,30,.7))}
+  .tabbar a:active svg{transform:scale(.86)}
+  header.top nav, #proj .ptop nav{display:none!important}
+  #homeFoot{bottom:calc(84px + env(safe-area-inset-bottom))!important}
+  #proj .pw{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+  body.wallpage .tabbar{background:rgba(8,7,6,.55)}
+  .lb-open .tabbar{display:none}
+  .cshare{display:inline-flex}
+}
+.cshare{display:none; align-items:center; gap:8px; padding:12px 18px; border-radius:99px; background:rgba(7,9,11,.45); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.28); color:#fff; font:500 13px var(--f-display); letter-spacing:.06em; text-transform:uppercase}
+.cshare svg{width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2}
+
+/* Tablets held sideways (touch, no stone wall): same ember look and cards as phones, two columns */
+@media (hover:none) and (min-width:761px) and (max-width:1366px) and (orientation:landscape){
+  body.on-about:not(.wallpage) #proj::before, body.on-contact:not(.wallpage) #proj::before{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:radial-gradient(70% 50% at 85% -5%, rgba(255,110,30,.24), transparent 70%), radial-gradient(60% 45% at 0% 105%, rgba(255,70,20,.15), transparent 70%), #07090B}
+  body:not(.wallpage) #proj h1.ah{background:linear-gradient(90deg,#FF4D1A,#FF9A3C 55%,#FFD58A); -webkit-background-clip:text; background-clip:text; color:transparent}
+  body:not(.wallpage) #proj h1.ah em{background:none; -webkit-text-fill-color:transparent}
+  body:not(.wallpage) .abar{display:none!important}
+  body:not(.wallpage) .agrid2{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)!important; gap:48px!important; align-items:center}
+  body:not(.wallpage) .aphoto2{border:0!important; border-radius:18px!important; box-shadow:0 24px 50px -20px rgba(0,0,0,.9), 0 0 0 1px rgba(255,140,60,.12)}
+  body:not(.wallpage) #aBio p{font-size:15px!important; line-height:1.65!important}
+  body:not(.wallpage) .crows{display:grid; gap:10px; border:0!important} body:not(.wallpage) .crows li{border:0!important}
+  body:not(.wallpage) #proj .crows a{display:grid!important; grid-template-columns:40px 1fr!important; gap:14px!important; align-items:center; padding:12px 14px!important; border-radius:14px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.06); font-family:var(--f-display); font-weight:500; font-size:16px!important}
+  body:not(.wallpage) #proj .crows .lab, body:not(.wallpage) #proj .crows .ar{display:none!important}
+  body:not(.wallpage) #proj .crows .ic{width:40px!important; height:40px!important; border-radius:12px!important; background:rgba(255,120,40,.12)!important; color:#FF9A3C!important}
+  body:not(.wallpage) #proj .crows a:active{background:rgba(255,110,30,.14); border-color:rgba(255,140,60,.45); box-shadow:0 0 24px rgba(255,100,30,.25)}
+  body:not(.wallpage) .cform2 input, body:not(.wallpage) .cform2 textarea{border-radius:12px!important; background:rgba(255,255,255,.04)!important; border-color:rgba(255,255,255,.08)!important; font-size:16px!important}
+  body:not(.wallpage) .csend{border-radius:14px!important}
+}
+
+/* Phones + portrait tablets: real stone behind About/Contact, content carved into it as niches */
+@media (max-width:760px), (hover:none) and (max-width:1100px) and (orientation:portrait){
+  body.on-about #proj::before, body.on-contact #proj::before{
+    background:linear-gradient(180deg, rgba(7,9,11,.35), rgba(7,9,11,.62) 40%, rgba(7,9,11,.8)), radial-gradient(90% 45% at 85% -5%, rgba(255,110,30,.22), transparent 70%), url(media/stone-phone.webp) center top/cover no-repeat, #07090B}
+  .niche, .aphoto2, #aBio, .crows, .cform2{position:relative}
+  #aBio, .crows, .cform2{padding:20px 18px 22px!important; border-radius:6px; background:rgba(4,5,7,.62);
+    box-shadow:inset 0 14px 26px -8px rgba(0,0,0,.95), inset 0 -2px 0 rgba(255,255,255,.03), inset 1px 0 0 rgba(0,0,0,.6), inset -1px 0 0 rgba(0,0,0,.6)}
+  #aBio::after, .crows::after, .cform2::after{content:""; position:absolute; left:-8px; right:-8px; bottom:-12px; height:12px; border-radius:2px;
+    background:linear-gradient(180deg, #4a4f58, #2a2e35 55%, #15171b); box-shadow:0 8px 14px -4px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.12)}
+  .aphoto2{box-shadow:0 0 0 10px rgba(4,5,7,.6), 0 0 0 11px rgba(255,255,255,.04), 0 24px 40px -10px rgba(0,0,0,.95)!important; border-radius:6px!important; margin-left:10px; margin-right:10px; width:calc(100% - 20px)!important}
+  .aphoto2::after{content:""; position:absolute; left:-18px; right:-18px; bottom:-22px; height:12px; border-radius:2px; background:linear-gradient(180deg, #4a4f58, #2a2e35 55%, #15171b); box-shadow:0 8px 14px -4px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.12)}
+  #aBio{margin-top:44px!important} .crows{margin-bottom:8px} .cform2{margin-top:8px}
+  #proj .crows a{background:rgba(255,255,255,.025)!important}
+}
 </style>
 </head>
 <body>
@@ -562,6 +646,7 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
 
 <canvas id="wall" aria-hidden="true"></canvas>
 <canvas id="flame" aria-hidden="true"></canvas>
+<button type="button" class="skip" id="skip">Skip to content</button>
 <a id="wallLink" href="#reel" aria-label="Watch the demo reel"></a>
 
 <div id="page">
@@ -575,7 +660,7 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
     <div class="track" id="track"></div>
   </section>
 
-  <footer class="wrap" id="homeFoot"><a class="cta" href="#contact">Let’s create something together</a><span class="soc" data-soc></span></footer>
+  <footer class="wrap" id="homeFoot"><a class="cta" href="#contact">Let’s create something together</a><span class="hfr"><a href="#legal" class="flegal">Legal</a><span class="soc" data-soc></span></span></footer>
 </div>
 
 
@@ -623,6 +708,36 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
         </form>
       </div>
     </main>
+    <main class="view" id="vLegal">
+      <article class="legal">
+        <h1 tabindex="-1">Legal</h1>
+        <p class="lupd">Last updated: 17 November 2026</p>
+        <nav class="ltoc" aria-label="On this page"><a data-jump="l-notice">Legal notice</a><a data-jump="l-ip">Intellectual property</a><a data-jump="l-privacy">Privacy</a><a data-jump="l-cookies">Cookies</a><a data-jump="l-access">Accessibility</a></nav>
+        <section id="l-notice"><h2>Legal notice</h2>
+          <p>In compliance with Article 10 of Spanish Law 34/2002 on Information Society Services and Electronic Commerce (LSSI-CE), the owner of this website is:</p>
+          <dl class="lid"><dt>Owner</dt><dd>Fernando Cuen Pérez (“Evokai”)</dd><!--NIF--><!--ADDR--><dt>Location</dt><dd>Madrid, Spain</dd><dt>Email</dt><dd><a href="mailto:evokaidesign@gmail.com">evokaidesign@gmail.com</a></dd><dt>Phone</dt><dd><a href="tel:+34619002857">+34 619 00 28 57</a></dd></dl>
+          <p>This website is a personal portfolio presenting the design, animation and motion work of its owner. Using the site means accepting these terms. The owner may update the content and these terms at any time.</p>
+        </section>
+        <section id="l-ip"><h2>Intellectual property</h2>
+          <p>All work shown on this site — films, animations, illustrations, designs, photographs, texts, the Evokai name and logo — is © Fernando Cuen Pérez unless stated otherwise, and may not be copied, reproduced, distributed or used to train AI models without written permission.</p>
+          <p>Collaborative projects are shown with credit to everyone involved. Music, brands and other third-party material that appear in the work belong to their respective owners and are used for portfolio purposes only. If you believe something here infringes your rights, write to the email above and it will be reviewed promptly.</p>
+        </section>
+        <section id="l-privacy"><h2>Privacy</h2>
+          <p>This site does not ask you to create an account and does not collect personal data on its own. The contact form does not send anything to a server: it opens your own email app with your message already written, and you decide whether to send it.</p>
+          <p>If you write to Evokai, your name, email address and message are used only to reply to you and to discuss the project or role you mention (legal basis: your consent and pre-contractual steps, Art. 6.1.a and 6.1.b GDPR). They are not shared with third parties or used for marketing, and are kept only as long as the conversation needs them.</p>
+          <p>You can ask to access, correct or delete your data, or object to its use, by writing to the email above. You can also complain to the Spanish Data Protection Agency (<a href="https://www.aepd.es" target="_blank" rel="noopener">aepd.es</a>).</p>
+          <p>The site is hosted on Cloudflare Pages, which processes technical data such as IP addresses to deliver and protect the site.</p>
+        </section>
+        <section id="l-cookies"><h2>Cookies</h2>
+          <p>Evokai does not use its own cookies, analytics or advertising trackers.</p>
+          <p>Project pages show films from YouTube in its privacy-enhanced mode (youtube-nocookie.com). When those videos load or play, YouTube (Google) may store or read information on your device under its own policy: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>. Your browser lets you block or delete this storage at any time.</p>
+        </section>
+        <section id="l-access"><h2>Accessibility</h2>
+          <p>This site aims to meet WCAG 2.2 level AA. Every page can be used with a keyboard, images have text descriptions, links and buttons are labelled for screen readers, and animations, auto-scrolling and background films stop when your device is set to reduce motion.</p>
+          <p>Some films and visual effects are artistic by nature. If anything is hard to use or you need content in another format, write to the email above and it will be fixed or sent to you.</p>
+        </section>
+      </article>
+    </main>
 
     <div class="abarfoot" id="aFoot">
       <span class="af-links" data-links></span>
@@ -632,10 +747,17 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
 
     <footer class="pfoot" id="pfoot">
       <a class="talk cta" href="#contact">Let’s create something together</a>
-      <div class="fbar"><span id="fLeft">© Evokai 2026</span><span class="soc" data-soc></span><button type="button" id="pTop">Back to top ↑</button></div>
+      <div class="fbar"><span id="fLeft">© Evokai 2026 · <a href="#legal" class="flegal">Legal</a></span><span class="soc" data-soc></span><button type="button" id="pTop">Back to top ↑</button></div>
     </footer>
   </div>
 </div>
+<nav class="tabbar" aria-label="Main">
+  <a href="#" data-tab="home"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Work</span></a>
+  <a href="#reel" data-tab="reel"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z" fill="currentColor" stroke="none"/></svg><span>Reel</span></a>
+  <a href="#about" data-tab="about"><svg viewBox="0 0 24 24"><circle cx="11" cy="7" r="3"/><path d="M15.5 4.5l1.6-2.2M16 11c-1 4-1.2 7-1 10M8.5 21c.5-3.5 1-6 3.5-9.5"/><path d="M18.6 1.6l.4 1.3 1.3.4-1.3.4-.4 1.3-.4-1.3-1.3-.4 1.3-.4z" fill="currentColor"/></svg><span>About</span></a>
+  <a href="#contact" data-tab="contact"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H9l-5 4z" stroke-linejoin="round"/></svg><span>Contact</span></a>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="lb" role="dialog" aria-modal="true" aria-label="Image viewer" hidden><img id="lbImg" alt=""><button type="button" class="lbb" id="lbPrev" aria-label="Previous">←</button><button type="button" class="lbb" id="lbNext" aria-label="Next">→</button><button type="button" class="lbx" id="lbClose" aria-label="Close">Close ✕</button><span id="lbN"></span></div>
 <div id="veil"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -666,7 +788,7 @@ document.querySelectorAll('.tset[aria-hidden] a').forEach(a => a.tabIndex = -1);
 const jobs = []; let done = 0;
 const step = () => { done++; const pct = Math.round(done / jobs.length * 100); $('#barFill').style.width = pct + '%'; $('#pct').textContent = `Loading · ${pct}%`; };
 const loadImg = src => new Promise(r => { const i = new Image(); i.onload = i.onerror = () => { step(); r(i); }; i.src = src; });
-const loadVid = v => new Promise(r => { const d = () => { step(); r(); }; v.preload = 'metadata'; v.addEventListener('loadedmetadata', d, { once: true }); v.addEventListener('error', d, { once: true }); setTimeout(d, 2500); });
+const loadVid = v => new Promise(r => { let once = false; const d = () => { if (once) return; once = true; step(); r(); }; v.preload = 'metadata'; v.addEventListener('loadedmetadata', d, { once: true }); v.addEventListener('error', d, { once: true }); setTimeout(d, 2500); });
 jobs.push(loadImg('media/stone.webp')); jobs.push(loadImg('media/logo.png')); P.filter(p => !p.soon).forEach(p => jobs.push(loadImg(`media/${p.slug}/poster.jpg`)));
 document.querySelectorAll('.tset:first-child .tile video').forEach(v => jobs.push(loadVid(v)));
 jobs.push(document.fonts ? document.fonts.ready.then(step) : Promise.resolve(step()));
@@ -702,7 +824,7 @@ function autoTick(t){
 }
 const holdAuto = ms => autoHold = performance.now() + ms;
 addEventListener('wheel', e => { if (touch || view !== 'home') return; let d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX; if (e.deltaMode === 1) d *= 40; if (e.deltaMode === 2) d *= innerWidth; if (!easing) target = track.scrollLeft; scrollTo_(target + d); holdAuto(1500); e.preventDefault(); }, { passive: false });
-if (!touch) track.style.scrollSnapType = 'none';
+track.style.scrollSnapType = 'none';
 let dragX = null, dragS = 0, moved = false;
 track.addEventListener('pointerdown', e => { holdAuto(2500); if (touch) return; dragX = e.clientX; dragS = track.scrollLeft; moved = false; });
 track.addEventListener('pointermove', e => { if (dragX === null) return; const d = e.clientX - dragX; if (Math.abs(d) > 6) { moved = true; track.setPointerCapture(e.pointerId); } track.scrollLeft = dragS - d; });
@@ -712,13 +834,13 @@ track.addEventListener('click', e => { if (moved) { e.preventDefault(); moved = 
 let hov = null; const play = t => { if (!t) return; t.classList.add('playing'); const v = t.querySelector('video'); v.preload = 'auto'; v.play().catch(() => {}); }, stop = t => { if (!t) return; t.classList.remove('playing'); t.querySelector('video').pause(); };
 const setHov = t => { if (t === hov) return; stop(hov); hov = t; play(t); };
 if (!touch) { track.addEventListener('pointerover', e => { inTrack = true; setHov(e.target.closest('a.tile')); }); track.addEventListener('pointerleave', () => { inTrack = false; setHov(null); }); }
-else { const pick = () => { let best = null, bd = 1e9; track.querySelectorAll('a.tile').forEach(t => { const r = t.getBoundingClientRect(); const d = Math.abs(r.left + r.width / 2 - innerWidth / 2); if (d < bd) { bd = d; best = t; } }); setHov(best); }; track.addEventListener('scroll', pick, { passive: true }); setTimeout(pick, 1800); track.addEventListener('touchstart', () => holdAuto(3000), { passive: true }); track.addEventListener('touchmove', () => holdAuto(3000), { passive: true }); }
+else { const pick = () => { let best = null, bd = 1e9; track.querySelectorAll('a.tile').forEach(t => { const r = t.getBoundingClientRect(); const d = Math.abs(r.left + r.width / 2 - innerWidth / 2); if (d < bd) { bd = d; best = t; } }); setHov(best); }; track.addEventListener('scroll', pick, { passive: true }); setTimeout(pick, 1800); track.addEventListener('touchstart', e => { holdAuto(3500); const t = e.target.closest('a.tile'); if (t) setHov(t); }, { passive: true }); track.addEventListener('contextmenu', e => e.preventDefault()); track.addEventListener('touchmove', () => holdAuto(3000), { passive: true }); }
 startLoop();
 
 
 /* ---------- Project pages + routing (#slug) ---------- */
 const bySlug = Object.fromEntries(P.map(p => [p.slug, p]));
-const PAGES = ['about', 'contact'];
+const PAGES = ['about', 'contact', 'legal'];
 const cur = () => { const s = decodeURIComponent(location.hash.slice(1)); if (PAGES.includes(s)) return s; return bySlug[s] && !bySlug[s].soon ? s : null; };
 
 /* Video player. On the live site it embeds YouTube in place (youtube-nocookie, starts on click).
@@ -791,9 +913,9 @@ function mountHero(p){
   const h = $('#cHero'), STILLS = ['infinite-chances','sans-chaines','combustion','evokai','ummy'];
   const poster = `media/${p.slug}/${STILLS.includes(p.slug) ? 'still' : 'poster'}.jpg`;
   h.classList.remove('playing');
-  h.innerHTML = `<div class="cbg"><img src="${poster}" alt="" width="1920" height="1080">${PREVIEW ? '' : `<iframe src="${ytBg(p.yt)}" title="" tabindex="-1" aria-hidden="true" allow="autoplay; encrypted-media"></iframe>`}</div>
+  h.innerHTML = `<div class="cbg"><img src="${poster}" alt="" width="1920" height="1080">${PREVIEW || reduce ? '' : `<iframe src="${ytBg(p.yt)}" title="" tabindex="-1" aria-hidden="true" allow="autoplay; encrypted-media"></iframe>`}</div>
     <div class="cshade"></div>
-    <div class="cover"><h1 class="ctitle">${esc(p.title)}</h1><div class="cact"><button type="button" class="cplay"><svg viewBox="0 0 24 24"><path d="M6.5 4.5l13 7.5-13 7.5z"/></svg>${p.reel ? 'Play reel' : 'Play film'}</button><span class="cscroll"><i></i>Scroll</span></div></div>
+    <div class="cover"><h1 class="ctitle">${esc(p.title)}</h1><div class="cact"><button type="button" class="cplay"><svg viewBox="0 0 24 24"><path d="M6.5 4.5l13 7.5-13 7.5z"/></svg>${p.reel ? 'Play reel' : 'Play film'}</button>${navigator.share ? '<button type="button" class="cshare"><svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Share</button>' : ''}<span class="cscroll"><i></i>Scroll</span></div></div>
     <button type="button" class="cclose" aria-label="Close film">×</button>`;
   const f = h.querySelector('.cbg iframe'); if (f) f.addEventListener('load', () => setTimeout(() => f.classList.add('on'), 1400), { once: true });
   h.querySelector('.cplay').addEventListener('click', () => {
@@ -802,6 +924,7 @@ function mountHero(p){
     h.querySelector('.cbg').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${p.yt}?autoplay=1&rel=0&playsinline=1&color=white" title="${esc(p.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
   });
   h.querySelector('.cclose').addEventListener('click', () => mountHero(p));
+  const sh = h.querySelector('.cshare'); if (sh) sh.addEventListener('click', () => navigator.share({ title: `${p.title} — Evokai`, text: `${p.title} by Fernando Cuen Pérez (Evokai)`, url: location.href }).catch(() => {}));
 }
 function renderProject(slug){
   const p = bySlug[slug], g = (GAL[slug] || []).slice();
@@ -863,25 +986,29 @@ function renderProject(slug){
 })();
 function show(slug){
   $('#pHero').innerHTML = ''; $('#cHero').innerHTML = ''; // stops any film that was playing
-  document.body.classList.toggle('on-contact', slug === 'contact'); document.body.classList.toggle('on-about', slug === 'about');
+  document.body.classList.toggle('on-contact', slug === 'contact'); document.body.classList.toggle('on-about', slug === 'about'); document.body.classList.toggle('on-legal', slug === 'legal');
   if (slug) {
-    const v = PAGES.includes(slug) ? (slug === 'about' ? 'vAbout' : 'vContact') : 'vProject';
+    const v = PAGES.includes(slug) ? ({ about: 'vAbout', contact: 'vContact', legal: 'vLegal' })[slug] : 'vProject';
     document.querySelectorAll('#proj .view').forEach(m => m.classList.toggle('on', m.id === v));
     document.body.classList.toggle('case', v === 'vProject');
-    if (v === 'vProject') renderProject(slug); else document.title = (slug === 'about' ? 'About' : 'Contact') + ' — Evokai';
+    if (v === 'vProject') renderProject(slug); else document.title = ({ about: 'About', contact: 'Contact', legal: 'Legal' })[slug] + ' — Evokai';
     view = slug; document.body.classList.add('in-proj'); stop(hov); hov = null;
   } else { view = 'home'; document.body.classList.remove('in-proj', 'case'); document.title = 'Evokai Portfolio'; }
   const here = slug && !PAGES.includes(slug) && !(bySlug[slug] || {}).reel ? 'home' : (slug || 'home');
   document.querySelectorAll('[data-nav]').forEach(n => n.dataset.nav === here ? n.setAttribute('aria-current', 'page') : n.removeAttribute('aria-current'));
   window.scrollTo(0, 0); if (window.caseScrollRun) requestAnimationFrame(window.caseScrollRun);
   if (window.setWallPage) window.setWallPage(slug || 'home');
+  const tab = !slug ? 'home' : slug === 'reel' ? 'reel' : slug === 'about' ? 'about' : slug === 'contact' ? 'contact' : (PAGES.includes(slug) ? '' : 'home');
+  document.querySelectorAll('.tabbar a').forEach(a => a.dataset.tab === tab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  // screen readers / keyboard: land on the new page's heading
+  if (slug && document.activeElement && document.activeElement !== document.body) { const h = document.querySelector('#proj .view.on h1, #proj .view.on .ctitle'); if (h) { if (!h.hasAttribute('tabindex')) h.tabIndex = -1; h.focus({ preventScroll: true }); } }
 }
 
 /* ---------- Image viewer: click any still or presentation page ---------- */
 const lb = $('#lb'), lbImg = $('#lbImg'); let lbSet = [], lbI = 0;
 const lbShow = i => { lbI = (i + lbSet.length) % lbSet.length; const im = lbSet[lbI]; lbImg.src = im.currentSrc || im.src; lbImg.alt = im.alt; $('#lbN').textContent = `${lbI + 1} / ${lbSet.length}`; };
-const lbOpen = (set, i) => { lbSet = set; lb.hidden = false; lbShow(i); document.documentElement.style.overflow = 'hidden'; $('#lbClose').focus({ preventScroll: true }); };
-const lbClose = () => { lb.hidden = true; lbImg.removeAttribute('src'); document.documentElement.style.overflow = ''; };
+const lbOpen = (set, i) => { lbSet = set; lb.hidden = false; document.body.classList.add('lb-open'); lbShow(i); document.documentElement.style.overflow = 'hidden'; $('#lbClose').focus({ preventScroll: true }); };
+const lbClose = () => { lb.hidden = true; document.body.classList.remove('lb-open'); lbImg.removeAttribute('src'); document.documentElement.style.overflow = ''; };
 document.addEventListener('click', e => {
   const im = e.target.closest('.pgal3 img, #pStrip img, #cFlow figure img'); if (!im || view === 'home') return;
   const set = im.closest('#cFlow') ? [...document.querySelectorAll('#cFlow figure img')] : [...im.parentElement.querySelectorAll('img')]; lbOpen(set, set.indexOf(im));
@@ -933,6 +1060,15 @@ $('#cForm').addEventListener('submit', e => {
 
 function route(instant){ const s = cur(); if ((s || 'home') === view) return; if (instant) show(s); else transition(() => show(s)); }
 addEventListener('hashchange', () => route(false));
+document.addEventListener('click', e => { const j = e.target.closest('[data-jump]'); if (j) { e.preventDefault(); const t = document.getElementById(j.dataset.jump); if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); } });
+$('#skip').addEventListener('click', () => { const t = view === 'home' ? document.querySelector('#track .tset:first-child a.tile') : document.querySelector('#proj .view.on h1, #proj .view.on .ctitle, #proj .view.on .cplay'); if (t) { if (!t.hasAttribute('tabindex')) t.tabIndex = -1; t.focus(); } });
+const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.k); toast.k = setTimeout(() => t.classList.remove('on'), 1800); };
+document.querySelectorAll('.tabbar a').forEach(a => a.addEventListener('click', () => { if (navigator.vibrate) navigator.vibrate(8); }));
+/* swipe left / right on a project page to go to the next / previous project (touch only) */
+if (touch) { let sx = 0, sy = 0, st = 0, ok = false;
+  addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = performance.now(); ok = e.touches.length === 1 && !e.target.closest('.strip, .track, iframe, input, textarea, #lb, .cfx'); }, { passive: true });
+  addEventListener('touchend', e => { if (!ok || !document.body.classList.contains('case') || !$('#lb').hidden) return; const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 80 && Math.abs(dy) < 45 && performance.now() - st < 650) { const live = P.filter(q => !q.soon), i = live.findIndex(q => q.slug === view); if (i < 0) return; const n = live[(i + (dx < 0 ? 1 : -1) + live.length) % live.length]; if (navigator.vibrate) navigator.vibrate(6); location.hash = n.slug; } }, { passive: true }); }
 /* Internal links carry no href, so browsers don't pop up the link address at the bottom of the screen */
 function stripHref(root){ (root.querySelectorAll ? root : document).querySelectorAll('a[href^="#"]').forEach(a => { a.dataset.href = a.getAttribute('href'); a.removeAttribute('href'); if (!a.hasAttribute('tabindex')) a.tabIndex = a.closest('.tset[aria-hidden]') ? -1 : 0; a.setAttribute('role', 'link'); }); }
 stripHref(document);
@@ -985,7 +1121,7 @@ const WL = {
   about:   { A: [205, 205, 860, 420], B: [228, 522, 1250, 975], C: [200, 1104, 1495, 1242], D: [1842, 210, 2438, 968], F: [1400, 320, 1720, 1040] },
   contact: { A: [205, 232, 1140, 622], T: [160, 770, 1145, 1255], B: [1490, 336, 2400, 1166] }
 };
-const wallCapable = () => !touch && !reduce && innerWidth >= 900 && innerWidth / innerHeight >= 1.35;
+const wallCapable = () => !reduce && innerWidth >= 900 && innerWidth / innerHeight >= 1.35;
 function setWallPage(slug){
   const want = (slug === 'about' || slug === 'contact') && wallCapable() ? slug : null;
   wallOn = !!want; document.body.classList.toggle('wallpage', wallOn);
@@ -996,7 +1132,9 @@ function setWallPage(slug){
   size();
 }
 window.setWallPage = setWallPage;
-$('#figGlow').addEventListener('pointerenter', () => $('#figGlow').classList.add('on')); $('#figGlow').addEventListener('pointerleave', () => $('#figGlow').classList.remove('on'));
+$('#figGlow').addEventListener('pointerenter', () => $('#figGlow').classList.add('on'));
+if (touch) { $('#figGlow').addEventListener('touchstart', () => { const f = $('#figGlow'); f.classList.add('on'); clearTimeout(f._k); f._k = setTimeout(() => f.classList.remove('on'), 2600); }, { passive: true });
+  document.querySelectorAll('#vContact .crows a').forEach(a => a.addEventListener('touchstart', () => { a.classList.add('tap'); clearTimeout(a._k); a._k = setTimeout(() => a.classList.remove('tap'), 1400); }, { passive: true })); } $('#figGlow').addEventListener('pointerleave', () => $('#figGlow').classList.remove('on'));
 function place(el, r, pad){ if (!el || !cover) return; const s = cover.w / 2576, p = pad || [0, 0, 0, 0];
   el.classList.add('wp'); Object.assign(el.style, { left: (cover.x + (r[0] + p[3]) * s) + 'px', top: (cover.y + (r[1] + p[0]) * s) + 'px', width: ((r[2] - r[0] - p[1] - p[3]) * s) + 'px', height: ((r[3] - r[1] - p[0] - p[2]) * s) + 'px' }); }
 function fit(el, max, min, test){ let f = max; el.style.setProperty('--fs', f + 'px'); while (f > min && test()) { f -= .5; el.style.setProperty('--fs', f + 'px'); } }
@@ -1031,11 +1169,11 @@ function size(){
     layoutWall(); return;
   }
   phoneFade = null;
-  if (stone.naturalWidth && W < 760) {
+  if (stone.naturalWidth && (W < 760 || (touch && H > W))) {
     const iw = stone.naturalWidth, k = iw / 2576, S = Math.min(W * .94 / 1690, H * .5 / 900), s = S / k;
-    const wordY = H * .27; phoneWordY = wordY;
+    const wordY = H * (H < 760 ? .2 : .25); phoneWordY = wordY;
     cover = { w: iw * s, h: stone.naturalHeight * s, x: W / 2 - 1315 * S, y: wordY - 510 * S };
-    const tW = Math.min(W * .8, 420), tH = tW * 9 / 16, top = Math.max(cover.y + 1150 * S, wordY + 140);
+    const top = Math.max(cover.y + 1150 * S, wordY + 120), room = H - top - (touch && W <= 1100 ? 84 : 0) - 120 - 40, tW = Math.max(200, Math.min(W * .8, 420, room * 16 / 9)), tH = tW * 9 / 16;
     const r = document.documentElement.style;
     r.setProperty('--nL', '0px'); r.setProperty('--nW', W + 'px'); r.setProperty('--nT', top + 'px'); r.setProperty('--tW', tW + 'px'); r.setProperty('--capGap', '12px');
     phoneFade = { t0: cover.y, t1: cover.y + 140 * S, b0: cover.y + 1000 * S, b1: cover.y + 1300 * S };
@@ -1062,7 +1200,12 @@ const mouse = { x: innerWidth / 2, y: innerHeight * .4, on: false, overRail: fal
 const head = { x: mouse.x, y: mouse.y, vx: 0, vy: 0 }, prev = { x: mouse.x, y: mouse.y };
 const zoneBoxes = () => { const inP = document.body.classList.contains('in-proj'); return [navBox(), (document.querySelector(inP ? '#proj .fbar .soc' : '#homeFoot .soc') || { getBoundingClientRect: () => null }).getBoundingClientRect()].filter(r => r && r.width); };
 const navBox = () => { const n = document.querySelector(document.body.classList.contains('in-proj') ? '#proj .ptop nav' : 'header.top nav'); return n ? n.getBoundingClientRect() : null; };
-addEventListener('pointerdown', e => { if (touch) { mouse.x = e.clientX; mouse.y = e.clientY; mouse.on = true; mouse.t = performance.now(); } }, { passive: true });
+const touchAt = (x, y, start) => { mouse.x = x; mouse.y = y; mouse.on = true; mouse.t = performance.now(); if (start) { head.x = prev.x = x; head.y = prev.y = y; head.vx = head.vy = 0; } };
+if (touch) {
+  addEventListener('touchstart', e => { const t = e.touches[0]; touchAt(t.clientX, t.clientY, true); mouse.overRail = !!(e.target.closest && e.target.closest('.rail')); mouse.tiny = !!(e.target.closest && e.target.closest('.tabbar, header, nav, button, input, textarea')); }, { passive: true });
+  addEventListener('touchmove', e => { const t = e.touches[0]; touchAt(t.clientX, t.clientY, false); }, { passive: true });
+  const off = () => { mouse.on = false; }; addEventListener('touchend', off, { passive: true }); addEventListener('touchcancel', off, { passive: true });
+}
 addEventListener('pointermove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.on = true; mouse.t = performance.now(); mouse.overRail = !!e.target.closest('.rail'); const nearNav = zoneBoxes().some(nr => nr && e.clientX > nr.left - 28 && e.clientX < nr.right + 28 && e.clientY > nr.top - 22 && e.clientY < nr.bottom + 22);
   mouse.tiny = nearNav || (!mouse.overRail && !!e.target.closest('a:not(#wallLink), button, input, textarea, label, #figGlow')); document.body.classList.toggle('on-wall', e.target.id === 'wallLink'); }, { passive: true });
 document.addEventListener('mouseleave', () => mouse.on = false);
@@ -1174,7 +1317,7 @@ function drawWall(now, dt){
   for (let i = 0; i < pts.length; i += 4) { const p = pts[i]; blob(p.x, p.y, 110 + p.r * 5, .045 * (1 - p.age)); }
   for (const e of embers) blob(e.x, e.y, 80 + e.r * 10, .12 * (1 - e.age));
   if (touch) { if (phoneFade) { blob(W * (.5 + .36 * Math.sin(t * .42)), phoneWordY + 20 * Math.sin(t * .7), 230 * fl, .3); if (mouse.on && now - (mouse.t || 0) < 1400) blob(mouse.x, mouse.y, 200 * fl, .28 * (1 - (now - mouse.t) / 1400)); } else blob(W * .5, H * .3, 320 * fl, .22); }
-  if (wallOn) document.querySelectorAll('#figGlow, #vContact .crows a').forEach(el => { const on = el.matches(':hover') || el.matches(':focus-visible'); el._g = (el._g || 0) + ((on ? 1 : 0) - (el._g || 0)) * .12; if (el._g < .01) return;
+  if (wallOn) document.querySelectorAll('#figGlow, #vContact .crows a').forEach(el => { const on = el.matches(':hover') || el.matches(':focus-visible') || el.matches(':active') || el.classList.contains('on') || el.classList.contains('tap'); el._g = (el._g || 0) + ((on ? 1 : 0) - (el._g || 0)) * .12; if (el._g < .01) return;
     const r = el.getBoundingClientRect(), big = el.id === 'figGlow';
     if (big) { blob(r.left + r.width * .55, r.top + r.height * .45, r.height * .75 * fl, .2 * el._g); blob(r.left + r.width * .7, r.top + r.height * .1, r.width * .9, .16 * el._g); }
     else { const ic = el.querySelector('.ic').getBoundingClientRect(); blob(ic.left + ic.width / 2, ic.top + ic.height / 2, 120 * fl, .22 * el._g); blob(r.left + r.width * .5, r.top + r.height * .5, r.width * .45, .1 * el._g); } });
@@ -1189,9 +1332,9 @@ function drawWall(now, dt){
     let g = wx.createLinearGradient(0, f.b0 * d, 0, f.b1 * d); g.addColorStop(0, 'rgba(7,9,11,0)'); g.addColorStop(1, '#07090B'); wx.fillStyle = g; wx.fillRect(0, f.b0 * d, wall.width, (f.b1 - f.b0) * d + 1); wx.fillStyle = '#07090B'; wx.fillRect(0, f.b1 * d, wall.width, wall.height);
     g = wx.createLinearGradient(0, f.t0 * d, 0, f.t1 * d); g.addColorStop(0, '#07090B'); g.addColorStop(1, 'rgba(7,9,11,0)'); wx.fillStyle = g; wx.fillRect(0, f.t0 * d, wall.width, (f.t1 - f.t0) * d); wx.fillStyle = '#07090B'; wx.fillRect(0, 0, wall.width, Math.max(0, f.t0 * d)); }
 }
-if (!touch && !reduce) initFire();
+if (!reduce) initFire();
 let last = performance.now(), useTimer = false, alive = false;
-function frame(){ const now = performance.now(), dt = Math.min(.05, (now - last) / 1000); last = now; if (view !== 'home' && !wallOn) { if (!useTimer) requestAnimationFrame(frame); return; } if (!reduce) { if (!touch) updateFire(now, dt); drawWall(now, dt); if (!touch) renderFire(now); } else if (cover) { wx.save(); wx.scale(dpr, dpr); wx.globalAlpha = .35; wx.fillStyle = '#07090B'; wx.fillRect(0, 0, W, H); wx.drawImage(stone, cover.x, cover.y, cover.w, cover.h); wx.restore(); } if (!useTimer) requestAnimationFrame(frame); }
+function frame(){ const now = performance.now(), dt = Math.min(.05, (now - last) / 1000); last = now; if (view !== 'home' && !wallOn) { if (!useTimer) requestAnimationFrame(frame); return; } if (!reduce) { updateFire(now, dt); drawWall(now, dt); renderFire(now); } else if (cover) { wx.save(); wx.scale(dpr, dpr); wx.globalAlpha = .35; wx.fillStyle = '#07090B'; wx.fillRect(0, 0, W, H); wx.drawImage(stone, cover.x, cover.y, cover.w, cover.h); wx.restore(); } if (!useTimer) requestAnimationFrame(frame); }
 requestAnimationFrame(() => { alive = true; frame(); });
 setTimeout(() => { if (!alive) { useTimer = true; setInterval(frame, 33); } }, 400);
 })();
