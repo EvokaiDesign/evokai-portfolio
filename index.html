@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Evokai Portfolio</title>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 <meta name="description" content="Evokai — portfolio of Fernando Cuen Pérez, visual designer and animator in Madrid: motion design, 3D, animation and branding.">
 <meta property="og:title" content="Evokai Portfolio">
 <meta property="og:description" content="Motion design, 3D, animation and branding by Fernando Cuen Pérez.">
@@ -544,6 +545,16 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
   .chero h1.ctitle{font-size:clamp(44px,13vw,64px)}
   .cintro{padding-top:70px}
 }
+
+/* 3D pieces beside the pictures */
+.cb.hasfx{display:flex; align-items:center; gap:clamp(20px,3vw,56px)}
+.cb.hasfx figure{flex:none; margin:0!important}
+.cfx{position:relative; flex:1; min-width:0; aspect-ratio:1/1; max-height:72vh; align-self:center}
+.cfx:not([data-fx=figure]){-webkit-mask:linear-gradient(transparent, #000 14%, #000 86%, transparent); mask:linear-gradient(transparent, #000 14%, #000 86%, transparent)}
+.cfx canvas, .cfx .fxvid{position:absolute; inset:0; width:100%!important; height:100%!important; display:block}
+.cfx .fxvid{object-fit:contain; mix-blend-mode:screen}
+.cb-fxonly{display:flex; justify-content:center} .cb-fxonly .cfx{flex:none; width:min(46vw,620px)}
+@media (max-width:760px){ .cfx, .cb-fxonly{display:none!important} .cb.hasfx{display:block} }
 </style>
 </head>
 <body>
@@ -790,12 +801,22 @@ function renderProject(slug){
     else if (k === 'pair') blocks.push(`<section class="cb cb-pair">${fig(g.shift())}${fig(g.shift())}</section>`);
     else blocks.push(`<section class="cb cb-${k}">${fig(g.shift())}</section>`);
   }
+  // 3D pieces in the empty space beside the smaller pictures (desktop only)
+  const FX = { 'infinite-chances': ['ball'], 'sans-chaines': ['chain'], 'combustion': ['embers'], 'ummy': ['jelly'], 'hero': ['knot'], 'evokai': ['figure', 'coins'], 'reel': ['figure', 'coinsViolet'] };
+  const fxList = innerWidth > 760 ? (FX[slug] || []).slice() : [];
+  if (fxList.length) {
+    blocks = blocks.map(b => { if (!fxList.length) return b; const m = b.match(/^<section class="cb (cb-left|cb-right|cb-plL|cb-plR)">/); if (!m) return b;
+      const fx = `<div class="cfx" data-fx="${fxList.shift()}" aria-hidden="true"></div>`;
+      return /cb-left|cb-plL/.test(m[1]) ? b.replace('<section class="cb ' + m[1] + '">', '<section class="cb ' + m[1] + ' hasfx">').replace(/<\/section>$/, fx + '</section>') : b.replace('<section class="cb ' + m[1] + '">', '<section class="cb ' + m[1] + ' hasfx">' + fx); });
+    let at = 2; while (fxList.length) { blocks.splice(Math.min(at, blocks.length), 0, `<section class="cb cb-fxonly"><div class="cfx" data-fx="${fxList.shift()}" aria-hidden="true"></div></section>`); at += 3; }
+  }
   // weave the remaining text and the quote between the pictures
   const out = []; let ti = 0;
   blocks.forEach((b, i) => { out.push(b); if (i % 2 === 1 && ti < rest.length) out.push(`<section class="ctext"><p class="tx">${esc(rest[ti++])}</p></section>`); if (quote && i === Math.min(2, blocks.length - 1)) { out.push(`<section class="cquote"><blockquote class="tx">“${esc(quote.q)}”</blockquote><cite class="tx">${esc(quote.who)}</cite></section>`); quote = null; } });
   while (ti < rest.length) out.push(`<section class="ctext"><p class="tx">${esc(rest[ti++])}</p></section>`);
   if (quote) out.push(`<section class="cquote"><blockquote class="tx">“${esc(quote.q)}”</blockquote><cite class="tx">${esc(quote.who)}</cite></section>`);
   $('#cFlow').innerHTML = out.join('');
+  if (innerWidth > 760 && $('#cFlow .cfx')) import('./fx.js').then(m => { window.fxMod = m; if (view === 'project' || document.body.classList.contains('case')) m.mount($('#cFlow')); }).catch(e => console.warn(e));
   $('#pDeck').hidden = !p.deck; $('#pStrip').scrollLeft = 0;
   $('#pStrip').innerHTML = p.deck ? Array.from({ length: p.deck }, (_, k) => `<img loading="lazy" draggable="false" src="media/${slug}/book/${String(k + 1).padStart(2, '0')}.webp" width="1600" height="899" alt="${esc(p.title)} presentation, page ${k + 1}">`).join('') : '';
   if (p.deck) deckCount();
@@ -822,7 +843,7 @@ function renderProject(slug){
   window.caseScrollRun = run;
 })();
 function show(slug){
-  $('#pHero').innerHTML = ''; $('#cHero').innerHTML = ''; // stops any film that was playing
+  $('#pHero').innerHTML = ''; $('#cHero').innerHTML = ''; if (window.fxMod) window.fxMod.dispose(); // stops any film that was playing
   document.body.classList.toggle('on-contact', slug === 'contact'); document.body.classList.toggle('on-about', slug === 'about');
   if (slug) {
     const v = PAGES.includes(slug) ? (slug === 'about' ? 'vAbout' : 'vContact') : 'vProject';
