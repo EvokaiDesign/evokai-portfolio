@@ -652,6 +652,20 @@ body.on-legal #proj .pfoot .talk{display:none}
 .clegal:hover, .clegal:focus-visible{color:var(--ember2)}
 body.wallpage .clegal{position:fixed; right:clamp(18px,1.6vw,28px); bottom:18px; margin:0; z-index:4}
 @media (hover:none) and (max-width:1100px){ .clegal{margin-bottom:8px} body.wallpage .clegal{bottom:calc(86px + env(safe-area-inset-bottom))} }
+
+html.lock, html.lock body{overflow:hidden; height:100%; overscroll-behavior:none}
+html{overscroll-behavior-y:none}
+@media (hover:none){ .track{touch-action:pan-x} }
+/* phones + tablets without the wall: links look engraved like the computer version and glow when touched */
+@media (max-width:760px), (hover:none) and (max-width:1366px){
+  body:not(.wallpage) #proj .crows a{background:none!important; border:0!important; box-shadow:none!important; padding:10px 4px!important; grid-template-columns:30px 1fr!important; gap:14px!important; font-family:var(--f-display); font-weight:500; font-size:17px!important;
+    color:rgba(196,205,218,.66); text-shadow:0 1px 0 rgba(255,255,255,.10), 0 -1px 1px rgba(0,0,0,.95); transition:color .3s, text-shadow .3s}
+  body:not(.wallpage) #proj .crows .ic{width:30px!important; height:30px!important; background:none!important; color:inherit!important; filter:drop-shadow(0 1px 0 rgba(255,255,255,.1)) drop-shadow(0 -1px 1px rgba(0,0,0,.95)); transition:color .3s, filter .3s}
+  body:not(.wallpage) #proj .crows .ic svg{width:20px!important; height:20px!important; stroke-width:1.7}
+  body:not(.wallpage) #proj .crows a:active, body:not(.wallpage) #proj .crows a.tap, body:not(.wallpage) #proj .crows a:focus-visible{color:#FFB347; background:none!important; border:0!important; box-shadow:none!important; text-shadow:0 0 14px rgba(255,120,30,.75), 0 0 34px rgba(255,80,20,.45)}
+  body:not(.wallpage) #proj .crows a:active .ic, body:not(.wallpage) #proj .crows a.tap .ic, body:not(.wallpage) #proj .crows a:focus-visible .ic{color:#FF9A3C; filter:drop-shadow(0 0 8px rgba(255,120,30,.9)) drop-shadow(0 0 20px rgba(255,80,20,.6))}
+  body:not(.wallpage) .crows{gap:4px!important}
+}
 </style>
 </head>
 <body>
@@ -1017,6 +1031,7 @@ function show(slug){
   document.querySelectorAll('[data-nav]').forEach(n => n.dataset.nav === here ? n.setAttribute('aria-current', 'page') : n.removeAttribute('aria-current'));
   window.scrollTo(0, 0); if (window.caseScrollRun) requestAnimationFrame(window.caseScrollRun);
   if (window.setWallPage) window.setWallPage(slug || 'home');
+  document.documentElement.classList.toggle('lock', !slug);
   const tab = !slug ? 'home' : slug === 'reel' ? 'reel' : slug === 'about' ? 'about' : slug === 'contact' ? 'contact' : (PAGES.includes(slug) ? '' : 'home');
   document.querySelectorAll('.tabbar a').forEach(a => a.dataset.tab === tab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
   // screen readers / keyboard: land on the new page's heading
@@ -1195,15 +1210,16 @@ function size(){
     if (!stone.naturalWidth) return;
     // portrait wall (1193 x 2576): EVOKAI carved at y 420-640, first ledge top at 1865, its front face ends at 1945
     const iw = stone.naturalWidth, ih = stone.naturalHeight, k = iw / 1193, s = Math.max(W / iw, H / ih), u = k * s;
-    const tab = touch && W <= 1100 ? 84 : 16, foot = H < 760 ? 30 : 92, cap = 44;
-    let y = Math.min(0, Math.max(H - ih * s, 84 - 420 * u)); // EVOKAI just under the logo bar
+    const tab = touch && W <= 1100 ? 84 : 16, foot = H < 760 ? 30 : 92, cap = 44, gap = 96;
+    const tH = Math.max(110, Math.min(Math.min(W * .8, 460) * 9 / 16, (H - 70 - tab - foot - cap - gap - 230 * u) * .9)), tW = tH * 16 / 9;
+    const group = 230 * u + gap + tH + cap, freeTop = 70, freeBot = H - tab - foot;
+    const wordTop = freeTop + Math.max(0, (freeBot - freeTop - group) / 2);
+    let y = Math.min(0, Math.max(H - ih * s, wordTop - 420 * u));
     cover = { w: iw * s, h: ih * s, x: (W - iw * s) / 2, y };
-    const wordBottom = y + 650 * u, ledge = y + 1865 * u, face = y + 1945 * u, onLedge = face + cap + foot + tab <= H;
-    const bottom = onLedge ? ledge : H - tab - foot - cap - 12;           // tiles sit on the ledge when the screen is tall enough
-    const tH = Math.max(110, Math.min(bottom - wordBottom - 70, Math.min(W * .8, 460) * 9 / 16)), tW = tH * 16 / 9;
+    const wordBottom = y + 650 * u, top = wordBottom + gap;
     const r = document.documentElement.style;
-    r.setProperty('--nL', '0px'); r.setProperty('--nW', W + 'px'); r.setProperty('--nT', (bottom - tH - 1) + 'px'); r.setProperty('--tW', tW + 'px'); r.setProperty('--capGap', (onLedge ? (face - ledge) + 10 : 12) + 'px');
-    r.setProperty('--hintY', ((wordBottom + bottom - tH) / 2) + 'px');
+    r.setProperty('--nL', '0px'); r.setProperty('--nW', W + 'px'); r.setProperty('--nT', top + 'px'); r.setProperty('--tW', tW + 'px'); r.setProperty('--capGap', '12px');
+    r.setProperty('--hintY', (wordBottom + gap / 2) + 'px');
     phoneFade = null; phoneWordY = y + 515 * u;
     return;
   }
@@ -1229,6 +1245,7 @@ const head = { x: mouse.x, y: mouse.y, vx: 0, vy: 0 }, prev = { x: mouse.x, y: m
 const zoneBoxes = () => { const inP = document.body.classList.contains('in-proj'); return [navBox(), (document.querySelector(inP ? '#proj .fbar .soc' : '#homeFoot .soc') || { getBoundingClientRect: () => null }).getBoundingClientRect()].filter(r => r && r.width); };
 const navBox = () => { const n = document.querySelector(document.body.classList.contains('in-proj') ? '#proj .ptop nav' : 'header.top nav'); return n ? n.getBoundingClientRect() : null; };
 const touchAt = (x, y, start) => { mouse.x = x; mouse.y = y; mouse.on = true; mouse.t = performance.now(); if (start) { head.x = prev.x = x; head.y = prev.y = y; head.vx = head.vy = 0; } };
+addEventListener('touchmove', e => { if ((view === 'home' || wallOn) && e.cancelable && !e.target.closest('.track, input, textarea, .strip')) e.preventDefault(); }, { passive: false });
 let dragDone = false; try { dragDone = sessionStorage.getItem('evkDrag') === '1'; } catch (e) {}
 if (touch && !reduce && !dragDone) setTimeout(() => { if (!dragDone) document.body.classList.add('show-hint'); }, 900);
 let dragStart = null;
