@@ -439,7 +439,7 @@ body.case #proj .deck{margin-top:clamp(90px,14vh,170px)}
 #cGrad{position:fixed; inset:0; z-index:-1; display:none; overflow:hidden; background:var(--g0,#07090B); --k:0}
 body.case #cGrad{display:block}
 #cGrad i{position:absolute; width:var(--s,70vmax); height:var(--s,70vmax); left:var(--x); top:var(--y); border-radius:50%; background:radial-gradient(circle at 50% 50%, var(--c) 0%, color-mix(in srgb, var(--c) 55%, transparent) 32%, transparent 68%); filter:blur(30px); transform:translate(-50%,-50%) translate(calc(var(--dx,0) * var(--k) * 1vw), calc(var(--dy,0) * var(--k) * 1vh)) scale(var(--sc,1)); animation:gdrift var(--t,26s) ease-in-out infinite alternate}
-#cGrad i:nth-child(2){animation-delay:-7s} #cGrad i:nth-child(3){animation-delay:-13s} #cGrad i:nth-child(4){animation-delay:-19s}
+#cGrad i:nth-child(2){animation-delay:-7s} #cGrad i:nth-child(3){animation-delay:-13s} #cGrad i:nth-child(4){animation-delay:-19s} #cGrad i:nth-child(5){animation-delay:-4s} #cGrad i:nth-child(6){animation-delay:-16s}
 @keyframes gdrift{from{scale:1; rotate:0deg} to{scale:1.18; rotate:14deg}}
 #cGrad::after{content:""; position:absolute; inset:-50%; opacity:.22; mix-blend-mode:overlay; pointer-events:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.2 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
 body.case #proj{background:transparent}
@@ -573,7 +573,7 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
 
 
 <div id="proj" aria-live="polite">
-  <div id="cGrad" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div id="cGrad" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="pw">
     <header class="ptop">
       <a class="mark" href="#" aria-label="Evokai, home"><img src="media/logo-small.png" alt="Evokai" width="480" height="130"></a>
@@ -737,15 +737,15 @@ let io = null;
 /* per-project gradients, picked from each film's own colours: base + four light sources (colour, x, y, size, drift) */
 const GRAD = {
   'reel':             ['#0d0310', [['#7b2cff','18%','30%','80vmax',-20,30], ['#ff4fa0','85%','20%','70vmax',15,40], ['#ff9a3c','60%','85%','75vmax',-25,-30], ['#2a0a6b','30%','80%','60vmax',20,-20]]],
-  'infinite-chances': ['#020a02', [['#1fae3c','15%','25%','85vmax',25,35], ['#b6ff4a','88%','55%','60vmax',-20,30], ['#0b4a16','55%','90%','80vmax',-15,-35], ['#ff2f7a','92%','12%','40vmax',-25,25]]],
+  'infinite-chances': ['#000000', [['#00FF08','22%','35%','70vmax',25,35], ['#007A04','80%','70%','85vmax',-20,-30], ['#00C406','90%','15%','55vmax',-25,30], ['#8DFF91','35%','88%','45vmax',20,-25], ['#FFFFFF','78%','42%','22vmax',-15,20], ['#003302','5%','5%','60vmax',15,25]]],
   'sans-chaines':     ['#f1dcc3', [['#fcd2a2','20%','20%','80vmax',20,30], ['#2a1d16','90%','40%','70vmax',-25,30], ['#c98a52','40%','90%','80vmax',15,-30], ['#fff3e0','70%','10%','60vmax',-15,25]]],
-  'combustion':       ['#080100', [['#ff4d1a','20%','30%','85vmax',25,30], ['#ffb340','85%','70%','70vmax',-20,-30], ['#ffe9c2','70%','15%','45vmax',-30,30], ['#7c1d0a','30%','90%','70vmax',20,-20]]],
+  'combustion': ['#5a2380', [['#FF0040','18%','30%','80vmax',25,30], ['#FC8134','80%','22%','70vmax',-20,30], ['#FCB045','60%','78%','75vmax',-25,-30], ['#833AB4','10%','90%','70vmax',20,-25], ['#FCDA45','92%','75%','50vmax',-15,-20], ['#FFF0AD','70%','8%','34vmax',-20,25]]],
   'ummy':             ['#f3eff4', [['#ffb3c7','15%','25%','75vmax',25,30], ['#9fd2ff','85%','30%','70vmax',-25,30], ['#b4f2c4','30%','90%','70vmax',20,-30], ['#ffe08a','85%','85%','60vmax',-20,-25]]],
   'hero':             ['#07020b', [['#b8607e','20%','25%','80vmax',25,30], ['#5a2790','85%','40%','75vmax',-20,30], ['#1b3a9a','35%','90%','70vmax',20,-30], ['#ff7a4d','90%','90%','50vmax',-25,-20]]],
-  'evokai':           ['#0b0806', [['#ff5a1f','20%','30%','80vmax',25,30], ['#ffcf7a','85%','25%','55vmax',-25,30], ['#6b2a14','40%','90%','80vmax',15,-30], ['#ebe4d2','92%','85%','40vmax',-20,-25]]]
+  'evokai': ['#000000', [['#FF0000','20%','70%','75vmax',25,-30], ['#FF6A00','75%','30%','75vmax',-20,30], ['#FCB634','50%','10%','55vmax',-25,25], ['#8a0000','5%','10%','70vmax',20,25], ['#FCEF3D','90%','85%','40vmax',-15,-20], ['#FFF894','40%','45%','24vmax',15,-15]]],
 };
 function setGrad(slug){ const g = GRAD[slug] || GRAD.evokai, el = $('#cGrad'); el.style.setProperty('--g0', g[0]); el.style.setProperty('--k', 0);
-  [...el.children].forEach((b, i) => { const [c, x, y, sz, dx, dy] = g[1][i]; Object.assign(b.style, { '--c': c }); b.style.setProperty('--c', c); b.style.setProperty('--x', x); b.style.setProperty('--y', y); b.style.setProperty('--s', sz); b.style.setProperty('--dx', dx); b.style.setProperty('--dy', dy); b.style.setProperty('--t', (22 + i * 5) + 's'); }); }
+  [...el.children].forEach((b, i) => { b.style.display = g[1][i] ? '' : 'none'; if (!g[1][i]) return; const [c, x, y, sz, dx, dy] = g[1][i]; Object.assign(b.style, { '--c': c }); b.style.setProperty('--c', c); b.style.setProperty('--x', x); b.style.setProperty('--y', y); b.style.setProperty('--s', sz); b.style.setProperty('--dx', dx); b.style.setProperty('--dy', dy); b.style.setProperty('--t', (22 + i * 5) + 's'); }); }
 function ytBg(id){ return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=0`; }
 function mountHero(p){
   const h = $('#cHero'), STILLS = ['infinite-chances','sans-chaines','combustion','evokai','ummy'];
