@@ -854,7 +854,7 @@ Promise.race([Promise.all([Promise.all(jobs), floor]), cap]).then(async () => {
   $('#pct').hidden = true; $('.bar').classList.add('done'); const ch = $('#lChoice'); ch.hidden = false; requestAnimationFrame(() => ch.classList.add('in'));
   const pick = await new Promise(r => ch.querySelectorAll('button').forEach(b => b.addEventListener('click', () => r(b.dataset.sound === '1'), { once: true })));
   heroWantsSound = pick; soundOK.done = true;
-  route(true); toReel(); $('#loader').classList.add('out'); document.body.classList.add('ready'); preloadFx();
+  armWall(); route(true); toReel(); $('#loader').classList.add('out'); document.body.classList.add('ready'); preloadFx();
 });
 
 /* ---------- Carousel ---------- */
@@ -1073,7 +1073,7 @@ function show(slug){
   document.querySelectorAll('[data-nav]').forEach(n => n.dataset.nav === here ? n.setAttribute('aria-current', 'page') : n.removeAttribute('aria-current'));
   window.scrollTo(0, 0); if (window.caseScrollRun) requestAnimationFrame(window.caseScrollRun);
   if (window.setWallPage) window.setWallPage(slug || 'home');
-  document.documentElement.classList.toggle('lock', !slug);
+  document.documentElement.classList.toggle('lock', !slug); if (!slug && typeof armWall === 'function') armWall();
   const tab = !slug ? 'home' : slug === 'reel' ? 'reel' : slug === 'about' ? 'about' : slug === 'contact' ? 'contact' : (PAGES.includes(slug) ? '' : 'home');
   document.querySelectorAll('.tabbar a').forEach(a => a.dataset.tab === tab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
   // screen readers / keyboard: land on the new page's heading
@@ -1150,7 +1150,9 @@ function stripHref(root){ (root.querySelectorAll ? root : document).querySelecto
 stripHref(document);
 new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; if (n.matches && n.matches('a[href^="#"]')) stripHref(n.parentNode); else stripHref(n); }))).observe(document.body, { childList: true, subtree: true });
 const goHref = h => { if (h === '#') { if (location.hash) location.hash = ''; else route(false); } else if (location.hash !== h) location.hash = h; };
-document.addEventListener('click', e => { const a = e.target.closest('a[data-href]'); if (!a || e.defaultPrevented) return; e.preventDefault(); goHref(a.dataset.href); });
+/* the stone wall only becomes a link to the reel a moment after the homepage appears, so quick double-clicks don't jump there by accident */
+let wallReadyAt = Infinity; const armWall = () => { wallReadyAt = performance.now() + 1600; };
+document.addEventListener('click', e => { const a = e.target.closest('a[data-href]'); if (!a || e.defaultPrevented) return; e.preventDefault(); if (a.id === 'wallLink' && (performance.now() < wallReadyAt || e.detail > 1)) return; goHref(a.dataset.href); });
 document.addEventListener('keydown', e => { if (e.key !== 'Enter') return; const a = e.target.closest && e.target.closest('a[data-href]'); if (a) { e.preventDefault(); goHref(a.dataset.href); } });
 // in-page links that are not routes
 document.addEventListener('click', e => { const a = e.target.closest('[data-to]'); if (a) { e.preventDefault(); $('#' + a.dataset.to).scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); } });
