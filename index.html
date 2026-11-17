@@ -676,6 +676,16 @@ html{overscroll-behavior-y:none}
 .chero .csound .x{display:none} .chero.muted .csound .x{display:block} .chero.muted .csound .w{display:none}
 .chero.playing .csound{display:none}
 @media (hover:none) and (max-width:1100px){ .csound{top:74px} }
+
+#loader .lchoice{display:flex; gap:14px; opacity:0; transform:translateY(8px); transition:opacity .5s ease, transform .6s cubic-bezier(.2,.8,.2,1)}
+#loader .lchoice.in{opacity:1; transform:none}
+#loader .lchoice[hidden]{display:none}
+#loader .lchoice button{display:inline-flex; align-items:center; gap:10px; padding:13px 22px; border-radius:99px; border:1px solid rgba(236,230,216,.22); background:rgba(255,255,255,.03); color:var(--fg); font:500 13px var(--f-display); letter-spacing:.14em; text-transform:uppercase; cursor:pointer; transition:background .3s, border-color .3s, color .3s, transform .4s cubic-bezier(.2,.8,.2,1)}
+#loader .lchoice button:hover, #loader .lchoice button:focus-visible{background:linear-gradient(135deg,#FF4D1A,#FF9A3C); border-color:transparent; color:#fff; transform:translateY(-2px)}
+#loader .lchoice svg{width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+#loader .lchoice svg path:first-child{fill:currentColor}
+#loader .bar.done{opacity:.4}
+#loader, #loader *{cursor:auto} #loader button{cursor:pointer}
 </style>
 </head>
 <body>
@@ -683,6 +693,7 @@ html{overscroll-behavior-y:none}
   <img class="logo" src="media/logo.png" alt="Evokai" width="1600" height="432">
   <div class="bar"><i id="barFill"></i></div>
   <div class="pct" id="pct">Loading · 0%</div>
+  <div class="lchoice" id="lChoice" hidden><button type="button" data-sound="1"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>Sound on</button><button type="button" data-sound="0"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>Sound off</button></div>
 </div>
 
 <canvas id="wall" aria-hidden="true"></canvas>
@@ -838,7 +849,12 @@ jobs.push(document.fonts ? document.fonts.ready.then(step) : Promise.resolve(ste
 const floor = new Promise(r => setTimeout(r, reduce ? 0 : 1500)), cap = new Promise(r => setTimeout(r, 6000));
 Promise.race([Promise.all([Promise.all(jobs), floor]), cap]).then(async () => {
   $('#barFill').style.width = '100%'; $('#pct').textContent = 'Loading · 100%';
-  await new Promise(r => setTimeout(r, 250)); route(true); toReel(); $('#loader').classList.add('out'); document.body.classList.add('ready'); preloadFx();
+  await new Promise(r => setTimeout(r, 250));
+  // the visitor chooses sound on/off — this tap is also what lets the browser play the films with sound
+  $('#pct').hidden = true; $('.bar').classList.add('done'); const ch = $('#lChoice'); ch.hidden = false; requestAnimationFrame(() => ch.classList.add('in'));
+  const pick = await new Promise(r => ch.querySelectorAll('button').forEach(b => b.addEventListener('click', () => r(b.dataset.sound === '1'), { once: true })));
+  heroWantsSound = pick; soundOK.done = true;
+  route(true); toReel(); $('#loader').classList.add('out'); document.body.classList.add('ready'); preloadFx();
 });
 
 /* ---------- Carousel ---------- */
