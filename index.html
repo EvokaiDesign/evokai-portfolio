@@ -544,6 +544,13 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
   .chero h1.ctitle{font-size:clamp(44px,13vw,64px)}
   .cintro{padding-top:70px}
 }
+
+/* Combustion: flame ribbons with a purple glow; Evokai: Fernando's fire streaks, scrolled with the page */
+#cGrad .gfl, #cGrad .gimg{display:none; position:absolute; pointer-events:none}
+#cGrad.flames .gfl{display:block; inset:0; width:100%; height:100%; filter:blur(3.5px)}
+#cGrad.flames::before{content:""; position:absolute; inset:0; background:radial-gradient(38% 55% at 50% 48%, rgba(226,214,255,.30), rgba(120,70,190,.10) 55%, transparent 80%)}
+#cGrad.img .gimg{display:block; left:0; top:0; width:100vw; height:calc(100vw * var(--ar, 4.65)); background:var(--src) top center/100% 100% no-repeat; will-change:transform;
+  transform:translateY(calc(var(--k) * (100vh - 100vw * var(--ar, 4.65))))}
 </style>
 </head>
 <body>
@@ -573,7 +580,7 @@ body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:
 
 
 <div id="proj" aria-live="polite">
-  <div id="cGrad" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div id="cGrad" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><canvas class="gfl"></canvas><div class="gimg"></div></div>
   <div class="pw">
     <header class="ptop">
       <a class="mark" href="#" aria-label="Evokai, home"><img src="media/logo-small.png" alt="Evokai" width="480" height="130"></a>
@@ -737,15 +744,48 @@ let io = null;
 /* per-project gradients, picked from each film's own colours: base + four light sources (colour, x, y, size, drift) */
 const GRAD = {
   'reel':             ['#0d0310', [['#7b2cff','18%','30%','80vmax',-20,30], ['#ff4fa0','85%','20%','70vmax',15,40], ['#ff9a3c','60%','85%','75vmax',-25,-30], ['#2a0a6b','30%','80%','60vmax',20,-20]]],
-  'infinite-chances': ['#000000', [['#00FF08','22%','35%','70vmax',25,35], ['#007A04','80%','70%','85vmax',-20,-30], ['#00C406','90%','15%','55vmax',-25,30], ['#8DFF91','35%','88%','45vmax',20,-25], ['#FFFFFF','78%','42%','22vmax',-15,20], ['#003302','5%','5%','60vmax',15,25]]],
+  'infinite-chances': ['#000000', [['#00FF08','22%','35%','70vmax',25,35], ['#007A04','80%','70%','85vmax',-20,-30], ['#00C406','90%','15%','55vmax',-25,30], ['#8DFF91','35%','88%','40vmax',20,-25], ['#003302','5%','5%','60vmax',15,25]]],
   'sans-chaines':     ['#f1dcc3', [['#fcd2a2','20%','20%','80vmax',20,30], ['#2a1d16','90%','40%','70vmax',-25,30], ['#c98a52','40%','90%','80vmax',15,-30], ['#fff3e0','70%','10%','60vmax',-15,25]]],
-  'combustion': ['#5a2380', [['#FF0040','18%','30%','80vmax',25,30], ['#FC8134','80%','22%','70vmax',-20,30], ['#FCB045','60%','78%','75vmax',-25,-30], ['#833AB4','10%','90%','70vmax',20,-25], ['#FCDA45','92%','75%','50vmax',-15,-20], ['#FFF0AD','70%','8%','34vmax',-20,25]]],
+  'combustion': ['#0b0a0e', [], 'flames'],
   'ummy':             ['#f3eff4', [['#ffb3c7','15%','25%','75vmax',25,30], ['#9fd2ff','85%','30%','70vmax',-25,30], ['#b4f2c4','30%','90%','70vmax',20,-30], ['#ffe08a','85%','85%','60vmax',-20,-25]]],
   'hero':             ['#07020b', [['#b8607e','20%','25%','80vmax',25,30], ['#5a2790','85%','40%','75vmax',-20,30], ['#1b3a9a','35%','90%','70vmax',20,-30], ['#ff7a4d','90%','90%','50vmax',-25,-20]]],
-  'evokai': ['#000000', [['#FF0000','20%','70%','75vmax',25,-30], ['#FF6A00','75%','30%','75vmax',-20,30], ['#FCB634','50%','10%','55vmax',-25,25], ['#8a0000','5%','10%','70vmax',20,25], ['#FCEF3D','90%','85%','40vmax',-15,-20], ['#FFF894','40%','45%','24vmax',15,-15]]],
+  'evokai': ['#050302', [], 'img:media/evokai/bg-streaks2.webp'],
 };
 function setGrad(slug){ const g = GRAD[slug] || GRAD.evokai, el = $('#cGrad'); el.style.setProperty('--g0', g[0]); el.style.setProperty('--k', 0);
-  [...el.children].forEach((b, i) => { b.style.display = g[1][i] ? '' : 'none'; if (!g[1][i]) return; const [c, x, y, sz, dx, dy] = g[1][i]; Object.assign(b.style, { '--c': c }); b.style.setProperty('--c', c); b.style.setProperty('--x', x); b.style.setProperty('--y', y); b.style.setProperty('--s', sz); b.style.setProperty('--dx', dx); b.style.setProperty('--dy', dy); b.style.setProperty('--t', (22 + i * 5) + 's'); }); }
+  const mode = g[2] || ''; el.classList.toggle('flames', mode === 'flames'); el.classList.toggle('img', mode.startsWith('img:'));
+  if (mode.startsWith('img:')) { const src = mode.slice(4); el.style.setProperty('--src', `url(${src})`); const im = new Image(); im.onload = () => el.style.setProperty('--ar', (im.naturalHeight / im.naturalWidth).toFixed(4)); im.src = src; }
+  flames(mode === 'flames');
+  [...el.querySelectorAll('i')].forEach((b, i) => { b.style.display = g[1][i] ? '' : 'none'; if (!g[1][i]) return; const [c, x, y, sz, dx, dy] = g[1][i]; Object.assign(b.style, { '--c': c }); b.style.setProperty('--c', c); b.style.setProperty('--x', x); b.style.setProperty('--y', y); b.style.setProperty('--s', sz); b.style.setProperty('--dx', dx); b.style.setProperty('--dy', dy); b.style.setProperty('--t', (22 + i * 5) + 's'); }); }
+/* Combustion: soft wavy flame ribbons (orange core, purple glow), drawn small and scaled up so they stay soft */
+let flameRaf = 0;
+function flames(on){
+  cancelAnimationFrame(flameRaf); flameRaf = 0; if (!on) return;
+  const c = $('#cGrad .gfl'), x = c.getContext('2d'), Q = 3;
+  const lines = Array.from({ length: 6 }, (_, i) => ({ x: .08 + i * .168 + (Math.random() - .5) * .07, ph: Math.random() * 9, sp: .5 + Math.random() * .5, a: .018 + Math.random() * .016, w: .8 + Math.random() * .5 }));
+  const draw = now => {
+    if (!document.body.classList.contains('case') || !$('#cGrad').classList.contains('flames')) { flameRaf = 0; return; }
+    const W = Math.ceil(innerWidth / Q), H = Math.ceil(innerHeight / Q); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    const t = now / 1000, k = parseFloat($('#cGrad').style.getPropertyValue('--k')) || 0;
+    x.clearRect(0, 0, W, H); x.lineCap = 'round'; x.lineJoin = 'round';
+    lines.forEach((l, i) => {
+      const pts = [];
+      for (let s = 0; s <= 90; s++) { const v = s / 90, y = v * H * 1.12 - H * .06, up = v * 6.28 + t * l.sp; // the shape licks upwards over time
+        const dx = Math.sin(up * 1.1 + l.ph + k * 5) * l.a * 1.4 + Math.sin(up * 2.9 + l.ph * 2) * l.a * .7 + Math.sin(up * 6.3 + l.ph * 3) * .007 + Math.sin(up * 13.7 + i) * .004 + Math.sin(up * 27 + l.ph) * .0025;
+        pts.push([(l.x + dx) * W, y]); }
+      const path = () => { x.beginPath(); pts.forEach((p, j) => j ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])); };
+      const fl = .78 + .22 * Math.sin(t * 1.7 + l.ph) * Math.sin(t * .9 + i);
+      path();
+      x.strokeStyle = `rgba(90,30,180,${.12 * fl})`; x.lineWidth = 42 * l.w; x.stroke();
+      x.strokeStyle = `rgba(110,40,200,${.22 * fl})`; x.lineWidth = 26 * l.w; x.stroke();
+      x.strokeStyle = `rgba(150,60,230,${.32 * fl})`; x.lineWidth = 13 * l.w; x.stroke();
+      x.strokeStyle = `rgba(255,90,20,${.75 * fl})`; x.lineWidth = 6 * l.w; x.stroke();
+      x.strokeStyle = `rgba(255,170,30,${.95 * fl})`; x.lineWidth = 3.6 * l.w; x.stroke();
+      x.strokeStyle = `rgba(255,225,120,${.8 * fl})`; x.lineWidth = 1.3 * l.w; x.stroke();
+    });
+    flameRaf = requestAnimationFrame(draw);
+  };
+  flameRaf = requestAnimationFrame(draw);
+}
 function ytBg(id){ return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=0`; }
 function mountHero(p){
   const h = $('#cHero'), STILLS = ['infinite-chances','sans-chaines','combustion','evokai','ummy'];
