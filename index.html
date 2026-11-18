@@ -1218,14 +1218,17 @@ $('#figGlow').addEventListener('pointerenter', () => $('#figGlow').classList.add
 // easter egg: clicking the glowing figure plays an impact-frame sequence (12 fps), lined up with the carved figure
 const EGG = Array.from({ length: 29 }, (_, i) => `media/egg/f${String(i).padStart(2, '0')}.webp`); let eggImgs = null, eggOn = false;
 const eggLoad = () => eggImgs || (eggImgs = EGG.map(src => { const im = new Image(); im.decoding = 'async'; im.src = src; return im; }));
-$('#figGlow').addEventListener('pointerenter', eggLoad, { once: true });
+let eggSnd = null; const eggAudio = () => eggSnd || (eggSnd = Object.assign(new Audio('media/egg/impact.mp3'), { preload: 'auto' }));
+$('#figGlow').addEventListener('pointerenter', () => { eggLoad(); eggAudio(); }, { once: true });
 $('#figGlow').addEventListener('click', async () => {
   if (eggOn || !cover) return; eggOn = true; const ims = eggLoad();
   await Promise.all(ims.map(im => im.decode ? im.decode().catch(() => {}) : null));
   const box = document.createElement('div'); box.id = 'egg'; box.setAttribute('aria-hidden', 'true');
   const img = document.createElement('img'); img.alt = ''; Object.assign(img.style, { left: cover.x + 'px', top: cover.y + 'px', width: cover.w + 'px', height: cover.h + 'px' });
   box.appendChild(img); document.body.appendChild(box);
-  let i = 0; const step = () => { img.src = ims[i++].src; if (i < ims.length) setTimeout(step, 1000 / 12); else setTimeout(() => { box.style.transition = 'opacity .8s ease'; box.style.opacity = '0'; setTimeout(() => { box.remove(); eggOn = false; }, 850); }, 1000 / 12); }; step(); // last frame stays, then fades back to the page
+  const snd = heroWantsSound ? eggAudio() : null; // respects the Sound on / off choice from the loading screen
+  if (snd) { snd.pause(); snd.currentTime = 0; snd.volume = .85; snd.play().catch(() => {}); } // starts with the first frame
+  let i = 0; const step = () => { img.src = ims[i++].src; if (i < ims.length) setTimeout(step, 1000 / 12); else setTimeout(() => { box.style.transition = 'opacity .8s ease'; box.style.opacity = '0'; if (snd) { const v0 = snd.volume, t0 = performance.now(); const fade = () => { const k = Math.min(1, (performance.now() - t0) / 900); snd.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else snd.pause(); }; requestAnimationFrame(fade); } setTimeout(() => { box.remove(); eggOn = false; }, 850); }, 1000 / 12); }; step(); // last frame stays, then fades back to the page
 });
 if (touch) { $('#figGlow').addEventListener('touchstart', () => { const f = $('#figGlow'); f.classList.add('on'); clearTimeout(f._k); f._k = setTimeout(() => f.classList.remove('on'), 2600); }, { passive: true });
   document.querySelectorAll('#vContact .crows a').forEach(a => a.addEventListener('touchstart', () => { a.classList.add('tap'); clearTimeout(a._k); a._k = setTimeout(() => a.classList.remove('tap'), 1400); }, { passive: true }));
