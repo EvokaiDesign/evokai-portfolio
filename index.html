@@ -1224,7 +1224,7 @@ $('#figGlow').addEventListener('click', async () => {
   const box = document.createElement('div'); box.id = 'egg'; box.setAttribute('aria-hidden', 'true');
   const img = document.createElement('img'); img.alt = ''; Object.assign(img.style, { left: cover.x + 'px', top: cover.y + 'px', width: cover.w + 'px', height: cover.h + 'px' });
   box.appendChild(img); document.body.appendChild(box);
-  let i = 0; const step = () => { if (i >= ims.length) { box.remove(); eggOn = false; return; } img.src = ims[i++].src; setTimeout(step, 1000 / 12); }; step();
+  let i = 0; const step = () => { if (i >= ims.length) { box.remove(); eggOn = false; return; } img.src = ims[i++].src; setTimeout(step, (i === ims.length ? 2 : 1) * 1000 / 12); }; step(); // last frame holds for 2 frames
 });
 if (touch) { $('#figGlow').addEventListener('touchstart', () => { const f = $('#figGlow'); f.classList.add('on'); clearTimeout(f._k); f._k = setTimeout(() => f.classList.remove('on'), 2600); }, { passive: true });
   document.querySelectorAll('#vContact .crows a').forEach(a => a.addEventListener('touchstart', () => { a.classList.add('tap'); clearTimeout(a._k); a._k = setTimeout(() => a.classList.remove('tap'), 1400); }, { passive: true }));
