@@ -482,7 +482,7 @@ body.wallpage.on-about #figGlow{display:block}
 #figGlow.on{opacity:1}
 #figGlow{cursor:pointer}
 #figGlow .egghint{position:absolute; left:46%; top:91%; transform:translate(-50%,0); white-space:nowrap; font-size:13px; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:#FFD9A8; pointer-events:none}
-#egg{position:fixed; inset:0; z-index:9000; background:#000; pointer-events:none; overflow:hidden} #egg img{position:absolute; display:block; max-width:none}
+#egg{position:fixed; inset:0; z-index:9000; background:#000; overflow:hidden; cursor:grab} #egg:active{cursor:grabbing} #egg img{position:absolute; display:block; max-width:none; -webkit-user-drag:element}
 /* Contact */
 body.wallpage .chead{display:flex; flex-direction:column; justify-content:center; padding:0 5%}
 body.wallpage #proj h1.ch{font-size:var(--fs); line-height:1.04; max-width:none; margin:0}
@@ -1228,7 +1228,14 @@ $('#figGlow').addEventListener('click', async () => {
   box.appendChild(img); document.body.appendChild(box);
   const snd = heroWantsSound ? eggAudio() : null; // respects the Sound on / off choice from the loading screen
   if (snd) { snd.pause(); snd.currentTime = 0; snd.volume = .85; snd.play().catch(() => {}); } // starts with the first frame
-  let i = 0; const step = () => { img.src = ims[i++].src; if (i < ims.length) setTimeout(step, 1000 / 12); else setTimeout(() => { box.style.transition = 'opacity .8s ease'; box.style.opacity = '0'; if (snd) { const v0 = snd.volume, t0 = performance.now(); const fade = () => { const k = Math.min(1, (performance.now() - t0) / 900); snd.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else snd.pause(); }; requestAnimationFrame(fade); } setTimeout(() => { box.remove(); eggOn = false; }, 850); }, 1000 / 12); }; step(); // last frame stays, then fades back to the page
+  // hold the mouse on a frame to freeze it; drag it to another tab to open that frame on its own
+  let i = 0, timer = 0, held = false, ending = false; img.draggable = true;
+  const end = () => { ending = true; box.style.transition = 'opacity .8s ease'; box.style.opacity = '0'; if (snd) { const v0 = snd.volume, t0 = performance.now(); const fade = () => { const k = Math.min(1, (performance.now() - t0) / 900); snd.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else snd.pause(); }; requestAnimationFrame(fade); } setTimeout(() => { box.remove(); eggOn = false; }, 850); };
+  const step = () => { if (held) return; img.src = ims[i++].src; timer = setTimeout(i < ims.length ? step : end, 1000 / 12); };
+  const hold = () => { if (ending) return; held = true; clearTimeout(timer); if (snd) snd.pause(); };
+  const release = () => { if (!held) return; held = false; if (snd && i < ims.length) snd.play().catch(() => {}); timer = setTimeout(i < ims.length ? step : end, 1000 / 12); };
+  box.addEventListener('pointerdown', hold); addEventListener('pointerup', release); img.addEventListener('dragend', release);
+  step(); // last frame stays, then fades back to the page
 });
 if (touch) { $('#figGlow').addEventListener('touchstart', () => { const f = $('#figGlow'); f.classList.add('on'); clearTimeout(f._k); f._k = setTimeout(() => f.classList.remove('on'), 2600); }, { passive: true });
   document.querySelectorAll('#vContact .crows a').forEach(a => a.addEventListener('touchstart', () => { a.classList.add('tap'); clearTimeout(a._k); a._k = setTimeout(() => a.classList.remove('tap'), 1400); }, { passive: true }));
