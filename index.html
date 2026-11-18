@@ -1215,7 +1215,7 @@ function setWallPage(slug){
 window.setWallPage = setWallPage;
 $('#figGlow').addEventListener('pointerenter', () => $('#figGlow').classList.add('on'));
 // easter egg: clicking the glowing figure plays an impact-frame sequence (12 fps), lined up with the carved figure
-const EGG = Array.from({ length: 8 }, (_, i) => `media/egg/${String(i + 1).padStart(2, '0')}.webp`); let eggImgs = null, eggOn = false;
+const EGG = Array.from({ length: 29 }, (_, i) => `media/egg/f${String(i).padStart(2, '0')}.webp`); let eggImgs = null, eggOn = false;
 const eggLoad = () => eggImgs || (eggImgs = EGG.map(src => { const im = new Image(); im.decoding = 'async'; im.src = src; return im; }));
 $('#figGlow').addEventListener('pointerenter', eggLoad, { once: true });
 $('#figGlow').addEventListener('click', async () => {
