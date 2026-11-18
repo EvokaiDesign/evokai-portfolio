@@ -1420,6 +1420,30 @@ function renderFire(now){
     g.addColorStop(0, 'rgba(255,230,150,.9)'); g.addColorStop(.4, 'rgba(255,140,40,.6)'); g.addColorStop(1, 'rgba(255,80,20,0)'); fx2.fillStyle = g; fx2.fillRect(head.x - 60, head.y - 80, 120, 120);
   }
 }
+// About: the photo's own light spilling onto the stone around it (neutral, like the photo's backdrop), so it sits in the niche instead of floating on it
+let pgC = null, pgKey = '';
+function photoGlow(){
+  const ph = document.getElementById('aPhoto'); if (!ph || !cover || !stone.complete) return null;
+  const r = ph.getBoundingClientRect(); if (!r.width) return null;
+  const key = [r.left, r.top, r.width, r.height, wall.width, wall.height, stone.src].map(v => typeof v === 'number' ? Math.round(v) : v).join(',');
+  if (key === pgKey) return pgC; pgKey = key;
+  pgC = pgC || document.createElement('canvas'); pgC.width = wall.width; pgC.height = wall.height; const g = pgC.getContext('2d'), d = dpr;
+  // 1) the stone itself, tinted toward the photo's neutral backdrop light
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, pgC.width, pgC.height);
+  g.save(); g.scale(d, d); g.drawImage(stone, cover.x, cover.y, cover.w, cover.h); g.restore();
+  g.globalCompositeOperation = 'color'; g.globalAlpha = .35; g.fillStyle = 'rgb(214,210,204)'; g.fillRect(0, 0, pgC.width, pgC.height);
+  // 2) a soft mask: strongest at the frame's edge, fading over the niche, a little more on the ledge below (light falls down)
+  const m = document.createElement('canvas'); m.width = pgC.width; m.height = pgC.height; const mx = m.getContext('2d');
+  const sp = Math.max(r.width, r.height) * .26;
+  mx.filter = `blur(${sp * .55 * d}px)`; mx.fillStyle = '#fff';
+  mx.globalAlpha = .9; mx.fillRect((r.left - sp * .3) * d, (r.top - sp * .05) * d, (r.width + sp * .6) * d, (r.height + sp * .55) * d);
+  mx.globalAlpha = .55; mx.fillRect((r.left - sp * .1) * d, (r.bottom - sp * .1) * d, (r.width + sp * .2) * d, sp * .9 * d);
+  // 3) keep only the masked stone, at spill strength (not a spotlight)
+  g.globalCompositeOperation = 'destination-in'; g.globalAlpha = 1; g.drawImage(m, 0, 0);
+  g.globalCompositeOperation = 'destination-in'; g.fillStyle = 'rgba(0,0,0,.34)'; g.fillRect(0, 0, pgC.width, pgC.height);
+  g.globalCompositeOperation = 'source-over';
+  return pgC;
+}
 function drawWall(now, dt){
   if (!cover) return;
   const t = now / 1000, tiny = mouse.tiny, small = mouse.overRail || tiny;
@@ -1448,6 +1472,7 @@ function drawWall(now, dt){
   wx.globalCompositeOperation = 'source-over'; wx.fillStyle = '#07090B'; wx.fillRect(0, 0, wall.width, wall.height);
   wx.save(); wx.scale(dpr, dpr); wx.globalAlpha = AMB; wx.drawImage(stone, cover.x, cover.y, cover.w, cover.h); wx.restore();
   wx.globalAlpha = 1; wx.globalCompositeOperation = 'lighter'; wx.drawImage(litC, 0, 0); wx.globalCompositeOperation = 'source-over';
+  if (wallKey === 'about') { const pg = photoGlow(); if (pg) { wx.globalCompositeOperation = 'lighter'; wx.drawImage(pg, 0, 0); wx.globalCompositeOperation = 'source-over'; } }
   if (phoneFade && wallKey === 'home') { const f = phoneFade, d = dpr;
     let g = wx.createLinearGradient(0, f.b0 * d, 0, f.b1 * d); g.addColorStop(0, 'rgba(7,9,11,0)'); g.addColorStop(1, '#07090B'); wx.fillStyle = g; wx.fillRect(0, f.b0 * d, wall.width, (f.b1 - f.b0) * d + 1); wx.fillStyle = '#07090B'; wx.fillRect(0, f.b1 * d, wall.width, wall.height);
     g = wx.createLinearGradient(0, f.t0 * d, 0, f.t1 * d); g.addColorStop(0, '#07090B'); g.addColorStop(1, 'rgba(7,9,11,0)'); wx.fillStyle = g; wx.fillRect(0, f.t0 * d, wall.width, (f.t1 - f.t0) * d); wx.fillStyle = '#07090B'; wx.fillRect(0, 0, wall.width, Math.max(0, f.t0 * d)); }
