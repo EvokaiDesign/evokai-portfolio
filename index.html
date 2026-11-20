@@ -1227,13 +1227,13 @@ $('#figGlow').addEventListener('click', async () => {
   const img = document.createElement('img'); img.alt = ''; Object.assign(img.style, { left: cover.x + 'px', top: cover.y + 'px', width: cover.w + 'px', height: cover.h + 'px' });
   box.appendChild(img); document.body.appendChild(box);
   const snd = heroWantsSound ? eggAudio() : null; // respects the Sound on / off choice from the loading screen
-  if (snd) { snd._run = (snd._run || 0) + 1; snd.pause(); snd.currentTime = 0; snd.volume = .85; snd.play().catch(() => {}); } // starts with the first frame
+  if (snd) { snd.pause(); snd.currentTime = 0; snd.volume = .85; snd.play().catch(() => {}); } // starts with the first frame
   // hold the mouse on a frame to freeze it; drag it to another tab to open that frame on its own
   let i = 0, timer = 0, held = false, ending = false; img.draggable = true;
-  const end = () => { ending = true; box.style.transition = 'opacity .8s ease'; box.style.opacity = '0'; if (snd) { const run = snd._run, left = ((snd.duration || 3.13) - snd.currentTime) * 1000, fadeMs = 600; setTimeout(() => { if (snd._run !== run || snd.paused) return; const v0 = snd.volume, t0 = performance.now(); const fade = () => { const k = Math.min(1, (performance.now() - t0) / fadeMs); if (snd._run !== run) return; snd.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else snd.pause(); }; requestAnimationFrame(fade); }, Math.max(0, left - fadeMs)); } /* the full clip plays out, fading in its last 0.6 s */ setTimeout(() => { box.remove(); eggOn = false; }, 850); };
-  const step = () => { if (held) return; img.src = ims[i++].src; timer = setTimeout(i < ims.length ? step : end, 1000 / 24); };
+  const end = () => { ending = true; box.style.transition = 'opacity .8s ease'; box.style.opacity = '0'; if (snd) { const v0 = snd.volume, t0 = performance.now(); const fade = () => { const k = Math.min(1, (performance.now() - t0) / 900); snd.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else snd.pause(); }; requestAnimationFrame(fade); } setTimeout(() => { box.remove(); eggOn = false; }, 850); };
+  const step = () => { if (held) return; img.src = ims[i++].src; timer = setTimeout(i < ims.length ? step : end, 1000 / 12); };
   const hold = () => { if (ending) return; held = true; clearTimeout(timer); if (snd) snd.pause(); };
-  const release = () => { if (!held) return; held = false; if (snd && i < ims.length) snd.play().catch(() => {}); timer = setTimeout(i < ims.length ? step : end, 1000 / 24); };
+  const release = () => { if (!held) return; held = false; if (snd && i < ims.length) snd.play().catch(() => {}); timer = setTimeout(i < ims.length ? step : end, 1000 / 12); };
   box.addEventListener('pointerdown', hold); addEventListener('pointerup', release); img.addEventListener('dragend', release);
   step(); // last frame stays, then fades back to the page
 });
