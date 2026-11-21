@@ -7,7 +7,21 @@
 <meta name="description" content="Evokai — portfolio of Fernando Cuen Pérez, visual designer and animator in Madrid: motion design, 3D, animation and branding.">
 <meta property="og:title" content="Evokai Portfolio">
 <meta property="og:description" content="Motion design, 3D, animation and branding by Fernando Cuen Pérez.">
-<meta property="og:image" content="https://evokai-portfolio.pages.dev/media/reel/poster.jpg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Evokai">
+<meta property="og:url" content="https://evokai-portfolio.pages.dev/">
+<meta property="og:image" content="https://evokai-portfolio.pages.dev/media/icons/share-1200x630.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Evokai logo, glowing on dark stone">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Evokai Portfolio">
+<meta name="twitter:description" content="Motion design, 3D, animation and branding by Fernando Cuen Pérez.">
+<meta name="twitter:image" content="https://evokai-portfolio.pages.dev/media/icons/share-1200x630.jpg">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/media/icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/media/icons/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#07090B">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1409,9 +1423,9 @@ $('#figGlow').addEventListener('click', async () => {
   // hold the mouse on a frame to freeze it; drag it to another tab to open that frame on its own
   let i = 0, timer = 0, held = false, ending = false; img.draggable = true;
   const end = () => { ending = true; box.style.transition = 'opacity .8s ease'; box.style.opacity = '0'; if (snd) { const run = snd._run, left = ((snd.duration || 3.13) - snd.currentTime) * 1000, fadeMs = 600; setTimeout(() => { if (snd._run !== run || snd.paused) return; const v0 = snd.volume, t0 = performance.now(); const fade = () => { const k = Math.min(1, (performance.now() - t0) / fadeMs); if (snd._run !== run) return; snd.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else snd.pause(); }; requestAnimationFrame(fade); }, Math.max(0, left - fadeMs)); } /* the full clip plays out, fading in its last 0.6 s */ setTimeout(() => { box.remove(); eggOn = false; }, 850); };
-  const step = () => { if (held) return; img.src = ims[i++].src; timer = setTimeout(i < ims.length ? step : end, 1000 / 24); };
+  const step = () => { if (held) return; img.src = ims[i++].src; timer = setTimeout(i < ims.length ? step : end, 1000 / 12); };
   const hold = () => { if (ending) return; held = true; clearTimeout(timer); if (snd) snd.pause(); };
-  const release = () => { if (!held) return; held = false; if (snd && i < ims.length) snd.play().catch(() => {}); timer = setTimeout(i < ims.length ? step : end, 1000 / 24); };
+  const release = () => { if (!held) return; held = false; if (snd && i < ims.length) snd.play().catch(() => {}); timer = setTimeout(i < ims.length ? step : end, 1000 / 12); };
   box.addEventListener('pointerdown', hold); addEventListener('pointerup', release); img.addEventListener('dragend', release);
   step(); // last frame stays, then fades back to the page
 });
