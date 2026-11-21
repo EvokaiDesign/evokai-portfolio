@@ -9,7 +9,7 @@ import { makeIsland } from './islands.js';
 import { shipMaterials } from './shipmat.js';
 import { Sound } from './sound.js';
 
-const SHIP_URL = 'media/voyage/ship.glb';
+const SHIP_URL = 'media/voyage/ship-v1.glb';
 const L = 620;                       // length of the route (world units, -Z is forward)
 const EDGE_U = 0.62;                 // where the sunset ocean ends
 const EDGE_Z = -EDGE_U * L;
@@ -100,7 +100,7 @@ export function createVoyage(root){
     m.position.x = -5; m.position.y = 0.15;
     shipInner.add(m); shipInner.rotation.y = -Math.PI / 2;
     shipReady = true; onShip();
-  }, undefined, () => { root.classList.add('v-noship'); shipReady = true; onShip(); });
+  }, undefined, err => { console.error('AI Voyage: ship failed to load', err); root.classList.add('v-noship'); shipReady = true; onShip(); });
 
   // ---------- islands ----------
   const islands = STOPS.map((s, i) => {
