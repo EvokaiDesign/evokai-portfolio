@@ -249,7 +249,7 @@ export function createVoyage(root){
       const toShip = shipPos.clone().sub(isl.board).setY(0); const sd = toShip.length(); toShip.normalize();
       const away = toShip.applyAxisAngle(up, -0.35 * isl.side).normalize();
       const ip = isl.board.clone().addScaledVector(away, Math.min(tall ? 30 : 23, sd * 0.62)).add(tmp.set(0, 2.2, 0)).addScaledVector(right, Math.sin(t * 0.22) * 0.8);
-      camPos.lerp(ip, insp * 0.9); camLook.lerp(isl.board, insp * 0.8);
+      camPos.lerp(ip, insp); camLook.lerp(isl.board, insp * 0.96);
     }
     if (hoverI >= 0 && !anim) camLook.lerp(islands[hoverI].board.lengthSq() ? islands[hoverI].board : islands[hoverI].group.position, 0.1);
     if (first) { camPosS.copy(camPos); camLookS.copy(camLook); first = false; }
