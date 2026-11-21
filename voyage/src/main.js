@@ -284,6 +284,11 @@ export function createVoyage(root){
     if (hoverI >= 0 && !anim) camLook.lerp(islands[hoverI].board.lengthSq() ? islands[hoverI].board : islands[hoverI].group.position, 0.1);
     if (first) { camPosS.copy(camPos); camLookS.copy(camLook); first = false; }
     camPosS.lerp(camPos, 1 - Math.exp(-dt * 3.5)); camLookS.lerp(camLook, 1 - Math.exp(-dt * 3.5));
+    if (insp < 0.5) {                                                  // while swinging round, never cut through the ship or dip low
+      tmp.copy(camPosS).sub(ship.position); tmp.y = 0; const dd = tmp.length(), minD = tall ? 22 : 17;
+      if (dd < minD) camPosS.addScaledVector(tmp.normalize(), minD - dd);
+      camPosS.y = Math.max(camPosS.y, ship.position.y + (tall ? 5 : 3.8));
+    }
     camera.position.copy(camPosS); camera.lookAt(camLookS);
     const baseFov = tall ? 62 : (touch ? 56 : 48);
     fovS = lerp(fovS, baseFov - insp * 7 + Math.min(1, Math.abs(vel) * 6) * 4, 1 - Math.exp(-dt * 3));
