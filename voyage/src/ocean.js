@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { NOISE, SKYFN } from './sky.js';
+import { NOISE, SKYFN, LITE, LITE_DEF } from './sky.js';
 
 // ---------- sunset ocean: Gerstner waves on a polar grid that is dense near the camera ----------
 // waves: dir.x, dir.y, steepness, wavelength
@@ -42,7 +42,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
     uShip: { value: new THREE.Vector4(0, 0, 0, -1) }, uWake: { value: 1 },
     uW: { value: WAVES.map(w => new THREE.Vector4(...w)) }
   };
-  const mat = new THREE.ShaderMaterial({
+  const mat = new THREE.ShaderMaterial({ defines: LITE_DEF,
     uniforms,
     vertexShader: GERSTNER + `
       uniform float uTime, uEdge; uniform vec3 uCam; varying vec3 vW; varying vec3 vN; varying float vCrest;
@@ -58,9 +58,14 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
     fragmentShader: NOISE + SKYFN + `
       uniform float uTime, uMix, uEdge, uWake; uniform vec3 uSun, uCam; uniform vec4 uShip;
       varying vec3 vW; varying vec3 vN; varying float vCrest;
+      #ifdef LITE
+      #define DETAIL_N 3
+      #else
+      #define DETAIL_N 7
+      #endif
       vec2 detail(vec2 p, float t){
         vec2 g = vec2(0.0);
-        for (int i = 0; i < 7; i++){
+        for (int i = 0; i < DETAIL_N; i++){
           float fi = float(i); float a = fi * 2.399 + 0.6;
           vec2 d = vec2(cos(a), sin(a)); float k = 1.1 + fi * 0.62; float amp = 0.055 / (1.0 + fi * 0.55);
           g += d * k * amp * cos(dot(d, p) * k + t * (1.2 + fi * 0.35));
@@ -135,7 +140,7 @@ export function makeWaterfall(edgeZ, depth){
     const v = 0.5 - pos.getY(i); // 0 top → 1 bottom
     pos.setXYZ(i, pos.getX(i), 0.2 - v * depth, edgeZ - 10 * (1 - Math.exp(-v * 6)));
   }
-  const mat = new THREE.ShaderMaterial({
+  const mat = new THREE.ShaderMaterial({ defines: LITE_DEF,
     uniforms, transparent: true, depthWrite: false, side: THREE.DoubleSide,
     vertexShader: `varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vW = (modelMatrix * vec4(position, 1.)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.); }`,
     fragmentShader: NOISE + `
@@ -170,7 +175,7 @@ export function makeAura(edgeZ, endZ, n){
   const group = new THREE.Group();
   const shared = { uTime: { value: 0 }, uMix: { value: 0 }, uCam: { value: new THREE.Vector3() } };
   const layer = (y, scale, speed, bright) => {
-    const m = new THREE.ShaderMaterial({
+    const m = new THREE.ShaderMaterial({ defines: LITE_DEF,
       uniforms: { ...shared, uY: { value: y }, uS: { value: scale }, uSp: { value: speed }, uB: { value: bright }, uEdge: { value: edgeZ } },
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
       vertexShader: `uniform vec3 uCam; uniform float uY; varying vec3 vW; void main(){ vW = position + vec3(uCam.x, uY, uCam.z); gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.); }`,
@@ -191,7 +196,8 @@ export function makeAura(edgeZ, endZ, n){
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2600, 2600).rotateX(-Math.PI / 2), m); mesh.frustumCulled = false; mesh.renderOrder = -5;
     group.add(mesh);
   };
-  layer(-45, 0.006, 0.02, 0.9); layer(-110, 0.0032, 0.012, 1.2); layer(-220, 0.0018, 0.008, 1.4);
+  if (LITE) layer(-110, 0.0032, 0.012, 1.6);          // phones: one nebula layer instead of three
+  else { layer(-45, 0.006, 0.02, 0.9); layer(-110, 0.0032, 0.012, 1.2); layer(-220, 0.0018, 0.008, 1.4); }
 
   // floating nebula clouds around the route (soft billboards)
   const tex = cloudTexture(); const pal = [0x8a3cff, 0xff3fa6, 0x3f7cff, 0xb05cff, 0x46d0ff];
@@ -225,7 +231,7 @@ export function makeMotes(n){
   for (let i = 0; i < n; i++) { pos.set([(Math.random() - .5) * 140, (Math.random() - .3) * 50, (Math.random() - .5) * 140], i * 3); ph[i] = Math.random() * 6.28; }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aPh', new THREE.BufferAttribute(ph, 1));
   const uniforms = { uTime: { value: 0 }, uMix: { value: 0 }, uCam: { value: new THREE.Vector3() }, uPx: { value: Math.min(devicePixelRatio || 1, 2) } };
-  const mat = new THREE.ShaderMaterial({
+  const mat = new THREE.ShaderMaterial({ defines: LITE_DEF,
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: `attribute float aPh; uniform float uTime, uMix, uPx; uniform vec3 uCam; varying float vA; varying float vM;
       void main(){

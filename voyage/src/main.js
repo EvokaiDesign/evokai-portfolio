@@ -66,10 +66,10 @@ export function createVoyage(root){
   let gl;
   try { gl = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' }); }
   catch (e) { root.classList.add('v-nogl'); return { enter(){}, exit(){} }; }
-  const maxDpr = touch ? 1.5 : 1.75; let dpr = Math.min(devicePixelRatio || 1, maxDpr);
+  const maxDpr = touch ? 1 : 1.75; let dpr = Math.min(devicePixelRatio || 1, maxDpr);   // phones render at 1× — the biggest single saving
   gl.setPixelRatio(dpr); gl.outputColorSpace = THREE.SRGBColorSpace;
   gl.toneMapping = THREE.ACESFilmicToneMapping; gl.toneMappingExposure = 0.95;
-  if (!touch) { gl.shadowMap.enabled = true; gl.shadowMap.type = THREE.PCFSoftShadowMap; }
+  if (!touch) { gl.shadowMap.enabled = true; gl.shadowMap.type = THREE.PCFShadowMap; }
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, 1, 0.3, 4000);
@@ -77,12 +77,12 @@ export function createVoyage(root){
 
   // ---------- world ----------
   const sky = makeSky(SUN_DIR); scene.add(sky.mesh);
-  const stars = makeStars(touch ? 2200 : 5200); scene.add(stars.points);
-  const galaxies = makeGalaxies(touch ? 6 : 11); scene.add(galaxies.group);
-  const ocean = makeOcean({ rings: touch ? 110 : 150, segs: touch ? 180 : 288, edgeZ: EDGE_Z, sunDir: SUN_DIR }); scene.add(ocean.mesh);
+  const stars = makeStars(touch ? 1400 : 5200); scene.add(stars.points);
+  const galaxies = makeGalaxies(touch ? 5 : 11); scene.add(galaxies.group);
+  const ocean = makeOcean({ rings: touch ? 72 : 150, segs: touch ? 120 : 288, edgeZ: EDGE_Z, sunDir: SUN_DIR }); scene.add(ocean.mesh);
   const fall = makeWaterfall(EDGE_Z, 150); scene.add(fall.mesh);
-  const aura = makeAura(EDGE_Z, -L, touch ? 36 : 70); scene.add(aura.group);
-  const motes = makeMotes(touch ? 260 : 520); scene.add(motes.points);
+  const aura = makeAura(EDGE_Z, -L, touch ? 22 : 70); scene.add(aura.group);
+  const motes = makeMotes(touch ? 140 : 520); scene.add(motes.points);
 
   const sun = new THREE.DirectionalLight(0xffc49a, 2.4); sun.position.copy(KEY_DIR).multiplyScalar(100); scene.add(sun); scene.add(sun.target);
   if (!touch) { sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = sc.bottom = -38; sc.right = sc.top = 38; sc.near = 1; sc.far = 260;
@@ -100,6 +100,18 @@ export function createVoyage(root){
   scene.environment = envSunset;
 
   const post = makePost(gl, scene, camera, { mobile: touch });
+
+  // ---------- loading screen: water rises with real progress (12% = code downloaded, then models/textures, then shader warm-up) ----------
+  const loadEl = root.querySelector('.v-load'), portEl = loadEl.querySelector('.v-port'), pctEl = loadEl.querySelector('.v-pct b');
+  portEl.dataset.own = 1;
+  let shownP = parseFloat(pctEl.textContent) || 0, glbFrac = 0, items = [0, 0], loadState = 'loading';
+  const setP = p => { p = Math.max(shownP, Math.min(100, p)); shownP = p; portEl.style.setProperty('--p', p.toFixed(1)); pctEl.textContent = p | 0; };
+  const upd = () => setP(12 + 78 * (0.65 * glbFrac + 0.35 * (items[1] ? items[0] / items[1] : 0)));
+  THREE.DefaultLoadingManager.onProgress = (url, l, t) => { items = [l, t]; upd(); };
+  const creep = setInterval(() => { if (loadState !== 'loading') return clearInterval(creep); if (!glbFrac) setP(shownP + (60 - shownP) * 0.03); }, 200);   // keeps moving if sizes are unknown
+  if (touch) { loadEl.querySelector('.v-how1').textContent = 'Swipe up to set sail'; loadEl.querySelector('.v-how2').textContent = 'Swipe down to sail back'; }
+  const dismiss = () => { if (loadState !== 'loaded') return; loadState = 'done'; root.classList.add('v-ready'); hint(stop === 0 && !anim); };
+  for (const ev of ['wheel', 'pointerdown', 'touchstart']) loadEl.addEventListener(ev, e => { if (ev === 'wheel') e.preventDefault(); dismiss(); }, { passive: ev !== 'wheel' });
 
   // ---------- ship ----------
   const ship = new THREE.Group(); scene.add(ship);
@@ -119,16 +131,16 @@ export function createVoyage(root){
     m.position.x = -5; m.position.y = 0.15;            // model: bow at -X, 10 units long → centre it…
     shipInner.add(m); shipInner.rotation.y = -Math.PI / 2; // …and turn the bow to -Z
     shipReady = true; onShip();
-  }, undefined, err => { console.error('AI Voyage: ship failed to load', err); root.classList.add('v-noship'); shipReady = true; onShip(); });
+  }, e => { if (e.total) { glbFrac = e.loaded / e.total; upd(); } }, err => { console.error('AI Voyage: ship failed to load', err); root.classList.add('v-noship'); shipReady = true; onShip(); });
 
   // ---------- islands ----------
   const islands = ISLANDS.map((s, i) => {
     const p = s.slug && bySlug[s.slug];
-    const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? `media/${p.slug}/poster.jpg` : null, cosmic: s.u > EDGE_U });
+    const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? `media/${p.slug}/poster.jpg` : null, cosmic: s.u > EDGE_U, shadows: !touch });
     const at = routePos(s.u), dir = routeDir(s.u);
     const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(s.side);
-    isl.group.position.copy(at).addScaledVector(side, s.side > 0 ? 20 : 34).add(new THREE.Vector3(0, s.u > EDGE_U ? 3 : 5, 0)).addScaledVector(dir, 34);
-    const look = at.clone().addScaledVector(dir, -14).addScaledVector(new THREE.Vector3(-dir.z, 0, dir.x), 13); look.y = isl.group.position.y;
+    isl.group.position.copy(at).addScaledVector(side, s.side > 0 ? 26 : 34).add(new THREE.Vector3(0, s.u > EDGE_U ? 3 : 5, 0)).addScaledVector(dir, 6);   // beside the stop, so it works sailing either way
+    const look = at.clone(); look.y = isl.group.position.y;   // board faces the route
     isl.group.lookAt(look);
     scene.add(isl.group); isl.group.updateMatrixWorld(true);
     const el = document.createElement(s.slug ? 'a' : 'div');
@@ -150,17 +162,23 @@ export function createVoyage(root){
   const cap = ui.querySelector('.v-cap');
 
   // ---------- stop-to-stop travel ----------
-  const qU = parseFloat(new URLSearchParams(location.search).get('vu')); // ?vu=0.5 starts there (testing)
+  const qU = parseFloat(new URLSearchParams(location.search).get('vu'));
+  const SNAP = new URLSearchParams(location.search).has('vsnap'); // ?vu=0.5 starts there (testing)
   let stop = isFinite(qU) ? STOPS.reduce((b, s, i) => Math.abs(s.u - qU) < Math.abs(STOPS[b].u - qU) ? i : b, 0) : 0;
   let prog = STOPS[stop].u, anim = null, arrived = performance.now(), inspect = 0, vel = 0;
+  // the ship always sails bow-first: heading back means turning around first (face 0 = towards the edge, 1 = back home)
+  let face = 0, faceTo = 0, turnA = null;
+  const TURN_MS = reduce ? 300 : 1500;
   function goTo(i){
     i = Math.max(0, Math.min(STOPS.length - 1, i)); if (i === stop && !anim) return;
-    const from = prog, to = STOPS[i].u, span = Math.abs(to - from);
+    const from = prog, to = STOPS[i].u, span = Math.abs(to - from), now = performance.now();
     const crossesEdge = (from - EDGE_U) * (to - EDGE_U) < 0;
-    anim = { from, to, t0: performance.now(), dur: (reduce ? 600 : Math.min(5200, 1700 + span * 9000 + (crossesEdge ? 1200 : 0))) };
+    const want = to < from ? 1 : 0; let delay = 0;
+    if (want !== faceTo) { turnA = { from: face, to: want, t0: now }; faceTo = want; delay = TURN_MS * 0.72; }   // start sailing as the turn finishes
+    anim = { from, to, t0: now + delay, dur: (reduce ? 600 : Math.min(5200, 1700 + span * 9000 + (crossesEdge ? 1200 : 0))) };
     stop = i; hint(false);
   }
-  const step = d => { if (anim) return; goTo(stop + d); };
+  const step = d => { if (loadState !== 'done') { dismiss(); return; } if (anim) return; goTo(stop + d); };
 
   // ---------- input ----------
   const mouse = new THREE.Vector2(0, 0), mouseS = new THREE.Vector2(0, 0); let hasMouse = false;
@@ -196,7 +214,10 @@ export function createVoyage(root){
   // ---------- adaptive quality ----------
   let fpsT = 0, fpsN = 0, quality = 2;
   const degrade = () => {
-    if (quality === 2) { dpr = Math.max(1, dpr * 0.75); post.lower(); }
+    if (touch) {                                       // phones: drop resolution further, then the extras
+      if (quality === 2) { dpr = 0.8; motes.points.visible = false; galaxies.group.visible = false; }
+      else if (quality === 1) { dpr = 0.66; stars.points.visible = false; }
+    } else if (quality === 2) { dpr = Math.max(1, dpr * 0.75); post.lower(); }
     else if (quality === 1) { post.noBloom(); motes.points.visible = false; dpr = 1; }
     quality--; resize();
   };
@@ -216,8 +237,9 @@ export function createVoyage(root){
   function frame(){
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime, now = performance.now();
+    if (turnA) { const k = Math.min(1, (now - turnA.t0) / TURN_MS); face = lerp(turnA.from, turnA.to, ease(k)); if (k >= 1) turnA = null; }
     if (anim) {
-      const k = Math.min(1, (now - anim.t0) / anim.dur); prog = lerp(anim.from, anim.to, ease(k));
+      const k = Math.min(1, Math.max(0, now - anim.t0) / anim.dur); prog = lerp(anim.from, anim.to, ease(k));
       if (k >= 1) { anim = null; arrived = now; }
     }
     vel = lerp(vel, (prog - lastU) / Math.max(dt, 1e-3), 1 - Math.exp(-dt * 6)); lastU = prog;
@@ -225,20 +247,23 @@ export function createVoyage(root){
     const st = STOPS[stop];
     const wantInspect = !anim && st.island != null ? 1 : 0;
     inspect += (wantInspect * smooth(0, 700, now - arrived) - inspect) * (1 - Math.exp(-dt * (wantInspect ? 2.2 : 5)));
+    if (SNAP) { inspect = wantInspect; first = true; }                 // ?vsnap: settle instantly (headless tests)
     const insp = ease(Math.min(1, Math.max(0, inspect)));
 
     // ship on the route
     routePos(u, shipPos); routeDir(u, fwd);
     const bob = reduce ? 0 : Math.sin(t * 1.1) * 0.16 + Math.sin(t * 0.63) * 0.09;
     ship.position.copy(shipPos); ship.position.y += bob;
-    const yaw = Math.atan2(-fwd.x, -fwd.z);
+    const fc = Math.cos(face * Math.PI), swing = Math.sin(face * Math.PI);           // 1 → -1 while turning; swing peaks mid-turn
+    const yaw = Math.atan2(-fwd.x, -fwd.z) + face * Math.PI;
     const turn = (routeDir(Math.min(1, u + 0.01), tmp).x - fwd.x) * 30;     // bank into the curves
-    ship.rotation.set(Math.asin(Math.max(-0.3, Math.min(0.3, fwd.y))) * 0.8 + (reduce ? 0 : Math.sin(t * 0.9) * 0.02), yaw,
-      (reduce ? 0 : Math.sin(t * 0.7) * 0.035) - THREE.MathUtils.clamp(turn * vel * 3, -0.25, 0.25), 'YXZ');
+    ship.position.addScaledVector(tmp.set(-fwd.z, 0, fwd.x), swing * 2.2);         // turns in a small arc, not on the spot
+    ship.rotation.set(Math.asin(Math.max(-0.3, Math.min(0.3, fwd.y))) * 0.8 * fc + (reduce ? 0 : Math.sin(t * 0.9) * 0.02), yaw,
+      (reduce ? 0 : Math.sin(t * 0.7) * 0.035) - THREE.MathUtils.clamp(turn * vel * 3 * fc, -0.25, 0.25) - swing * 0.2, 'YXZ');
 
     // follow camera: behind and to the left, ship on the right third
     mouseS.lerp(hasMouse && !touch ? mouse : tmp.set(0, 0, 0), 1 - Math.exp(-dt * 3));
-    const fwdH = new THREE.Vector3(fwd.x, 0, fwd.z).normalize();
+    const fwdH = new THREE.Vector3(fwd.x, 0, fwd.z).normalize().applyAxisAngle(up, face * Math.PI);   // camera swings round with the ship
     right.crossVectors(fwdH, up).normalize();
     const tall = camera.aspect < 0.85;
     const dip = smooth(EDGE_U - 0.02, EDGE_U + 0.01, u) * (1 - smooth(EDGE_U + 0.04, EDGE_U + 0.1, u));
@@ -252,8 +277,8 @@ export function createVoyage(root){
       isl.board.copy(isl.boardCenter).applyMatrix4(isl.group.matrixWorld);
       // stand between the board and the ship (ship stays behind the camera, never in the shot)
       const toShip = shipPos.clone().sub(isl.board).setY(0); const sd = toShip.length(); toShip.normalize();
-      const away = toShip.applyAxisAngle(up, -0.35 * isl.side).normalize();
-      const ip = isl.board.clone().addScaledVector(away, Math.min(tall ? 30 : 23, sd * 0.62)).add(tmp.set(0, 2.2, 0)).addScaledVector(right, Math.sin(t * 0.22) * 0.8);
+      const away = toShip.applyAxisAngle(up, -0.5 * isl.side * (face > 0.5 ? -1 : 1)).normalize();
+      const ip = isl.board.clone().addScaledVector(away, tall ? 34 : 26).add(tmp.set(0, 4.2, 0)).addScaledVector(right, Math.sin(t * 0.22) * 0.8);
       camPos.lerp(ip, insp); camLook.lerp(isl.board, insp * 0.96);
     }
     if (hoverI >= 0 && !anim) camLook.lerp(islands[hoverI].board.lengthSq() ? islands[hoverI].board : islands[hoverI].group.position, 0.1);
@@ -269,10 +294,11 @@ export function createVoyage(root){
     stars.points.position.copy(camera.position); stars.uniforms.uMix.value = mix; stars.uniforms.uTime.value = t;
     galaxies.update(camera.position, mix);
     ocean.mesh.visible = u < EDGE_U + 0.14;
-    ocean.update(t, camera.position, mix, ship.position, yaw, (0.2 + Math.min(0.8, Math.abs(vel) * 18)) * (1 - smooth(0.3, 2.5, ship.position.y)));
+    ocean.update(t, camera.position, mix, ship.position, yaw, (0.2 + Math.min(0.8, Math.abs(vel) * 18 + swing * 0.5)) * (1 - smooth(0.3, 2.5, ship.position.y)));
     const nearEdge = Math.abs(u - EDGE_U) < 0.22;
     fall.mesh.visible = nearEdge; fall.update(t, mix);
-    aura.update(t, camera.position, mix, nearEdge); motes.update(t, camera.position, mix);
+    aura.group.visible = u > EDGE_U - 0.2;                                   // nebula only near and past the edge
+    if (aura.group.visible) aura.update(t, camera.position, mix, nearEdge); motes.update(t, camera.position, mix);
     scene.fog.color.copy(fogA).lerp(fogB, mix); scene.fog.density = lerp(0.0022, 0.0016, mix);
     sun.color.setRGB(lerp(1, 0.6, mix), lerp(0.77, 0.55, mix), lerp(0.6, 1, mix)); sun.intensity = lerp(2.4, 1.2, mix);
     hemi.color.setRGB(lerp(0.91, 0.5, mix), lerp(0.84, 0.42, mix), 1); hemi.groundColor.setRGB(lerp(0.04, 0.12, mix), lerp(0.16, 0.04, mix), lerp(0.22, 0.25, mix));
@@ -321,7 +347,7 @@ export function createVoyage(root){
 
     if (quality > 0 && clock.elapsedTime > 2) {
       fpsT += dt; fpsN++;
-      if (fpsT > 2) { if (fpsN / fpsT < 45) degrade(); fpsT = 0; fpsN = 0; if (clock.elapsedTime > 14) quality = 0; }
+      if (fpsT > 2) { if (fpsN / fpsT < (touch ? 40 : 45)) degrade(); fpsT = 0; fpsN = 0; if (clock.elapsedTime > 14) quality = 0; }
     }
   }
 
@@ -330,14 +356,23 @@ export function createVoyage(root){
   return {
     enter(){
       if (active) return; active = true; root.hidden = false; resize(); if (!hasMouse) root.classList.add('v-nomouse');
-      const go = () => { root.classList.add('v-ready'); if (!raf) { clock.getDelta(); frame(); } };
+      const go = async () => {
+        if (loadState === 'done') { root.classList.add('v-ready'); if (!raf) { clock.getDelta(); frame(); } return; }
+        if (loadState !== 'loading') return; loadState = 'warming'; glbFrac = 1; upd(); setP(90);
+        if (!SNAP) try { await gl.compileAsync(scene, camera); } catch (e) {}      // compile shaders in parallel now, not on the first scroll
+        if (!active) { loadState = 'loading'; return; }
+        if (!raf) { clock.getDelta(); frame(); }                        // start drawing behind the loader
+        await new Promise(r => setTimeout(r, 300));
+        setP(100); loadState = 'loaded'; root.classList.add('v-loaded');
+        setTimeout(dismiss, 2400);                                       // instructions stay up a moment, any input skips
+      };
       shipReady ? go() : (onShip = go);
       addEventListener('resize', resize); addEventListener('keydown', onKey); document.addEventListener('visibilitychange', vis);
       canvas.addEventListener('wheel', onWheel, { passive: false }); ui.addEventListener('wheel', onWheel, { passive: false });
       root.addEventListener('touchstart', onTS, { passive: true }); root.addEventListener('touchmove', onTM, { passive: false }); root.addEventListener('touchend', onTE);
       root.addEventListener('pointermove', onMove); canvas.addEventListener('click', onClick);
       if (touch) hintEl.querySelector('span').textContent = 'Swipe up to set sail';
-      hint(stop === 0 && !anim);
+      hint(loadState === 'done' && stop === 0 && !anim);
     },
     exit(){
       if (!active) return; active = false; root.hidden = true; cancelAnimationFrame(raf); raf = 0; sound.pause();

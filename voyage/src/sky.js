@@ -1,12 +1,21 @@
 import * as THREE from 'three';
 
+export const LITE = typeof matchMedia !== 'undefined' && matchMedia('(hover: none)').matches;   // phones
+export const LITE_DEF = LITE ? { LITE: 1 } : {};
 export const NOISE = /* glsl */`
 float hash3(vec3 p){ p = fract(p * 0.3183099 + .1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float vnoise(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(mix(hash3(i), hash3(i + vec3(1,0,0)), f.x), mix(hash3(i + vec3(0,1,0)), hash3(i + vec3(1,1,0)), f.x), f.y),
              mix(mix(hash3(i + vec3(0,0,1)), hash3(i + vec3(1,0,1)), f.x), mix(hash3(i + vec3(0,1,1)), hash3(i + vec3(1,1,1)), f.x), f.y), f.z); }
-float fbm(vec3 p){ float a = .5, s = 0.; for (int i = 0; i < 5; i++){ s += a * vnoise(p); p = p * 2.03 + 1.7; a *= .5; } return s; }
-float fbm3(vec3 p){ float a = .5, s = 0.; for (int i = 0; i < 3; i++){ s += a * vnoise(p); p = p * 2.03 + 1.7; a *= .5; } return s * 1.14; }
+#ifdef LITE
+#define FBM_N 3
+#define FBM3_N 2
+#else
+#define FBM_N 5
+#define FBM3_N 3
+#endif
+float fbm(vec3 p){ float a = .5, s = 0.; for (int i = 0; i < FBM_N; i++){ s += a * vnoise(p); p = p * 2.03 + 1.7; a *= .5; } return s; }
+float fbm3(vec3 p){ float a = .5, s = 0.; for (int i = 0; i < FBM3_N; i++){ s += a * vnoise(p); p = p * 2.03 + 1.7; a *= .5; } return s * 1.14; }
 `;
 
 // shared sky colour so the ocean can reflect the same sky
@@ -49,7 +58,11 @@ vec3 milkyWay(vec3 d){
   float dust = smoothstep(0.45, 0.72, lanes) * exp(-h * h * 260.0);          // dark lane along the middle
   float along = 0.5 + 0.5 * dot(normalize(d - nb * h), normalize(vec3(-0.6, 0.55, -0.58)));
   vec3 col = mix(vec3(0.45, 0.55, 1.0), vec3(1.0, 0.78, 0.55), pow(along, 3.0));   // warm bulge, blue arms
-  float grain = smoothstep(0.7, 1.0, vnoise(d * 180.0)) * 0.9;               // unresolved star clumps
+  #ifdef LITE
+  float grain = 0.0;
+#else
+  float grain = smoothstep(0.7, 1.0, vnoise(d * 180.0)) * 0.9;
+#endif               // unresolved star clumps
   return col * (band * (0.18 + clouds * 0.55) + core * 0.35 * along + grain * band * 0.5) * (1.0 - dust * 0.85);
 }
 vec3 cosmicSky(vec3 d){
@@ -67,7 +80,7 @@ vec3 cosmicSky(vec3 d){
 export function makeSky(sunDir){
   const uniforms = { uMix: { value: 0 }, uSun: { value: sunDir.clone() }, uTime: { value: 0 } };
   const mat = new THREE.ShaderMaterial({
-    uniforms, side: THREE.BackSide, depthWrite: false, fog: false,
+    defines: LITE_DEF, uniforms, side: THREE.BackSide, depthWrite: false, fog: false,
     vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
     fragmentShader: NOISE + SKYFN + `
       uniform float uMix, uTime; uniform vec3 uSun; varying vec3 vDir;

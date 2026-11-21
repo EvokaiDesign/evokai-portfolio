@@ -30,6 +30,9 @@ const GRADE = {
 };
 
 export function makePost(gl, scene, camera, { mobile }){
+  if (mobile) {                         // phones: draw straight to the screen (tone mapping happens in the materials), no bloom/grade passes
+    return { setSize(){}, lower(){}, noBloom(){}, render(){ gl.render(scene, camera); } };
+  }
   const composer = new EffectComposer(gl);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.5, 1.05);
