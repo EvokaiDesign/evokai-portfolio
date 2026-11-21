@@ -21,7 +21,7 @@ const KEY_DIR = new THREE.Vector3(-0.5, 0.42, -1).normalize();   // light comes 
 // Islands along the route. slug = project page; null = placeholder.
 const ISLANDS = [
   { u: 0.12, side: 1,  slug: 'ummy' },
-  { u: 0.27, side: -1, slug: null },
+  { u: 0.27, side: -1, slug: 'the-gulag' },
   { u: 0.42, side: 1,  slug: null },
   { u: 0.80, side: -1, slug: null },
   { u: 0.93, side: 1,  slug: null },
@@ -157,7 +157,7 @@ export function createVoyage(root){
     ? `<button type="button" class="edge" style="top:${(s.u * 100).toFixed(1)}%" data-i="${i}" aria-label="Sail to the edge of the world"></button>`
     : `<button type="button" style="top:${(s.u * 100).toFixed(1)}%" data-i="${i}" aria-label="${s.island == null ? 'Back to the start' : 'Sail to ' + (ISLANDS[s.island].slug ? (bySlug[ISLANDS[s.island].slug] || {}).title : 'island ' + (s.island + 1))}"></button>`).join('')
     + `<i class="ship"></i>`;
-  const railShip = rail.querySelector('.ship');
+  const railShip = rail.querySelector('.ship'), railBtns = [...rail.querySelectorAll('button')]; let railStop = -1;
   rail.addEventListener('click', e => { const b = e.target.closest('button'); if (b) goTo(+b.dataset.i); });
   const cap = ui.querySelector('.v-cap');
 
@@ -212,15 +212,21 @@ export function createVoyage(root){
   sBtn.addEventListener('click', () => { const on = sound.toggle(); sBtn.setAttribute('aria-pressed', on); sBtn.querySelector('span').textContent = on ? 'Sound on' : 'Sound off'; });
 
   // ---------- adaptive quality ----------
-  let fpsT = 0, fpsN = 0, quality = 2;
+  let fpsT = 0, fpsN = 0, quality = touch ? 3 : 2;
   const degrade = () => {
     if (touch) {                                       // phones: drop resolution further, then the extras
-      if (quality === 2) { dpr = 0.8; motes.points.visible = false; galaxies.group.visible = false; }
-      else if (quality === 1) { dpr = 0.66; stars.points.visible = false; }
+      if (quality === 3) { dpr = 0.85; motes.points.visible = false; galaxies.group.visible = false; }
+      else if (quality === 2) { dpr = 0.7; stars.points.visible = false; aura.group.visible = false; }
+      else if (quality === 1) { dpr = 0.55; fall.mesh.visible = false; }
     } else if (quality === 2) { dpr = Math.max(1, dpr * 0.75); post.lower(); }
     else if (quality === 1) { post.noBloom(); motes.points.visible = false; dpr = 1; }
     quality--; resize();
   };
+  // ?vfps: small live readout (frames per second + quality level) for testing on a real phone
+  const fpsEl = new URLSearchParams(location.search).has('vfps') ? Object.assign(document.createElement('div'), { style: 'position:absolute;left:8px;top:8px;z-index:9;font:12px/1.3 monospace;color:#fff;background:rgba(0,0,0,.6);padding:4px 8px;border-radius:6px;pointer-events:none' }) : null;
+  if (fpsEl) root.appendChild(fpsEl);
+  let fpsShowT = 0, fpsShowN = 0;
+  let lastDraw = 0;                                    // phones: never draw faster than 60 fps (120 Hz screens would double the work and the heat)
   let W = 1, H = 1;
   function resize(){
     W = root.clientWidth || innerWidth; H = root.clientHeight || innerHeight;
@@ -236,6 +242,7 @@ export function createVoyage(root){
   let raf = 0, active = false, lastU = prog, wasMoving = false, lastMix = -1;
   function frame(){
     raf = requestAnimationFrame(frame);
+    if (touch) { const n = performance.now(); if (n - lastDraw < 15.5) return; lastDraw = n; }
     const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime, now = performance.now();
     if (turnA) { const k = Math.min(1, (now - turnA.t0) / TURN_MS); face = lerp(turnA.from, turnA.to, ease(k)); if (k >= 1) turnA = null; }
     if (anim) {
@@ -246,7 +253,7 @@ export function createVoyage(root){
     const u = prog, mix = smooth(EDGE_U - 0.015, EDGE_U + 0.1, u);
     const st = STOPS[stop];
     const wantInspect = !anim && st.island != null ? 1 : 0;
-    inspect += (wantInspect * smooth(0, 700, now - arrived) - inspect) * (1 - Math.exp(-dt * (wantInspect ? 2.2 : 5)));
+    inspect += (wantInspect * smooth(0, 150, now - arrived) - inspect) * (1 - Math.exp(-dt * (wantInspect ? 4.8 : 5)));   // quick zoom on arrival (~1 s, was ~3 s)
     if (SNAP) { inspect = wantInspect; first = true; }                 // ?vsnap: settle instantly (headless tests)
     const insp = ease(Math.min(1, Math.max(0, inspect)));
 
@@ -344,16 +351,18 @@ export function createVoyage(root){
       glowEl.style.setProperty('--c1', `${lerp(255, 200, mix) | 0},${lerp(214, 190, mix) | 0},${lerp(150, 255, mix) | 0}`);
       glowEl.style.setProperty('--c2', `${lerp(255, 140, mix) | 0},${lerp(140, 90, mix) | 0},${lerp(60, 255, mix) | 0}`); }
     railShip.style.top = (u * 100).toFixed(2) + '%';
-    rail.querySelectorAll('button').forEach((b, i) => b.toggleAttribute('aria-current', i === stop));
+    if (railStop !== stop) { railStop = stop; railBtns.forEach((b, i) => b.toggleAttribute('aria-current', i === stop)); }
     root.style.setProperty('--v-mix', mix.toFixed(3));
     sound.update(mix, u);
 
     post.render(t, mix);
 
-    if (quality > 0 && clock.elapsedTime > 2) {
+    if (quality > 0 && clock.elapsedTime > (touch ? 1 : 2)) {
       fpsT += dt; fpsN++;
-      if (fpsT > 2) { if (fpsN / fpsT < (touch ? 40 : 45)) degrade(); fpsT = 0; fpsN = 0; if (clock.elapsedTime > 14) quality = 0; }
+      const win = touch ? 1.5 : 2;
+      if (fpsT > win) { if (fpsN / fpsT < (touch ? 46 : 45)) degrade(); fpsT = 0; fpsN = 0; if (clock.elapsedTime > (touch ? 20 : 14)) quality = 0; }
     }
+    if (fpsEl) { fpsShowT += dt; fpsShowN++; if (fpsShowT > 0.5) { fpsEl.textContent = `${Math.round(fpsShowN / fpsShowT)} fps · quality ${quality} · ${dpr.toFixed(2)}x`; fpsShowT = 0; fpsShowN = 0; } }
   }
 
   const vis = () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else if (active && !raf) { clock.getDelta(); frame(); } };

@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#07090B">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Jost:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Jost:wght@400;500&family=Anton&display=swap">
 <style>
 /* Layout: a dark temple wall. One question at the top, one row of work, two links at the bottom. The cursor is the only light source. */
 :root{
@@ -434,6 +434,37 @@ body.case #proj .deck{margin-top:clamp(90px,14vh,170px)}
   .chero .cover{flex-direction:column; align-items:flex-start} .chero .cact{align-items:flex-start; flex-direction:row}
 }
 @media (prefers-reduced-motion: reduce){ .cb figure img{transform:none} .cb figure.rv{clip-path:none; opacity:1} .tx{opacity:1; transform:none} }
+
+/* ---- projects with their own film file: vertical reel centred on a blurred copy of itself ---- */
+.chero .cbg.cvid .cblur{filter:blur(38px) brightness(.42) saturate(1.2); transform:scale(1.15)}
+.chero .cbg video.cvert{position:absolute; left:50%; top:0; height:100%; width:auto; max-width:none; aspect-ratio:9/16; transform:translateX(-50%); object-fit:cover; background:#000; box-shadow:0 0 140px 30px rgba(0,0,0,.7)}
+.chero.playing .cbg video.cvert{z-index:2} .chero.playing .cclose{z-index:4}
+@media (max-width:760px){ .chero .cbg video.cvert{left:0; width:100%; transform:none; box-shadow:none} }
+/* intro logo, numbers band, group headings, iteration strips, PDF link */
+.clogo{display:block; width:min(320px,62%); height:auto; margin:0 0 30px}
+.cstats .cst-in{width:100vw; margin-left:calc(50% - 50vw); display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:20px; padding:clamp(40px,7vh,72px) clamp(20px,4vw,72px); background:#a50f18; color:#0b0505}
+.cstats .cst-in div{display:flex; flex-direction:column; gap:10px}
+.cstats b{font:400 clamp(44px,5.2vw,96px)/.9 Anton, Impact, var(--f-display); letter-spacing:.005em}
+.cstats span{font-size:12px; letter-spacing:.16em; text-transform:uppercase; font-weight:500}
+.cst-src{margin:14px 0 0; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--fg2)}
+@media (max-width:820px){ .cstats .cst-in{grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:30px} }
+.cgrp{display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:clamp(16px,2vw,30px); align-items:end; padding-top:clamp(10px,4vh,50px)}
+.cgrp span{grid-row:span 2; font:400 clamp(56px,7vw,124px)/.82 Anton, Impact, var(--f-display); color:transparent; -webkit-text-stroke:1.5px #d0141f}
+.cgrp h3{justify-self:start; margin:0; padding:12px 20px 10px; background:#a50f18; color:#0b0505; font:400 clamp(30px,3.6vw,64px)/1 Anton, Impact, var(--f-display); text-transform:uppercase; letter-spacing:.01em; rotate:-1.2deg}
+.cgrp p{margin:14px 0 0; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:rgba(236,230,216,.72)}
+.cb-iter{display:flex; flex-direction:column; align-items:flex-end; gap:10px; margin-top:calc(-1 * clamp(40px,8vh,110px))}
+.cb-iter .lab{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--fg2); margin:0}
+.cb-iter > div{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:10px; width:min(46%,640px)}
+@media (max-width:820px){ .cb-iter > div{width:100%} }
+.dpdf{font-size:12px; letter-spacing:.14em; text-transform:uppercase; margin-right:10px; border-bottom:1px solid currentColor; padding-bottom:2px}
+/* The Gulag Fight: black + blood red, condensed bold uppercase, heavier grain, hard corners */
+body.case[data-proj="the-gulag"] .chero h1.ctitle, body.case[data-proj="the-gulag"] .cintro h2{font-family:Anton, Impact, var(--f-display); font-weight:400; letter-spacing:.005em; line-height:.9}
+body.case[data-proj="the-gulag"] .chero h1.ctitle{font-size:clamp(56px,9vw,170px); text-shadow:0 4px 40px rgba(0,0,0,.6)}
+body.case[data-proj="the-gulag"] #cGrad::after{opacity:.42}
+body.case[data-proj="the-gulag"] .cintro .tx, body.case[data-proj="the-gulag"] .ctext p, body.case[data-proj="the-gulag"] #proj .deckhead, body.case[data-proj="the-gulag"] #proj .pmore .lab, body.case[data-proj="the-gulag"] #proj .pmore .allw, body.case[data-proj="the-gulag"] #proj .card b, body.case[data-proj="the-gulag"] #proj .card span, body.case[data-proj="the-gulag"] #proj .fbar{mix-blend-mode:normal}
+body.case[data-proj="the-gulag"] .cintro .ckick{color:#ff4a4a}
+body.case[data-proj="the-gulag"] .cb figure{border-radius:0}
+body.case[data-proj="the-gulag"] .cplay:hover{background:#b3121b}
 
 /* ---- per-project gradient background (fixed, grainy, drifts as you scroll) ---- */
 #cGrad{position:fixed; inset:0; z-index:-1; display:none; overflow:hidden; background:var(--g0,#07090B); --k:0}
@@ -887,7 +918,7 @@ body.v-touch #voyage .v-mouse:after{top:auto; bottom:6px; width:8px; height:8px;
   <div class="v-ui">
     <div class="v-glow" aria-hidden="true"></div>
     <div class="v-labels"></div>
-    <p class="v-cap"><b>The edge of the world</b><span>Beyond it, the experiments drift</span></p>
+    <p class="v-cap"><b>The edge of the world</b></p>
     <div class="v-rail" aria-label="Islands"></div>
     <div class="v-hint"><i></i><span>Scroll down to set sail</span></div>
     <button type="button" class="v-sound" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg><span>Sound off</span></button>
@@ -917,6 +948,7 @@ body.v-touch #voyage .v-mouse:after{top:auto; bottom:6px; width:8px; height:8px;
 const $ = (s, r=document) => r.querySelector(s);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, touch = matchMedia('(hover: none)').matches;
 const GAL = {"infinite-chances":[["01.webp",1600,900],["02.webp",1600,900],["03.webp",1600,900],["04.webp",1600,900],["05.webp",1600,900],["06.webp",1600,1103],["07.webp",1600,1103]],"sans-chaines":[["01.webp",901,1600],["02.webp",1067,1600],["03.webp",1600,1067],["04.webp",1600,1067],["05.webp",1600,569],["06.webp",1600,900],["07.webp",1600,900],["08.webp",1600,900],["09.webp",1600,900],["10.webp",1600,1300],["11.webp",1600,900],["12.webp",1200,1600],["13.webp",1600,1067],["14.webp",1600,1067],["15.webp",1600,1067],["16.webp",1600,1067],["17.webp",1200,1600],["18.webp",1600,1258]],"combustion":[["01.webp",1600,1103],["02.webp",1600,1103],["03.webp",1600,1103],["04.webp",1600,1103],["05.webp",1600,1103],["06.webp",1600,1103]],"ummy":[["01.webp",1200,1600],["02.webp",1200,1600],["03.webp",1200,1600],["04.webp",1200,1600],["05.webp",1080,1560]],"hero":[["01.webp",1600,1103],["02.webp",1600,1103],["03.webp",1600,1103],["04.webp",1600,1103],["05.webp",1600,1103],["06.webp",1600,1103],["07.webp",1600,1103],["08.webp",1600,1103],["09.webp",1600,1103],["10.webp",1600,1103],["11.webp",1600,1103],["12.webp",1600,1103],["13.webp",1600,1103]],"evokai":[["01.webp",1366,768],["02.webp",1600,1200],["03.webp",1600,1200],["04.webp",1200,1600],["05.webp",1600,1067],["06.webp",1600,1067],["07.webp",1366,768],["08.webp",1366,768]]};
+GAL['the-gulag'] = ["§Props & merch|Branded gear that never existed until the deck needed it",["01.webp",1536,1024],["02.webp",1536,1024],["03.webp",1024,1536],["04.webp",1266,832],["05.webp",1460,1077],["06.webp",1600,946],["07.webp",1600,873],["08.webp",1408,768],["09.webp",1408,768],"§Venue & stands|Where the sponsors would live on fight night",["10.webp",1600,1226],["11.webp",1600,1066],["12.webp",1536,1024],["13.webp",1600,1226],["14.webp",1600,1475],["15.webp",1600,519],["16.webp",1600,711],["17.webp",1600,1031],["18.webp",1536,1024],["19.webp",1600,1066],["20.webp",1600,1031],"§Fighters|Sponsor gear, worn where it counts",["21.webp",1600,1226],["22.webp",1536,1024],["23.webp",1536,1024],["24.webp",1600,1048],["25.webp",1122,1402],["26.webp",1448,1086],["27.webp",1600,893],"§Sponsors, media & social|The numbers, made tangible",["28.webp",1536,1024],{"iter":[["29.webp",1536,1024],["30.webp",1536,1024],["31.webp",1536,1024]]},["32.webp",1600,900],{"iter":[["33.webp",1600,893],["34.webp",1600,893],["35.webp",1600,893]]},["36.webp",1600,1600],{"iter":[["37.webp",1526,1031],["38.webp",1600,1108]]},["39.webp",1600,900],["40.webp",1600,1226],"§Collages|Torn paper, polaroids and tape: the deck’s visual voice",["41.webp",1600,893],["42.webp",1600,893],["43.webp",1600,893],["44.webp",1600,893],["45.webp",1600,893],["46.webp",1600,893],["47.webp",1600,893],["48.webp",1600,900]]; // '§Heading|subtitle' starts a group, {iter:[...]} is a small strip of earlier versions
 // Contact details: placeholders until the fill-in doc comes back
 const LINKS = {"email": "evokaidesign@gmail.com", "phone": {"tel": "+34619002857", "label": "+34 619 00 28 57"}, "instagram": {"url": "https://www.instagram.com/evokaidesign/", "handle": "@evokaidesign"}, "youtube": {"url": "https://www.youtube.com/@EVOKAI_DESIGN", "handle": "@EVOKAI_DESIGN"}, "linkedin": {"url": "https://www.linkedin.com/in/fernando-cuen-perez-17a3a936a/", "handle": "Fernando Cuen Pérez"}, "where": "Madrid, Spain"};
 const BIO = ["What’s up! I’m Fernando, a visual designer and aspiring animator from Madrid, currently studying Digital Design at U-tad, University of Technology, Arts and Design.", "I’m passionate about creating memorable visuals, especially when motion and music come together. I love experimenting with different mediums, from 3D and motion graphics to animation and visual storytelling, always looking for new ways to bring ideas to life.", "Currently, I’m working at ILLION Studios in Madrid, helping develop the visual identity of an upcoming app. I’m always excited by projects that let me explore motion, 3D and push creative boundaries.", "Beyond design, I have a lifelong ambition: to create stories that leave a lasting impact. Through compelling characters, immersive worlds, beautiful visuals and music, I hope to create something that resonates with people, brings them together and maybe even changes the way they see the world, long after the screen goes dark."];
@@ -924,7 +956,7 @@ const TOOLS = ["Blender", "Cinema 4D", "After Effects", "Procreate", "Procreate 
 const BIO_DRAFT = ['Draft: Fernando Cuen Pérez, working as Evokai, is a 3D and motion designer based in Madrid, studying at U-TAD.', 'Draft: what you make and what draws you to it: the disciplines, the kind of projects you love, the stories you want to tell.', 'Draft: where you are now (internship, studio, freelance) and what you are looking for next.'];
 const LEAD = 'Got a project, a role or an idea? Let’s make it fire!';
 const DRAFT = ['Placeholder: two or three sentences on what this project is, who it was for and the idea behind it.', 'Placeholder: what you made, how you approached it, and how it turned out.'];
-const P = [{"slug": "reel", "title": "Demo Reel", "yt": "UeAljsXohXs", "local": "media/reel/reel.mp4", "year": "2026", "reel": true, "tags": ["Motion Design", "Animation"], "info": ["The culmination of all my past projects."], "tools": "After Effects, Procreate Dreams", "music": "“Magic What We Do (Surreal Montage)” — Ludwig Göransson feat. Miles Caton. Written by Ludwig Göransson & Raphael Saadiq. Produced by Ludwig Göransson. From Sinners (2025)."}, {"slug": "infinite-chances", "title": "Infinite Chances", "yt": "Kcz53-mWlhk", "year": "2025", "tags": ["3D Animation", "Motion Design", "2D Animation"], "info": ["“As long as I live, there are INFINITE CHANCES.” — Monkey D. Luffy", "This is the sentence that changed my life forever, a sentence that reminded me that, while I’m still breathing, it ain’t over. While I’m still breathing, anything is possible. I hope to one day inspire people as much as Luffy has inspired me. So for my first big project, I dedicate it to him and to his author, Eiichiro Oda."], "ctx": "Final project for Art Direction class", "tools": "Blender, After Effects, Procreate, Procreate Dreams, ElevenLabs", "music": "“Timefracture” by Bad History"}, {"slug": "sans-chaines", "title": "Sans Chaînes", "yt": "RmzZugM8DuE", "year": "2025", "deck": 24, "tags": ["Art Direction", "Branding", "Packaging", "3D"], "info": ["This is Sans Chaînes. French for “without chains”. A bold name considering the design choices surrounding this fragrance, but that’s exactly what I was going for.", "The idea I wanted to convey is that, once you use this elixir of liberation, you remove all things chaining you down and limiting who you are. Be who you want to be, regardless of what everybody else tells you. Free yourself. Become one without chains."], "ctx": "Art Direction project: design a perfume and the brand that produces it", "tools": "Blender, After Effects, Photoshop, Illustrator, InDesign, Procreate", "music": "“Broken Bones” by KALEO. My thanks go completely to them: this song is what inspired the project."}, {"slug": "combustion", "title": "Combustion", "yt": "D0YkVO-vL1o", "year": "2025", "tags": ["2D Animation", "Motion Design", "Event Identity"], "info": ["A cultural event that brings together dance, music and fire, exploring the human connection between the sound and the flame."], "ctx": "Project for Proyectos III", "tools": "Procreate Dreams, Procreate, After Effects, Illustrator, Photoshop, Figma", "music": "“FIRE” by Barns Courtney", "credits": "Made with Marina Mesa"}, {"slug": "ummy", "title": "Ummy", "yt": "Qcadwb03Z1M", "year": "2025", "tags": ["Branding", "Character Design", "Motion Design"], "info": ["Ummys are functional vitamin gummies disguised as “tiny helpers for big minds,” designed for the chaotic, high-speed lives of Gen Z creatives who want self-care without the boring clinical vibe. Positioned as “micro-pulses of well-being,” they aren’t just supplements: they are adorable, edible characters meant to guide you through your daily mental rollercoaster. The “Calm” gummy pulls you back from the “edge of collapse,” the “Focus” treat feeds your inner “hyper-precise mini artist,” and the “Creativity” flavor sparks a “controlled internal rave”.", "With a soft, “frosted glass” aesthetic that mimics clearing away brain fog, Ummys turn taking your Ashwagandha or B12 into a tasty, aesthetic ritual that feels less like a chore and more like a warm hug for your brain."], "ctx": "Project for Proyectos III", "tools": "Procreate Dreams, Gemini, Nano Banana, After Effects, Photoshop, Figma", "credits": "Made with Marta Carril"}, {"slug": "hero", "title": "Hero", "yt": "VpLTjYeB6qw", "year": "2025", "tags": ["Video Editing", "Post-production", "Motion Graphics"], "info": ["A tribute to all those heroes that inspired me to keep going."], "ctx": "Final project for Postproduction class", "tools": "Premiere Pro, After Effects", "music": "“Holding Out for a Hero” — Jennifer Saunders, from the Shrek 2 soundtrack"}, {"slug": "evokai", "title": "Evokai Style Guide", "yt": "a5KPRoC_Wcs", "year": "2024", "tags": ["Visual Identity", "Branding", "3D", "Motion Design"], "info": ["The EVOKAI style guide was a defining project in my development as an artist. Rather than simply building a brand, I created a visual identity that represented my own evolution: a commitment to growth, experimentation and continuous improvement. Before starting it, I didn’t have much discipline or direction in my creative life, and I rarely pushed myself beyond the basics.", "Evokai changed that. What began as a style guide quickly became a personal milestone: I pushed myself beyond my comfort zone, teaching myself Blender and After Effects from scratch so I could produce a full presentation video that brought the concept to life. Looking back, the work itself was only the starting point; the real value of this project was proving to myself that I could adapt, learn fast, and rise to a creative challenge without being asked. Evokai became the symbol of that shift — the moment I stopped just making things and started becoming the artist I wanted to be."], "tools": "Blender, After Effects, Photoshop, Illustrator, InDesign"}, {"slug": "letterboxd", "title": "Letterboxd", "soon": true}, {"slug": "extra", "title": "Extra", "soon": true}];
+const P = [{"slug": "reel", "title": "Demo Reel", "yt": "UeAljsXohXs", "local": "media/reel/reel.mp4", "year": "2026", "reel": true, "tags": ["Motion Design", "Animation"], "info": ["The culmination of all my past projects."], "tools": "After Effects, Procreate Dreams", "music": "“Magic What We Do (Surreal Montage)” — Ludwig Göransson feat. Miles Caton. Written by Ludwig Göransson & Raphael Saadiq. Produced by Ludwig Göransson. From Sinners (2025)."}, {"slug": "the-gulag", "title": "The Gulag Fight", "vid": "media/the-gulag/reel.mp4", "vposter": "media/the-gulag/reel-poster.jpg", "logo": "media/the-gulag/logo.webp", "year": "2026", "badge": "New work", "ai": true, "tags": ["AI Art Direction", "Visual Design", "Pitch Deck", "Video Editing"], "info": ["The Gulag Fight is a Madrid martial-arts promoter running K1, kickboxing and muay thai nights. During my internship (June–July 2026) I designed its visual pitch around the JowkeFight × The Gulag event at Jowke Club on 19 June 2026.", "The main deliverable is a 19-slide sponsorship deck, iterated from V1 to V11. Almost every image in it is AI-generated with ChatGPT and Gemini, then composited in Photoshop with real event photography: branded gloves, the championship belt, sponsor stands, rings, fighters in sponsor gear, press-wall shots and torn-paper polaroid collages.", "Alongside the deck I edited a 45-second vertical promo reel in After Effects from real event footage. It ends on the Gulag logo and the promoter’s one rule: “Rey de la pista, quien pierde, no vuelve.”"], "client": "The Gulag Fight, Madrid", "ctx": "Visual design & AI art direction (internship)", "tools": "ChatGPT image generation, Google Gemini, Photoshop, Illustrator, After Effects", "note": "The reel uses real event footage; the deck visuals are AI-generated.", "deck": 19, "deckFirst": true, "pdf": "media/the-gulag/the-gulag-deck.pdf", "stats": [["1,500", "tickets, sold out"], ["3", "events, 3 sold out"], ["7,000+", "live viewers"], ["2M+", "monthly views"], ["4,000+", "at the after-party"]]}, {"slug": "infinite-chances", "title": "Infinite Chances", "yt": "Kcz53-mWlhk", "year": "2025", "tags": ["3D Animation", "Motion Design", "2D Animation"], "info": ["“As long as I live, there are INFINITE CHANCES.” — Monkey D. Luffy", "This is the sentence that changed my life forever, a sentence that reminded me that, while I’m still breathing, it ain’t over. While I’m still breathing, anything is possible. I hope to one day inspire people as much as Luffy has inspired me. So for my first big project, I dedicate it to him and to his author, Eiichiro Oda."], "ctx": "Final project for Art Direction class", "tools": "Blender, After Effects, Procreate, Procreate Dreams, ElevenLabs", "music": "“Timefracture” by Bad History"}, {"slug": "sans-chaines", "title": "Sans Chaînes", "yt": "RmzZugM8DuE", "year": "2025", "deck": 24, "tags": ["Art Direction", "Branding", "Packaging", "3D"], "info": ["This is Sans Chaînes. French for “without chains”. A bold name considering the design choices surrounding this fragrance, but that’s exactly what I was going for.", "The idea I wanted to convey is that, once you use this elixir of liberation, you remove all things chaining you down and limiting who you are. Be who you want to be, regardless of what everybody else tells you. Free yourself. Become one without chains."], "ctx": "Art Direction project: design a perfume and the brand that produces it", "tools": "Blender, After Effects, Photoshop, Illustrator, InDesign, Procreate", "music": "“Broken Bones” by KALEO. My thanks go completely to them: this song is what inspired the project."}, {"slug": "combustion", "title": "Combustion", "yt": "D0YkVO-vL1o", "year": "2025", "tags": ["2D Animation", "Motion Design", "Event Identity"], "info": ["A cultural event that brings together dance, music and fire, exploring the human connection between the sound and the flame."], "ctx": "Project for Proyectos III", "tools": "Procreate Dreams, Procreate, After Effects, Illustrator, Photoshop, Figma", "music": "“FIRE” by Barns Courtney", "credits": "Made with Marina Mesa"}, {"slug": "ummy", "title": "Ummy", "yt": "Qcadwb03Z1M", "year": "2025", "tags": ["Branding", "Character Design", "Motion Design"], "info": ["Ummys are functional vitamin gummies disguised as “tiny helpers for big minds,” designed for the chaotic, high-speed lives of Gen Z creatives who want self-care without the boring clinical vibe. Positioned as “micro-pulses of well-being,” they aren’t just supplements: they are adorable, edible characters meant to guide you through your daily mental rollercoaster. The “Calm” gummy pulls you back from the “edge of collapse,” the “Focus” treat feeds your inner “hyper-precise mini artist,” and the “Creativity” flavor sparks a “controlled internal rave”.", "With a soft, “frosted glass” aesthetic that mimics clearing away brain fog, Ummys turn taking your Ashwagandha or B12 into a tasty, aesthetic ritual that feels less like a chore and more like a warm hug for your brain."], "ctx": "Project for Proyectos III", "tools": "Procreate Dreams, Gemini, Nano Banana, After Effects, Photoshop, Figma", "credits": "Made with Marta Carril"}, {"slug": "hero", "title": "Hero", "yt": "VpLTjYeB6qw", "year": "2025", "tags": ["Video Editing", "Post-production", "Motion Graphics"], "info": ["A tribute to all those heroes that inspired me to keep going."], "ctx": "Final project for Postproduction class", "tools": "Premiere Pro, After Effects", "music": "“Holding Out for a Hero” — Jennifer Saunders, from the Shrek 2 soundtrack"}, {"slug": "evokai", "title": "Evokai Style Guide", "yt": "a5KPRoC_Wcs", "year": "2024", "tags": ["Visual Identity", "Branding", "3D", "Motion Design"], "info": ["The EVOKAI style guide was a defining project in my development as an artist. Rather than simply building a brand, I created a visual identity that represented my own evolution: a commitment to growth, experimentation and continuous improvement. Before starting it, I didn’t have much discipline or direction in my creative life, and I rarely pushed myself beyond the basics.", "Evokai changed that. What began as a style guide quickly became a personal milestone: I pushed myself beyond my comfort zone, teaching myself Blender and After Effects from scratch so I could produce a full presentation video that brought the concept to life. Looking back, the work itself was only the starting point; the real value of this project was proving to myself that I could adapt, learn fast, and rise to a creative challenge without being asked. Evokai became the symbol of that shift — the moment I stopped just making things and started becoming the artist I wanted to be."], "tools": "Blender, After Effects, Photoshop, Illustrator, InDesign"}, {"slug": "letterboxd", "title": "Letterboxd", "soon": true}, {"slug": "extra", "title": "Extra", "soon": true}];
 let view = 'home';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const tileHTML = P.map(p => p.soon
@@ -1026,8 +1058,14 @@ const GRAD = {
   'combustion':       ['#080100', [['#ff4d1a','20%','30%','85vmax',25,30], ['#ffb340','85%','70%','70vmax',-20,-30], ['#ffe9c2','70%','15%','45vmax',-30,30], ['#7c1d0a','30%','90%','70vmax',20,-20]]],
   'ummy':             ['#f3eff4', [['#ffb3c7','15%','25%','75vmax',25,30], ['#9fd2ff','85%','30%','70vmax',-25,30], ['#b4f2c4','30%','90%','70vmax',20,-30], ['#ffe08a','85%','85%','60vmax',-20,-25]]],
   'hero':             ['#07020b', [['#b8607e','20%','25%','80vmax',25,30], ['#5a2790','85%','40%','75vmax',-20,30], ['#1b3a9a','35%','90%','70vmax',20,-30], ['#ff7a4d','90%','90%','50vmax',-25,-20]]],
-  'evokai':           ['#0b0806', [['#ff5a1f','20%','30%','80vmax',25,30], ['#ffcf7a','85%','25%','55vmax',-25,30], ['#6b2a14','40%','90%','80vmax',15,-30], ['#ebe4d2','92%','85%','40vmax',-20,-25]]]
+  'the-gulag':        ['#050202', [['#4a050a','12%','18%','60vmax',25,30], ['#220205','86%','45%','80vmax',-25,30], ['#6a0910','78%','98%','40vmax',-20,-25], ['#0d0000','30%','70%','60vmax',20,-20]]],
+  'evokai':           ['#0b0806',[['#ff5a1f','20%','30%','80vmax',25,30], ['#ffcf7a','85%','25%','55vmax',-25,30], ['#6b2a14','40%','90%','80vmax',15,-30], ['#ebe4d2','92%','85%','40vmax',-20,-25]]]
 };
+/* torn-paper edges: a ragged clip-path along the top and bottom of an element (px depth) */
+function torn(el, d){ if (!el) return; let s = 7; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  const top = [], bot = []; for (let x = 0; x <= 100; x += 1.25 + r() * 2.5) { top.push(`${Math.min(100, x).toFixed(2)}% ${(r() * d).toFixed(1)}px`); bot.push(`${Math.min(100, x).toFixed(2)}% calc(100% - ${(r() * d).toFixed(1)}px)`); }
+  top.push(`100% ${(r() * d).toFixed(1)}px`); bot.push(`100% calc(100% - ${(r() * d).toFixed(1)}px)`);
+  el.style.clipPath = `polygon(${top.join(',')},${bot.reverse().join(',')})`; }
 function setGrad(slug){ const g = GRAD[slug] || GRAD.evokai, el = $('#cGrad'); el.style.setProperty('--g0', g[0]); el.style.setProperty('--k', 0);
   const mode = g[2] || ''; el.classList.toggle('flames', mode === 'flames'); el.classList.toggle('img', mode.startsWith('img:'));
   if (mode.startsWith('img:')) { const src = mode.slice(4); el.style.setProperty('--src', `url(${src})`); const im = new Image(); im.onload = () => el.style.setProperty('--ar', (im.naturalHeight / im.naturalWidth).toFixed(4)); im.src = src; }
@@ -1065,7 +1103,11 @@ function flames(on){
 }
 let heroWantsSound = true;
 const soundOK = () => !!(navigator.userActivation ? navigator.userActivation.hasBeenActive : soundOK.done);
-function heroSound(h, on){ const f = h && h.querySelector('.cbg iframe'); if (!f || h.classList.contains('playing')) return;
+function heroSound(h, on){
+  const v = h && h.querySelector('.cbg video.cvert');   // projects with their own film file (no YouTube)
+  if (v) { if (h.classList.contains('playing')) return; v.muted = !(on && soundOK()); h.classList.toggle('muted', v.muted); v.play().catch(() => { v.muted = true; h.classList.add('muted'); v.play().catch(() => {}); });
+    const b = h.querySelector('.csound'); if (b) b.setAttribute('aria-label', v.muted ? 'Turn sound on' : 'Mute film'); return; }
+  const f = h && h.querySelector('.cbg iframe'); if (!f || h.classList.contains('playing')) return;
   const cmd = (func, args) => f.contentWindow && f.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args: args || [] }), '*');
   if (on && soundOK()) { cmd('unMute'); cmd('setVolume', [100]); h.classList.remove('muted'); } else { cmd('mute'); h.classList.add('muted'); }
   const b = h.querySelector('.csound'); if (b) b.setAttribute('aria-label', h.classList.contains('muted') ? 'Turn sound on' : 'Mute film'); }
@@ -1076,14 +1118,20 @@ function mountHero(p){
   const h = $('#cHero'), STILLS = ['infinite-chances','sans-chaines','combustion','evokai','ummy'];
   const poster = `media/${p.slug}/${STILLS.includes(p.slug) ? 'still' : 'poster'}.jpg`;
   h.classList.remove('playing');
-  h.innerHTML = `<div class="cbg"><img src="${poster}" alt="" width="1920" height="1080">${PREVIEW || reduce ? '' : `<iframe src="${ytBg(p.yt, !soundOK())}" title="" tabindex="-1" aria-hidden="true" allow="autoplay; encrypted-media"></iframe>`}</div>
+  const bg = p.vid
+    ? `<div class="cbg cvid"><img class="cblur" src="${p.vposter}" alt="" width="1080" height="1920"><video class="cvert" src="${p.vid}" poster="${p.vposter}" playsinline loop muted preload="${reduce ? 'none' : 'auto'}" aria-label="${esc(p.title)} promo reel"></video></div>`
+    : `<div class="cbg"><img src="${poster}" alt="" width="1920" height="1080">${PREVIEW || reduce ? '' : `<iframe src="${ytBg(p.yt, !soundOK())}" title="" tabindex="-1" aria-hidden="true" allow="autoplay; encrypted-media"></iframe>`}</div>`;
+  h.innerHTML = `${bg}
     <button type="button" class="csound" aria-label="Mute film"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="w" d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
     <div class="cshade"></div>
     <div class="cover"><h1 class="ctitle">${esc(p.title)}</h1><div class="cact"><button type="button" class="cplay"><svg viewBox="0 0 24 24"><path d="M6.5 4.5l13 7.5-13 7.5z"/></svg>${p.reel ? 'Play reel' : 'Play film'}</button>${navigator.share ? '<button type="button" class="cshare"><svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Share</button>' : ''}<span class="cscroll"><i></i>Scroll</span></div></div>
     <button type="button" class="cclose" aria-label="Close film">×</button>`;
   const f = h.querySelector('.cbg iframe'); if (f && touch) { const src = f.src; f.removeAttribute('src'); setTimeout(() => { if (f.isConnected) f.src = src; }, 2500); }
   if (f) f.addEventListener('load', () => { setTimeout(() => f.classList.add('on'), 1400); setTimeout(() => heroSound(h, heroWantsSound), 900); }, { once: true });
+  const vv = h.querySelector('.cbg video.cvert');
+  if (vv && !reduce) heroSound(h, heroWantsSound);
   const play = () => {
+    if (vv) { h.classList.add('playing'); window.scrollTo({ top: 0, behavior: 'smooth' }); vv.loop = false; vv.controls = true; vv.muted = false; vv.currentTime = 0; vv.play().catch(() => {}); return; }
     if (PREVIEW) { window.open(`https://youtu.be/${p.yt}`, '_blank', 'noopener'); return; }
     h.classList.add('playing'); window.scrollTo({ top: 0, behavior: 'smooth' });
     h.querySelector('.cbg').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${p.yt}?autoplay=1&rel=0&playsinline=1&color=white" title="${esc(p.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
@@ -1091,7 +1139,7 @@ function mountHero(p){
   // clicking anywhere on the film (not on a button) opens the full player, like the Play button
   h.onclick = e => { if (h.classList.contains('playing') || e.target.closest('button, a')) return; play(); }; // onclick (not addEventListener): #cHero is reused, so old projects' handlers must not pile up
   h.querySelector('.csound').addEventListener('click', () => { heroWantsSound = !heroWantsSound; heroSound(h, heroWantsSound); });
-  h.classList.toggle('muted', !heroWantsSound || !soundOK());
+  h.classList.toggle('muted', vv ? vv.muted : (!heroWantsSound || !soundOK()));
   h.querySelector('.cplay').addEventListener('click', play);
   h.querySelector('.cclose').addEventListener('click', () => mountHero(p));
   const sh = h.querySelector('.cshare'); if (sh) sh.addEventListener('click', () => navigator.share({ title: `${p.title} — Evokai`, text: `${p.title} by Fernando Cuen Pérez (Evokai)`, url: location.href }).catch(() => {}));
@@ -1099,25 +1147,37 @@ function mountHero(p){
 function renderProject(slug){
   const p = bySlug[slug], g = (GAL[slug] || []).slice();
   document.title = `${p.title} — Evokai`;
+  document.body.dataset.proj = slug;   // lets a project carry its own look (e.g. The Gulag Fight)
   mountHero(p); setGrad(slug);
   // split the write-up: a “quote — who” line becomes a big quote, the first paragraph opens, the rest sit between pictures
   const info = (p.info || DRAFT).slice(); let quote = null;
   const qi = info.findIndex(t => /^[“"]/.test(t) && / — /.test(t)); if (qi > -1) { const [q, who] = info.splice(qi, 1)[0].split(' — '); quote = { q: q.replace(/^[“"]|[”"]$/g, ''), who }; }
   const intro = info.splice(0, 1), rest = info;
-  const meta = [['Year', p.year], ['Role', p.ctx], ['Made with', p.tools], ['Music', p.music], ['Credits', p.credits]].filter(x => x[1]);
-  $('#cIntro').innerHTML = `<div><span class="ckick tx">${esc((p.tags || []).join(' · '))}</span><h2 class="tx">${esc(p.title)}.</h2><div class="cbody tx">${intro.map(t => `<p>${esc(t)}</p>`).join('')}</div></div>
+  const meta = [['Year', p.year], ['Client', p.client], ['Role', p.ctx], ['Made with', p.tools], ['Music', p.music], ['Credits', p.credits], ['Note', p.note]].filter(x => x[1]);
+  $('#cIntro').innerHTML = `<div>${p.logo ? `<img class="clogo tx" src="${p.logo}" alt="${esc(p.title)} logo" width="1000" height="697">` : ''}<span class="ckick tx">${esc((p.tags || []).join(' · '))}</span><h2 class="tx">${esc(p.title)}.</h2><div class="cbody tx">${intro.map(t => `<p>${esc(t)}</p>`).join('')}</div></div>
     <div class="cmeta tx">${meta.map(([k, v]) => `<div><span>${k}</span><p>${esc(v)}</p></div>`).join('')}</div>`;
+  // numbers strip (torn-paper band) right under the intro
+  let st = $('#cStats'); if (!st) { st = document.createElement('section'); st.id = 'cStats'; st.className = 'cstats'; $('#cIntro').after(st); }
+  st.hidden = !p.stats; st.innerHTML = p.stats ? `<div class="cst-in">${p.stats.map(([n, l]) => `<div class="tx"><b>${esc(n)}</b><span>${esc(l)}</span></div>`).join('')}</div><p class="cst-src tx">Figures from the sponsorship deck</p>` : '';
+  if (p.stats) torn(st.querySelector('.cst-in'), 10);
+  // the presentation sits before the pictures when it is the main piece
+  if (p.deckFirst) st.after($('#pDeck')); else $('#cFlow').after($('#pDeck'));
+  let pdf = $('#deckPdf'); if (!pdf) { pdf = document.createElement('a'); pdf.id = 'deckPdf'; pdf.className = 'dpdf'; pdf.target = '_blank'; pdf.rel = 'noopener'; pdf.textContent = 'Full deck (PDF) ↗'; $('.deckctl').prepend(pdf); }
+  pdf.hidden = !p.pdf; if (p.pdf) pdf.href = p.pdf;
   // pictures: a rhythm of layouts, like a printed case study
   let nFig = 0;
   const fig = x => { const m = x[0].replace('.webp', '-m.webp'); return `<figure class="rv"><img loading="${nFig++ < 2 ? 'eager' : 'lazy'}" decoding="async" draggable="false" src="media/${slug}/${x[0]}" srcset="media/${slug}/${m} 800w, media/${slug}/${x[0]} ${x[1]}w" sizes="(max-width: 760px) 66vw, 62vw" width="${x[1]}" height="${x[2]}" alt="${esc(p.title)}, still"></figure>`; };
-  const port = x => x[2] > x[1] * 1.05;
+  const port = x => Array.isArray(x) && x[2] > x[1] * 1.05;
   const LAND = ['full', 'pair', 'right', 'tess', 'left', 'full', 'pair', 'left', 'right'];
-  let blocks = [], li = 0, side = 0;
+  let blocks = [], li = 0, side = 0, gi = 0;
   while (g.length) {
     const x = g[0];
+    if (typeof x === 'string') { g.shift(); const [t, sub] = x.slice(1).split('|'); li = 0;   // group heading
+      blocks.push(`<section class="cgrp"><span class="tx">${String(++gi).padStart(2, '0')}</span><h3 class="tx">${esc(t)}</h3>${sub ? `<p class="tx">${esc(sub)}</p>` : ''}</section>`); continue; }
+    if (x.iter) { g.shift(); blocks.push(`<section class="cb cb-iter"><span class="lab tx">Iterations</span><div>${x.iter.map(fig).join('')}</div></section>`); continue; }
     if (port(x)) { if (g[1] && port(g[1])) { blocks.push(`<section class="cb cb-pair pp">${fig(g.shift())}${fig(g.shift())}</section>`); } else { blocks.push(`<section class="cb ${side++ % 2 ? 'cb-plR' : 'cb-plL'}">${fig(g.shift())}</section>`); } continue; }
     let k = LAND[li++ % LAND.length];
-    const landAhead = n => g.slice(0, n).every(y => !port(y)) && g.length >= n;
+    const landAhead = n => g.slice(0, n).every(y => Array.isArray(y) && !port(y)) && g.length >= n;
     if (k === 'tess' && !landAhead(3)) k = 'full';
     if (k === 'pair' && !landAhead(2)) k = 'full';
     if (k === 'tess') blocks.push(`<section class="cb cb-tess">${fig(g.shift())}<div class="col">${fig(g.shift())}${fig(g.shift())}</div></section>`);
@@ -1126,10 +1186,11 @@ function renderProject(slug){
   }
   // weave the remaining text and the quote between the pictures
   const out = []; let ti = 0;
-  blocks.forEach((b, i) => { out.push(b); if (i % 2 === 1 && ti < rest.length) out.push(`<section class="ctext"><p class="tx">${esc(rest[ti++])}</p></section>`); if (quote && i === Math.min(2, blocks.length - 1)) { out.push(`<section class="cquote"><blockquote class="tx">“${esc(quote.q)}”</blockquote><cite class="tx">${esc(quote.who)}</cite></section>`); quote = null; } });
+  blocks.forEach((b, i) => { out.push(b); if (i % 2 === 1 && ti < rest.length && !b.startsWith('<section class="cgrp')) out.push(`<section class="ctext"><p class="tx">${esc(rest[ti++])}</p></section>`); if (quote && i === Math.min(2, blocks.length - 1)) { out.push(`<section class="cquote"><blockquote class="tx">“${esc(quote.q)}”</blockquote><cite class="tx">${esc(quote.who)}</cite></section>`); quote = null; } });
   while (ti < rest.length) out.push(`<section class="ctext"><p class="tx">${esc(rest[ti++])}</p></section>`);
   if (quote) out.push(`<section class="cquote"><blockquote class="tx">“${esc(quote.q)}”</blockquote><cite class="tx">${esc(quote.who)}</cite></section>`);
   $('#cFlow').innerHTML = out.join('');
+  document.querySelectorAll('#cFlow .cgrp h3').forEach(e => torn(e, 6));
   $('#pDeck').hidden = !p.deck; $('#pStrip').scrollLeft = 0;
   $('#pStrip').innerHTML = p.deck ? Array.from({ length: p.deck }, (_, k) => `<img loading="lazy" decoding="async" draggable="false" src="media/${slug}/book/${String(k + 1).padStart(2, '0')}.webp" srcset="media/${slug}/book/${String(k + 1).padStart(2, '0')}-m.webp 800w, media/${slug}/book/${String(k + 1).padStart(2, '0')}.webp 1600w" sizes="(max-width: 760px) 66vw, 900px" width="1600" height="899" alt="${esc(p.title)} presentation, page ${k + 1}">`).join('') : '';
   if (p.deck) deckCount();
