@@ -17,8 +17,8 @@ vec3 sunsetSky(vec3 d, vec3 sun){
   c = mix(c, vec3(1.0, 0.42, 0.12), smoothstep(0.00, 0.05, e));    // orange
   c = mix(c, vec3(0.86, 0.24, 0.22), smoothstep(0.04, 0.10, e));   // coral / warm red
   c = mix(c, vec3(0.62, 0.24, 0.44), smoothstep(0.09, 0.18, e));   // dusty pink
-  c = mix(c, vec3(0.28, 0.14, 0.46), smoothstep(0.16, 0.32, e));   // violet
-  c = mix(c, vec3(0.035, 0.035, 0.15), smoothstep(0.30, 0.72, e)); // deep blue
+  c = mix(c, vec3(0.28, 0.14, 0.46), smoothstep(0.13, 0.26, e));   // violet
+  c = mix(c, vec3(0.03, 0.03, 0.13), smoothstep(0.22, 0.52, e));   // deep blue dusk, where the stars come out
   float az = max(dot(normalize(vec3(d.x, 0., d.z)), normalize(vec3(sun.x, 0., sun.z))), 0.0);
   c *= mix(0.78, 1.12, az);                                         // warmer towards the sun
   float s = max(dot(d, sun), 0.0);
@@ -39,6 +39,19 @@ vec3 cloudLayer(vec3 d, vec3 sun, vec3 base, float t){
   vec3 cc = mix(shade, rim, clamp(lit * 0.75 + pow(toSun, 4.0) * 0.35, 0.0, 1.0));
   return mix(base, cc, dens * 0.92);
 }
+// a galactic band of dust lanes and star clouds across the sky
+vec3 milkyWay(vec3 d){
+  vec3 nb = normalize(vec3(0.85, 0.42, 0.28));
+  float h = dot(d, nb);
+  float band = exp(-h * h * 34.0), core = exp(-h * h * 140.0);
+  vec3 q = d * 7.0;
+  float clouds = fbm(q), lanes = fbm3(q * 2.2 + 4.0);
+  float dust = smoothstep(0.45, 0.72, lanes) * exp(-h * h * 260.0);          // dark lane along the middle
+  float along = 0.5 + 0.5 * dot(normalize(d - nb * h), normalize(vec3(-0.6, 0.55, -0.58)));
+  vec3 col = mix(vec3(0.45, 0.55, 1.0), vec3(1.0, 0.78, 0.55), pow(along, 3.0));   // warm bulge, blue arms
+  float grain = smoothstep(0.7, 1.0, vnoise(d * 180.0)) * 0.9;               // unresolved star clumps
+  return col * (band * (0.18 + clouds * 0.55) + core * 0.35 * along + grain * band * 0.5) * (1.0 - dust * 0.85);
+}
 vec3 cosmicSky(vec3 d){
   vec3 c = vec3(0.025, 0.018, 0.075);
   float n = fbm(d * 2.6 + vec3(3.1, 0.0, 1.7));
@@ -46,6 +59,7 @@ vec3 cosmicSky(vec3 d){
   c += vec3(0.42, 0.14, 0.70) * smoothstep(0.45, 0.85, n) * 0.9;   // violet clouds
   c += vec3(0.90, 0.20, 0.62) * smoothstep(0.62, 0.95, n * m * 1.6) * 0.8; // magenta cores
   c += vec3(0.15, 0.45, 1.00) * smoothstep(0.55, 0.9, m) * 0.55;  // electric blue
+  c += milkyWay(d) * 1.1;
   return c;
 }
 `;
@@ -61,7 +75,7 @@ export function makeSky(sunDir){
         vec3 d = normalize(vDir);
         float below = 1.0 - smoothstep(-0.06, 0.01, d.y);         // under the horizon: the cosmos is always there
         vec3 c;
-        if (uMix < 0.999) { vec3 s = cloudLayer(d, uSun, sunsetSky(d, uSun), uTime); c = s; }
+        if (uMix < 0.999) { vec3 s = sunsetSky(d, uSun); s += milkyWay(d) * smoothstep(0.1, 0.4, d.y) * 0.7; c = cloudLayer(d, uSun, s, uTime); }
         if (uMix > 0.001 || below > 0.001) { vec3 cs = cosmicSky(d); c = uMix < 0.999 ? mix(c, cs, max(uMix, below)) : cs; }
         c += vec3(0.55, 0.32, 0.95) * exp(-abs(d.y + 0.05) * 22.0) * below * (1.0 - uMix) * 0.7; // glow of the cosmos under the edge
         gl_FragColor = vec4(c, 1.0);
@@ -75,25 +89,71 @@ export function makeSky(sunDir){
 }
 
 export function makeStars(n){
-  const pos = new Float32Array(n * 3), aSize = new Float32Array(n), aPh = new Float32Array(n);
+  const pos = new Float32Array(n * 3), aCol = new Float32Array(n * 3), aSize = new Float32Array(n), aPh = new Float32Array(n);
   for (let i = 0; i < n; i++) {
     const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u);
     pos.set([r * Math.cos(a) * 1400, u * 1400, r * Math.sin(a) * 1400], i * 3);
-    const big = Math.random() < 0.035; aSize[i] = big ? 2.6 + Math.random() * 2 : 0.8 + Math.random() * 1.2; aPh[i] = Math.random() * 6.28;
+    const big = Math.random() < 0.03; aSize[i] = big ? 2.4 + Math.random() * 2.2 : 0.7 + Math.random() * 1.1; aPh[i] = Math.random() * 6.28;
+    const tk = Math.random(); aCol.set(tk < 0.2 ? [0.7, 0.8, 1.0] : tk < 0.32 ? [1.0, 0.78, 0.55] : [1.0, 0.97, 0.92], i * 3);
   }
   const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aSize', new THREE.BufferAttribute(aSize, 1)); g.setAttribute('aPh', new THREE.BufferAttribute(aPh, 1));
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aSize', new THREE.BufferAttribute(aSize, 1)); g.setAttribute('aPh', new THREE.BufferAttribute(aPh, 1)); g.setAttribute('aCol', new THREE.BufferAttribute(aCol, 3));
   const uniforms = { uMix: { value: 0 }, uTime: { value: 0 }, uPx: { value: Math.min(devicePixelRatio || 1, 2) } };
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    vertexShader: `attribute float aSize; attribute float aPh; uniform float uTime, uMix, uPx; varying float vA;
+    vertexShader: `attribute float aSize; attribute float aPh; attribute vec3 aCol; uniform float uTime, uMix, uPx; varying float vA; varying vec3 vC;
       void main(){ vec3 d = normalize(position); float e = d.y;
-        float sunsetVis = smoothstep(0.16, 0.5, e) * 0.8;        // stars only in the upper sunset sky
+        vC = aCol; float sunsetVis = smoothstep(0.04, 0.26, e);        // stars only in the upper sunset sky
         vA = mix(sunsetVis, 1.0, uMix) * (0.65 + 0.35 * sin(uTime * (1.2 + aPh * 0.3) + aPh * 10.0));
-        gl_PointSize = aSize * uPx * mix(1.0, 1.25, uMix);
+        gl_PointSize = aSize * uPx * 1.15;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position.z = gl_Position.w * 0.9999; }`,
-    fragmentShader: `varying float vA; void main(){ vec2 p = gl_PointCoord - .5; float d = length(p); float a = smoothstep(.5, 0., d); gl_FragColor = vec4(vec3(1.0, 0.96, 0.9) * a * vA, a * vA); }`
+    fragmentShader: `varying float vA; varying vec3 vC; void main(){ vec2 p = gl_PointCoord - .5; float d = length(p); float a = smoothstep(.5, 0., d); a = a * a + exp(-d * 18.0) * 0.6; gl_FragColor = vec4(vC * a * vA * 1.4, a * vA); }`
   });
   const points = new THREE.Points(g, mat); points.frustumCulled = false; points.renderOrder = -9;
   return { points, uniforms };
+}
+
+// ---------- distant galaxies: procedural spiral textures on tilted planes around the sky ----------
+function galaxyTexture(seed, kind){
+  const S = 256, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
+  let st = seed * 7919 + 13; const R = () => ((st = (st * 16807) % 2147483647) / 2147483647);
+  x.globalCompositeOperation = 'lighter';
+  const core = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.3);
+  core.addColorStop(0, 'rgba(255,240,215,1)'); core.addColorStop(0.25, 'rgba(255,200,150,.55)'); core.addColorStop(1, 'rgba(255,170,120,0)');
+  x.fillStyle = core; x.fillRect(0, 0, S, S);
+  if (kind === 'elliptical') {
+    const g = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.48); g.addColorStop(0, 'rgba(255,215,180,.5)'); g.addColorStop(1, 'rgba(255,190,160,0)');
+    x.fillStyle = g; x.fillRect(0, 0, S, S);
+  } else {
+    const arms = 2 + (R() * 2 | 0), twist = 1.05 + R() * 0.55, hue = R(), st0 = st;
+    for (let pass = 0; pass < 2; pass++) { st = st0; x.filter = pass ? 'none' : 'blur(7px)'; x.globalAlpha = pass ? 0.22 : 1;
+    for (let i = 0; i < 2600; i++) {
+      const arm = i % arms, t = Math.pow(R(), 0.7), r = t * S * 0.46;
+      const a = arm / arms * Math.PI * 2 + t * twist * Math.PI + (R() - 0.5) * (0.9 - t * 0.35);
+      const px = S / 2 + Math.cos(a) * r, py = S / 2 + Math.sin(a) * r;
+      const blue = t > 0.35 && R() < 0.6, pink = R() < 0.08;
+      x.fillStyle = pink ? 'rgba(255,120,190,.5)' : blue ? (hue < .5 ? 'rgba(150,180,255,.32)' : 'rgba(170,150,255,.32)') : 'rgba(255,215,170,.25)';
+      const sz = (R() * 2.2 + 0.4) * (pass ? 0.7 : 1.6); x.beginPath(); x.arc(px, py, sz, 0, 7); x.fill();
+    } }
+    x.filter = 'none'; x.globalAlpha = 1;
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const lerpN = (a, b, t) => a + (b - a) * t;
+export function makeGalaxies(n){
+  let gs = 20261121; const rg = () => ((gs = (gs * 16807) % 2147483647) / 2147483647);   // fixed layout
+  const group = new THREE.Group(); group.renderOrder = -8; const list = [];
+  for (let i = 0; i < n; i++) {
+    const high = i < Math.ceil(n * 0.6);                                  // most sit high enough to show above the sunset
+    const el = high ? 0.16 + rg() * (i % 2 ? 0.14 : 0.45) : -0.6 + rg() * 0.9, az = high ? -Math.PI / 2 + (rg() - 0.5) * 2.6 : rg() * Math.PI * 2, ce = Math.sqrt(1 - el * el);
+    const dir = new THREE.Vector3(Math.cos(az) * ce, el, Math.sin(az) * ce);
+    const kind = i % 4 === 3 ? 'elliptical' : 'spiral', size = (kind === 'elliptical' ? 40 : 60) + rg() * (high ? 70 : 140);
+    const m = new THREE.MeshBasicMaterial({ map: galaxyTexture(i + 3, kind), color: new THREE.Color(1.7, 1.6, 1.7), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0, toneMapped: true });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), m);
+    mesh.position.copy(dir).multiplyScalar(1300); mesh.lookAt(0, 0, 0);
+    mesh.rotateZ(rg() * Math.PI); mesh.rotateX((rg() - 0.5) * 2.2);          // inclination
+    mesh.frustumCulled = false; mesh.renderOrder = -8;
+    group.add(mesh); list.push({ m, high, k: 0.6 + rg() * 0.6, dusk: THREE.MathUtils.smoothstep(el, 0.16, 0.42) });
+  }
+  return { group, update(cam, mix){ group.position.copy(cam); for (const g of list) g.m.opacity = g.k * (g.high ? lerpN(0.22 + g.dusk * 0.5, 1, mix) : mix); } };
 }

@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { makeSky, makeStars } from './sky.js';
+import { makeSky, makeStars, makeGalaxies } from './sky.js';
 import { makeOcean, makeWaterfall, makeAura, makeMotes } from './ocean.js';
 import { makeIsland } from './islands.js';
 import { shipMaterials } from './shipmat.js';
@@ -16,6 +16,7 @@ const EDGE_U = 0.62;                 // where the sunset ocean ends
 const EDGE_Z = -EDGE_U * L;
 const FLY_Y = 6;                     // height the ship floats at beyond the edge
 const SUN_DIR = new THREE.Vector3(-0.42, 0.075, -1).normalize();
+const KEY_DIR = new THREE.Vector3(-0.5, 0.42, -1).normalize();   // light comes from the sunset side, a little higher than the disc so shapes read
 
 // Islands along the route. slug = project page; null = placeholder.
 const ISLANDS = [
@@ -68,6 +69,7 @@ export function createVoyage(root){
   const maxDpr = touch ? 1.5 : 1.75; let dpr = Math.min(devicePixelRatio || 1, maxDpr);
   gl.setPixelRatio(dpr); gl.outputColorSpace = THREE.SRGBColorSpace;
   gl.toneMapping = THREE.ACESFilmicToneMapping; gl.toneMappingExposure = 0.95;
+  if (!touch) { gl.shadowMap.enabled = true; gl.shadowMap.type = THREE.PCFSoftShadowMap; }
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, 1, 0.3, 4000);
@@ -75,13 +77,16 @@ export function createVoyage(root){
 
   // ---------- world ----------
   const sky = makeSky(SUN_DIR); scene.add(sky.mesh);
-  const stars = makeStars(touch ? 1400 : 2800); scene.add(stars.points);
+  const stars = makeStars(touch ? 2200 : 5200); scene.add(stars.points);
+  const galaxies = makeGalaxies(touch ? 6 : 11); scene.add(galaxies.group);
   const ocean = makeOcean({ rings: touch ? 110 : 150, segs: touch ? 180 : 288, edgeZ: EDGE_Z, sunDir: SUN_DIR }); scene.add(ocean.mesh);
   const fall = makeWaterfall(EDGE_Z, 150); scene.add(fall.mesh);
   const aura = makeAura(EDGE_Z, -L, touch ? 36 : 70); scene.add(aura.group);
   const motes = makeMotes(touch ? 260 : 520); scene.add(motes.points);
 
-  const sun = new THREE.DirectionalLight(0xffc49a, 2.4); sun.position.copy(SUN_DIR).multiplyScalar(100); scene.add(sun); scene.add(sun.target);
+  const sun = new THREE.DirectionalLight(0xffc49a, 2.4); sun.position.copy(KEY_DIR).multiplyScalar(100); scene.add(sun); scene.add(sun.target);
+  if (!touch) { sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = sc.bottom = -38; sc.right = sc.top = 38; sc.near = 1; sc.far = 260;
+    sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04; sun.shadow.radius = 3; }
   const hemi = new THREE.HemisphereLight(0xe8d6ff, 0x0a3340, 0.7); scene.add(hemi);
   const back = new THREE.DirectionalLight(0x9a7dff, 0.9); back.position.set(40, 25, 60); scene.add(back);
   const engineLight = new THREE.PointLight(0xff7a2a, 22, 14, 2);
@@ -176,7 +181,7 @@ export function createVoyage(root){
   };
   const ray = new THREE.Raycaster(); let hoverI = -1;
   const glowEl = ui.querySelector('.v-glow');
-  const onMove = e => { hasMouse = true; mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); if (glowEl) glowEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`; };
+  const onMove = e => { if (!hasMouse) root.classList.remove('v-nomouse'); hasMouse = true; mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); if (glowEl) glowEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`; };
   const onClick = () => {
     if (hoverI < 0) return; const s = islands[hoverI];
     if (s.slug) location.hash = '#' + s.slug; else { s.el.classList.add('pulse'); setTimeout(() => s.el.classList.remove('pulse'), 700); }
@@ -205,9 +210,9 @@ export function createVoyage(root){
   // ---------- frame ----------
   const clock = new THREE.Clock();
   const shipPos = new THREE.Vector3(), fwd = new THREE.Vector3(), camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
-  const camPosS = new THREE.Vector3(), camLookS = new THREE.Vector3(); let first = true, fovS = 50;
+  const camPosS = new THREE.Vector3(), camLookS = new THREE.Vector3(); let first = true, first2 = true, fovS = 50;
   const tmp = new THREE.Vector3(), right = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), fogA = new THREE.Color(0xe39a74), fogB = new THREE.Color(0x1c0f33);
-  let raf = 0, active = false, lastU = prog;
+  let raf = 0, active = false, lastU = prog, wasMoving = false, lastMix = -1;
   function frame(){
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime, now = performance.now();
@@ -239,7 +244,7 @@ export function createVoyage(root){
     const dip = smooth(EDGE_U - 0.02, EDGE_U + 0.01, u) * (1 - smooth(EDGE_U + 0.04, EDGE_U + 0.1, u));
     camPos.copy(shipPos).addScaledVector(fwdH, tall ? -30 : -21).addScaledVector(right, (tall ? -3.5 : -13) + mouseS.x * 1.6)
       .add(tmp.set(0, (tall ? 7.5 : 5.6) + mouseS.y * 1.2 + dip * 5, 0));
-    camLook.copy(shipPos).addScaledVector(fwdH, tall ? 12 : 18).addScaledVector(right, tall ? -1 : -5).add(tmp.set(0, 1.6 - dip * 6, 0));
+    camLook.copy(shipPos).addScaledVector(fwdH, tall ? 12 : 18).addScaledVector(right, tall ? -1 : -5).add(tmp.set(0, 3.4 - dip * 7.5, 0));   // a touch more sky so the dusk stars show
 
     // inspect view: ease in towards the island's notice board, slow drift
     if (st.island != null && insp > 0.001) {
@@ -262,6 +267,7 @@ export function createVoyage(root){
     // world look
     sky.uniforms.uMix.value = mix; sky.uniforms.uTime.value = t; sky.mesh.position.copy(camera.position);
     stars.points.position.copy(camera.position); stars.uniforms.uMix.value = mix; stars.uniforms.uTime.value = t;
+    galaxies.update(camera.position, mix);
     ocean.mesh.visible = u < EDGE_U + 0.14;
     ocean.update(t, camera.position, mix, ship.position, yaw, (0.2 + Math.min(0.8, Math.abs(vel) * 18)) * (1 - smooth(0.3, 2.5, ship.position.y)));
     const nearEdge = Math.abs(u - EDGE_U) < 0.22;
@@ -298,8 +304,14 @@ export function createVoyage(root){
         const lx = Math.min(W - lw / 2 - 16, Math.max(lw / 2 + 16, (tmp.x + 1) / 2 * W)), ly = Math.min(H - 16, Math.max(lh + 84, (1 - tmp.y) / 2 * H));
         s.el.style.transform = `translate(${lx.toFixed(1)}px, ${ly.toFixed(1)}px) translate(-50%, -100%)`; }
     }
+    if (nearest && !touch) { const f = nd < 0.06 ? nearest.group.position : ship.position;
+      sun.target.position.lerp(f, first2 ? 1 : 1 - Math.exp(-dt * 4)); first2 = false; sun.position.copy(sun.target.position).addScaledVector(KEY_DIR, 120); }
     if (nearest) { nearest.group.localToWorld(islandLight.position.set(0, 4.5, 5)); islandLight.intensity = (0.35 + nearest.hover) * 45 * (1 - smooth(0.04, 0.1, nd)); islandLight.color.setRGB(1, lerp(0.62, 0.5, mix), lerp(0.3, 0.6, mix)); }
     cap.classList.toggle('on', !anim && !!st.edge);
+    const moving = !!anim || Math.abs(vel) > 0.004; if (moving !== wasMoving) { wasMoving = moving; root.classList.toggle('v-moving', moving); }
+    if (glowEl && Math.abs(mix - lastMix) > 0.01) { lastMix = mix;
+      glowEl.style.setProperty('--c1', `${lerp(255, 200, mix) | 0},${lerp(214, 190, mix) | 0},${lerp(150, 255, mix) | 0}`);
+      glowEl.style.setProperty('--c2', `${lerp(255, 140, mix) | 0},${lerp(140, 90, mix) | 0},${lerp(60, 255, mix) | 0}`); }
     railShip.style.top = (u * 100).toFixed(2) + '%';
     rail.querySelectorAll('button').forEach((b, i) => b.toggleAttribute('aria-current', i === stop));
     root.style.setProperty('--v-mix', mix.toFixed(3));
@@ -317,7 +329,7 @@ export function createVoyage(root){
 
   return {
     enter(){
-      if (active) return; active = true; root.hidden = false; resize();
+      if (active) return; active = true; root.hidden = false; resize(); if (!hasMouse) root.classList.add('v-nomouse');
       const go = () => { root.classList.add('v-ready'); if (!raf) { clock.getDelta(); frame(); } };
       shipReady ? go() : (onShip = go);
       addEventListener('resize', resize); addEventListener('keydown', onKey); document.addEventListener('visibilitychange', vis);
