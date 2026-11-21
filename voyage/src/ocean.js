@@ -210,7 +210,11 @@ export function makeAura(edgeZ, endZ, n){
     update(t, cam, mix, near){
       shared.uTime.value = t; shared.uMix.value = mix; shared.uCam.value.copy(cam);
       group.visible = mix > 0.005 || near;
-      for (const s of clouds) { s.material.opacity = s.userData.o * mix; s.material.rotation += s.userData.r * 0.016; }
+      for (const s of clouds) {
+        const d = s.position.distanceTo(cam), k = s.scale.x;              // fade clouds out before the camera reaches them
+        const f = THREE.MathUtils.smoothstep(d, k * 0.45, k * 1.3);
+        s.material.opacity = s.userData.o * mix * f; s.material.rotation += s.userData.r * 0.016;
+      }
     }
   };
 }
