@@ -74,8 +74,46 @@ function tri(pos, cols, a, b, c, col){ pos.push(...a, ...b, ...c); cols.push(...
 
 const PAL = {
   sea:    { top: [0xd8662a, 0xe2783a, 0xc95a24], side: 0xb04a1e, soil: [0x5a3a2c, 0x4c3127, 0x63402f], deep: 0x2a1d1a, stone: [0x6d6a6c, 0x5c595c, 0x7c787a], peak: [0xb8b6b8, 0xa5a3a7, 0xcfcdcf, 0x929095], water: 0x3fd6b5, leaf: [0xc4485a, 0xb23c4e, 0xd25a68], trunk: 0x5a3b2a },
-  cosmic: { top: [0x7d4fd6, 0x8c5fe0, 0x6a42c4], side: 0x5a36a6, soil: [0x2f2548, 0x281f3f, 0x372b54], deep: 0x16112a, stone: [0x4a4766, 0x3f3c58, 0x56527a], peak: [0x8d8aa8, 0x7c7898, 0xa29fbe, 0x6e6a8c], water: 0x5fe0ff, leaf: [0x3fc6ff, 0x5a8cff, 0x8a6cff], trunk: 0x2b2140 }
+  cosmic: { top: [0x7d4fd6, 0x8c5fe0, 0x6a42c4], side: 0x5a36a6, soil: [0x2f2548, 0x281f3f, 0x372b54], deep: 0x16112a, stone: [0x4a4766, 0x3f3c58, 0x56527a], peak: [0x8d8aa8, 0x7c7898, 0xa29fbe, 0x6e6a8c], water: 0x5fe0ff, leaf: [0x3fc6ff, 0x5a8cff, 0x8a6cff], trunk: 0x2b2140 },
+  // per-project islands: each one wears its project's look
+  ummy:   { top: [0xffb3c7, 0xf7c6e0, 0xc9b6ff], side: 0xff9fbf, soil: [0xd9b8f0, 0xc8a6e6, 0xe6c6f5], deep: 0x8f6fbf, stone: [0xffffff, 0xf1e8f5, 0xe4daee], peak: [0xfff0f6, 0xf6e2f0, 0xe9dcf5, 0xffffff], water: 0x8fd8ff, leaf: [0xb4f2c4, 0x9fd2ff, 0xffb3c7], trunk: 0xf3e6ef,
+            wood: 0xffd9e6, torch: 'orb', orb: [1.6, 0.9, 1.3], gummies: [0xffc94d, 0xff8fb0, 0xb08cff], backTrees: true },
+  gulag:  { top: [0x1d1b1c, 0x262324, 0x161415], side: 0xa50f18, soil: [0x2a2526, 0x231f20, 0x302a2b], deep: 0x0c0a0a, stone: [0x3a3637, 0x2f2c2d, 0x4a4546], peak: [0x403b3c, 0x353132, 0x4d4748, 0x2c2829], water: null, leaf: [0x8a0b12, 0x6e0910, 0xa50f18], trunk: 0x1a1616,
+            wood: 0x5a4444, ring: true, noTrees: true }
 };
+
+// Ummy: soft translucent gummy characters
+function gummy(col){
+  const parts = [], s = (r, x, y, z, sx = 1, sy = 1, sz = 1) => { const g = new THREE.SphereGeometry(r, 8, 6); g.scale(sx, sy, sz); g.translate(x, y, z); parts.push(g); };
+  s(0.5, 0, 0.62, 0, 1, 1.25, 0.85); s(0.42, 0, 1.45, 0);                         // body, head
+  s(0.14, -0.28, 1.8, 0); s(0.14, 0.28, 1.8, 0);                                   // ears
+  s(0.18, -0.52, 0.88, 0.05); s(0.18, 0.52, 0.88, 0.05); s(0.2, -0.25, 0.12, 0.1); s(0.2, 0.25, 0.12, 0.1);   // arms, feet
+  const m = new THREE.MeshStandardMaterial({ color: col, roughness: 0.25, metalness: 0, transparent: true, opacity: 0.9, emissive: col, emissiveIntensity: 0.22, flatShading: true });
+  return new THREE.Mesh(mergeGeometries(parts), m);
+}
+// The Gulag Fight: a fight-night ring in front of the board, red corner pads, ropes, a heavy bag
+function fightRing(group, R, top, side, shadows){
+  const red = new THREE.MeshStandardMaterial({ color: 0xa50f18, roughness: 0.55, flatShading: true });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x141213, roughness: 0.7, flatShading: true });
+  const rope = new THREE.MeshStandardMaterial({ color: 0xe8e2d6, roughness: 0.6 });
+  const add = (g, m, x, y, z) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = shadows; group.add(o); return o; };
+  add(new THREE.BoxGeometry(10.2, 0.14, 4.4), dark, 0, top + 0.26, 2.4);                       // canvas
+  add(new THREE.BoxGeometry(10.4, 0.1, 0.22), red, 0, top + 0.36, 4.5);                         // red apron edge
+  const corners = [[-4.9, 4.3], [4.9, 4.3], [-5.2, 0.8], [5.2, 0.8]];                            // back corners sit on the torch posts
+  for (const [x, z] of corners.slice(0, 2)) { add(new THREE.BoxGeometry(0.22, 1.7, 0.22), dark, x, top + 1.1, z); add(new THREE.BoxGeometry(0.42, 1.25, 0.42), red, x, top + 1.15, z); }
+  const seg = (a, b, y) => { const ax = a[0], az = a[1], bx = b[0], bz = b[1], len = Math.hypot(bx - ax, bz - az);
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, len, 5), rope); c.position.set((ax + bx) / 2, top + y, (az + bz) / 2);
+    c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(bx - ax, 0, bz - az).normalize()); group.add(c); };
+  for (const y of [0.5, 0.9, 1.3]) { seg(corners[0], corners[1], y); seg(corners[0], corners[2], y); seg(corners[1], corners[3], y); }
+  // heavy bag on a post, off to one side behind the ring
+  const bx = side * 5.4, bz = -2.2;
+  add(new THREE.BoxGeometry(0.28, 5.4, 0.28), dark, bx, top + 2.7, bz);
+  add(new THREE.BoxGeometry(1.7, 0.22, 0.22), dark, bx - side * 0.75, top + 5.3, bz);
+  add(new THREE.CylinderGeometry(0.04, 0.04, 1.1, 4), dark, bx - side * 1.4, top + 4.7, bz);
+  add(new THREE.CylinderGeometry(0.55, 0.55, 2.0, 10), red, bx - side * 1.4, top + 3.1, bz);
+  add(new THREE.CylinderGeometry(0.57, 0.57, 0.12, 10), dark, bx - side * 1.4, top + 4.08, bz); add(new THREE.CylinderGeometry(0.57, 0.57, 0.12, 10), dark, bx - side * 1.4, top + 2.12, bz);
+  mergeStatic(group, red); mergeStatic(group, dark); mergeStatic(group, rope);
+}
 
 // slab + underside as one faceted mesh. Returns geometry and helpers to sample the ground.
 function islandBody(R, pal, scale = 1, depth = 10.5){
@@ -176,7 +214,7 @@ function populate(group, R, pal, body, cosmic, opts){
   // little stones and bushes on top
   for (let i = 0; i < 6; i++) { const a = R() * 6.28, r = 4.6 + R() * 1.8, s = 0.18 + R() * 0.3; add(lowRock(R, pal.stone, s, s * 0.7, s), Math.cos(a) * r, body.top + 0.2, Math.sin(a) * r); }
   // trees around the back and sides, clear of the board
-  const spots = opts.small ? [[0.6, -0.4]] : (opts.peak ? [[-5.7, -1.6], [5.6, -2.0], [-4.4, -4.4]] : [[-5.7, -1.6], [5.6, -2.0], [-2.9, -5.0], [2.7, -5.2]]).filter(() => R() < 0.85);
+  const spots = pal.noTrees ? [] : pal.backTrees && !opts.small ? [[-2.9, -5.0], [2.7, -5.2]] : opts.small ? [[0.6, -0.4]] : (opts.peak ? [[-5.7, -1.6], [5.6, -2.0], [-4.4, -4.4]] : [[-5.7, -1.6], [5.6, -2.0], [-2.9, -5.0], [2.7, -5.2]]).filter(() => R() < 0.85);
   for (const [x, z] of spots) add(lowTree(R, pal, (opts.small ? 2.2 : 2.8 + R() * 1.4)), x * (opts.small ? 0.4 : 1), body.top + 0.1, z * (opts.small ? 0.4 : 1)).rotation.y = R() * 6.28;
   // a grey peak behind the board on some islands
   if (opts.peak) { const g = lowRock(R, pal.peak, 3.4, 7.5, 2.8, 1); g.translate(0, 5.4, 0); const p = add(g, (R() - 0.5) * 3, body.top - 0.6, -4.6); p.rotation.y = R() * 6; }
@@ -192,21 +230,21 @@ function mergeStatic(group, mat, keepUV = false){
   ms.forEach(m => group.remove(m)); group.add(merged); return merged;
 }
 
-export function makeIsland({ seed, title, image, cosmic, shadows = true }){
-  const R = rnd(seed), group = new THREE.Group(), pal = cosmic ? PAL.cosmic : PAL.sea;
+export function makeIsland({ seed, title, image, cosmic, shadows = true, theme = null }){
+  const R = rnd(seed), group = new THREE.Group(), pal = PAL[theme] || (cosmic ? PAL.cosmic : PAL.sea);
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.92, metalness: 0, envMapIntensity: 0.35 });
   const body = islandBody(R, pal);
   const rock = new THREE.Mesh(body.geo, mat); rock.castShadow = rock.receiveShadow = shadows; group.add(rock);
   const front = R() < 0.5 ? -1 : 1;
-  waterworks(group, R, pal, body, [front * 3.4, 3.2], cosmic, shadows);
+  if (pal.water) waterworks(group, R, pal, body, [front * 3.4, 3.2], cosmic, shadows);
   populate(group, R, pal, body, cosmic, { mat, shadows, peak: seed % 2 === 1 });
 
   // a small satellite chunk drifting below and behind (like the reference)
   const chunks = [];
   { const s = 0.42, cb = islandBody(R, pal, s, 9); const cg = new THREE.Group(); const cm = new THREE.Mesh(cb.geo, mat); cm.castShadow = cm.receiveShadow = shadows; cg.add(cm);
     populate(cg, R, pal, cb, cosmic, { mat, shadows, small: true }); mergeStatic(cg, mat);
-    const pond = new THREE.Mesh(new THREE.CircleGeometry(1.0, 8).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: pal.water, roughness: 0.15, flatShading: true, emissive: pal.water, emissiveIntensity: cosmic ? 0.5 : 0.1 }));
-    pond.position.set(-0.5, cb.top + 0.16, 0.6); cg.add(pond);
+    if (pal.water) { const pond = new THREE.Mesh(new THREE.CircleGeometry(1.0, 8).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: pal.water, roughness: 0.15, flatShading: true, emissive: pal.water, emissiveIntensity: cosmic ? 0.5 : 0.1 }));
+    pond.position.set(-0.5, cb.top + 0.16, 0.6); cg.add(pond); }
     cg.position.set(-front * (11 + R() * 3), -5 - R() * 3, -5 - R() * 4); cg.userData = { y: cg.position.y, ph: R() * 6 }; group.add(cg); chunks.push(cg); }
 
   if (cosmic) {                                                      // glowing crystals under the cosmic islands
@@ -218,7 +256,7 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true }){
   const top = body.top;
   // notice board: chunky frame, plank back, little plank roof, posts — image is a separate replaceable plane
   const wt = wood();
-  const woodMat = rimmed(new THREE.MeshStandardMaterial({ map: wt, color: cosmic ? 0xb7a3d8 : 0xffffff, roughness: 0.82 }), 0.7);
+  const woodMat = rimmed(new THREE.MeshStandardMaterial({ map: wt, color: pal.wood || (cosmic ? 0xb7a3d8 : 0xffffff), roughness: 0.82 }), 0.7);
   const bw = 7.2, bh = 4.05, fy = top + 1.4 + bh / 2;
   const box = (w, h, d, x, y, z, ry = 0, rz = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), woodMat); m.position.set(x, y, z); m.rotation.set(0, ry, rz); m.castShadow = m.receiveShadow = shadows; group.add(m); return m; };
   box(bw + 0.9, 0.45, 0.45, 0, fy + bh / 2 + 0.22, 0); box(bw + 0.9, 0.45, 0.45, 0, fy - bh / 2 - 0.22, 0);
@@ -232,15 +270,19 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true }){
   const imgMat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6 });
   const img = new THREE.Mesh(new THREE.PlaneGeometry(bw, bh), imgMat); img.position.set(0, fy, 0.0); img.receiveShadow = shadows; group.add(img);
 
-  // torches with the site's flame frames
+  if (pal.ring) fightRing(group, R, top, -front, shadows);
+  if (pal.gummies) { const spots = [[-front * 4.3, 3.4, 0.35], [-front * 5.9, 2.0, -0.4], [front * 6.1, -1.0, 0.2]];
+    pal.gummies.forEach((c, i) => { const g = gummy(c), [x, z, ry] = spots[i]; g.position.set(x, top + 0.2, z); g.rotation.y = ry; g.scale.setScalar(0.95 + R() * 0.2); g.castShadow = shadows; group.add(g); }); }
+  // torches with the site's flame frames (Ummy: soft pastel orbs instead)
   const fr = frames(), torches = [];
   for (const s of [-1, 1]) {
     const x = s * (bw / 2 + 1.6);
     box(0.18, 2.8, 0.18, x, top + 1.4, 0.8);
-    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.16, 0.36, 8), ironMat); bowl.position.set(x, top + 2.9, 0.8); group.add(bowl);
+    const orb = pal.torch === 'orb';
+    const bowl = new THREE.Mesh(orb ? new THREE.IcosahedronGeometry(0.42, 1) : new THREE.CylinderGeometry(0.34, 0.16, 0.36, 8), orb ? new THREE.MeshStandardMaterial({ color: 0xfff2f8, emissive: new THREE.Color(...pal.orb), emissiveIntensity: 1, flatShading: true }) : ironMat); bowl.position.set(x, top + (orb ? 3.15 : 2.9), 0.8); group.add(bowl);
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: fr[0], color: new THREE.Color(2.2, 1.7, 1.4), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false }));
-    fl.position.set(x, top + 3.0, 0.8); fl.scale.set(1.4, 1.75, 1); fl.center.set(0.5, 0.12); group.add(fl);
-    const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: new THREE.Color(1.6, 1.1, 0.8), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .5, toneMapped: false, fog: false }));
+    fl.position.set(x, top + 3.0, 0.8); fl.scale.set(1.4, 1.75, 1); fl.center.set(0.5, 0.12); fl.visible = !orb; group.add(fl);
+    const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: orb ? new THREE.Color(...pal.orb) : new THREE.Color(1.6, 1.1, 0.8), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .5, toneMapped: false, fog: false }));
     gl.position.set(x, top + 3.5, 0.8); gl.scale.set(5, 5, 1); group.add(gl);
     torches.push({ fl, gl, off: R() * 24 | 0 });
   }

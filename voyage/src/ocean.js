@@ -38,16 +38,16 @@ function polarGrid(rings, segs, rMax){
 
 export function makeOcean({ rings, segs, edgeZ, sunDir }){
   const uniforms = {
-    uTime: { value: 0 }, uMix: { value: 0 }, uEdge: { value: edgeZ }, uSun: { value: sunDir.clone() }, uCam: { value: new THREE.Vector3() },
+    uTime: { value: 0 }, uMix: { value: 0 }, uEdge: { value: edgeZ }, uSun: { value: sunDir.clone() }, uCam: { value: new THREE.Vector3() }, uCen: { value: new THREE.Vector3() },
     uShip: { value: new THREE.Vector4(0, 0, 0, -1) }, uWake: { value: 1 },
     uW: { value: WAVES.map(w => new THREE.Vector4(...w)) }
   };
   const mat = new THREE.ShaderMaterial({ defines: LITE_DEF,
     uniforms,
     vertexShader: GERSTNER + `
-      uniform float uTime, uEdge; uniform vec3 uCam; varying vec3 vW; varying vec3 vN; varying float vCrest;
+      uniform float uTime, uEdge; uniform vec3 uCam, uCen; varying vec3 vW; varying vec3 vN; varying float vCrest;
       void main(){
-        vec3 w = vec3(position.x + uCam.x, 0.0, position.z + uCam.z);
+        vec3 w = vec3(position.x + uCen.x, 0.0, position.z + uCen.z);   // grid centre stays on the water side of the edge, so the detailed rings are where the water is
         float dist = length(position.xz); vec3 N;
         vec3 o = gerstner(w.xz, uTime, dist, N, vCrest);
         w += o;
@@ -125,7 +125,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
   return {
     mesh, uniforms,
     update(t, cam, mix, ship, heading, wake){
-      uniforms.uTime.value = t; uniforms.uMix.value = mix; uniforms.uCam.value.copy(cam);
+      uniforms.uTime.value = t; uniforms.uMix.value = mix; uniforms.uCam.value.copy(cam); uniforms.uCen.value.set(cam.x, 0, Math.max(cam.z, edgeZ + 40));
       uniforms.uShip.value.set(ship.x, ship.z, heading, 1); uniforms.uWake.value = wake;
     }
   };

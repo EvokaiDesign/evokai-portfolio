@@ -20,8 +20,8 @@ const KEY_DIR = new THREE.Vector3(-0.5, 0.42, -1).normalize();   // light comes 
 
 // Islands along the route. slug = project page; null = placeholder.
 const ISLANDS = [
-  { u: 0.12, side: 1,  slug: 'ummy' },
-  { u: 0.27, side: -1, slug: 'the-gulag' },
+  { u: 0.12, side: 1,  slug: 'ummy', theme: 'ummy' },
+  { u: 0.27, side: -1, slug: 'the-gulag', theme: 'gulag' },
   { u: 0.42, side: 1,  slug: null },
   { u: 0.80, side: -1, slug: null },
   { u: 0.93, side: 1,  slug: null },
@@ -136,7 +136,7 @@ export function createVoyage(root){
   // ---------- islands ----------
   const islands = ISLANDS.map((s, i) => {
     const p = s.slug && bySlug[s.slug];
-    const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? `media/${p.slug}/poster.jpg` : null, cosmic: s.u > EDGE_U, shadows: !touch });
+    const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? `media/${p.slug}/poster.jpg` : null, cosmic: s.u > EDGE_U, shadows: !touch, theme: s.theme });
     const at = routePos(s.u), dir = routeDir(s.u);
     const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(s.side);
     isl.group.position.copy(at).addScaledVector(side, s.side > 0 ? 26 : 34).add(new THREE.Vector3(0, s.u > EDGE_U ? 3 : 5, 0)).addScaledVector(dir, 6);   // beside the stop, so it works sailing either way
@@ -371,7 +371,7 @@ export function createVoyage(root){
     enter(){
       if (active) return; active = true; root.hidden = false; resize(); if (!hasMouse) root.classList.add('v-nomouse');
       const go = async () => {
-        if (loadState === 'done') { root.classList.add('v-ready'); if (!raf) { clock.getDelta(); frame(); } return; }
+        if (loadState === 'done') { stop = 0; prog = STOPS[0].u; lastU = prog; anim = null; vel = 0; inspect = 0; arrived = performance.now(); face = faceTo = 0; turnA = null; first = true; hint(true); root.classList.add('v-ready');   /* every visit starts at the beginning */ if (!raf) { clock.getDelta(); frame(); } return; }
         if (loadState !== 'loading') return; loadState = 'warming'; glbFrac = 1; upd(); setP(90);
         if (!SNAP) try { await gl.compileAsync(scene, camera); } catch (e) {}      // compile shaders in parallel now, not on the first scroll
         if (!active) { loadState = 'loading'; return; }
