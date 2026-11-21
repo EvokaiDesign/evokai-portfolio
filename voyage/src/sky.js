@@ -26,6 +26,19 @@ vec3 sunsetSky(vec3 d, vec3 sun){
   c = mix(c, vec3(1.0, 0.95, 0.78) * 3.0, smoothstep(0.99955, 0.9998, s)); // sun disc
   return c;
 }
+
+vec3 cloudLayer(vec3 d, vec3 sun, vec3 base, float t){
+  if (d.y < 0.004) return base;
+  vec2 uv = d.xz / (d.y + 0.07) * 0.8 + vec2(t * 0.0035, t * 0.001);
+  float n = fbm(vec3(uv * 0.85, 1.3)), n2 = fbm3(vec3(uv * 2.6 + 5.0, 2.1));
+  float dens = smoothstep(0.52, 0.8, n * 0.78 + n2 * 0.32) * smoothstep(0.004, 0.05, d.y) * (1.0 - smoothstep(0.22, 0.5, d.y));
+  float toSun = max(dot(normalize(vec3(d.x, 0., d.z)), normalize(vec3(sun.x, 0., sun.z))), 0.0);
+  float lit = smoothstep(0.35, 0.85, n2);
+  vec3 shade = mix(vec3(0.26, 0.12, 0.32), vec3(0.5, 0.2, 0.3), toSun);
+  vec3 rim = mix(vec3(1.0, 0.5, 0.32), vec3(1.0, 0.8, 0.48), toSun) * (0.7 + 2.2 * pow(toSun, 8.0));
+  vec3 cc = mix(shade, rim, clamp(lit * 0.75 + pow(toSun, 4.0) * 0.35, 0.0, 1.0));
+  return mix(base, cc, dens * 0.92);
+}
 vec3 cosmicSky(vec3 d){
   vec3 c = vec3(0.025, 0.018, 0.075);
   float n = fbm(d * 2.6 + vec3(3.1, 0.0, 1.7));
@@ -38,22 +51,18 @@ vec3 cosmicSky(vec3 d){
 `;
 
 export function makeSky(sunDir){
-  const uniforms = { uMix: { value: 0 }, uSun: { value: sunDir.clone() } };
+  const uniforms = { uMix: { value: 0 }, uSun: { value: sunDir.clone() }, uTime: { value: 0 } };
   const mat = new THREE.ShaderMaterial({
     uniforms, side: THREE.BackSide, depthWrite: false, fog: false,
     vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
     fragmentShader: NOISE + SKYFN + `
-      uniform float uMix; uniform vec3 uSun; varying vec3 vDir;
+      uniform float uMix, uTime; uniform vec3 uSun; varying vec3 vDir;
       void main(){
         vec3 d = normalize(vDir);
-        // painterly cloud streaks low in the sunset sky
-        float band = smoothstep(0.02, 0.07, d.y) * (1.0 - smoothstep(0.12, 0.26, d.y));
-        float cl = fbm(vec3(d.x * 3.0 / (d.y + 0.25), d.y * 30.0, d.z * 3.0 / (d.y + 0.25)));
-        vec3 sun = sunsetSky(d, uSun);
-        sun = mix(sun, sun * vec3(1.18, 0.82, 0.92) + vec3(0.06, 0.02, 0.04), band * smoothstep(0.55, 0.75, cl));
-        vec3 cos = cosmicSky(d);
         float below = 1.0 - smoothstep(-0.06, 0.01, d.y);         // under the horizon: the cosmos is always there
-        vec3 c = mix(sun, cos, max(uMix, below));
+        vec3 c;
+        if (uMix < 0.999) { vec3 s = cloudLayer(d, uSun, sunsetSky(d, uSun), uTime); c = s; }
+        if (uMix > 0.001 || below > 0.001) { vec3 cs = cosmicSky(d); c = uMix < 0.999 ? mix(c, cs, max(uMix, below)) : cs; }
         c += vec3(0.55, 0.32, 0.95) * exp(-abs(d.y + 0.05) * 22.0) * below * (1.0 - uMix) * 0.7; // glow of the cosmos under the edge
         gl_FragColor = vec4(c, 1.0);
         #include <tonemapping_fragment>

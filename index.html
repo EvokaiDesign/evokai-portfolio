@@ -717,7 +717,14 @@ body.on-voyage:not(.v-touch), body.on-voyage:not(.v-touch) a, body.on-voyage:not
 #voyage .v-rail{position:absolute; right:clamp(16px,2.6vw,36px); top:22vh; bottom:22vh; width:2px; background:rgba(236,230,216,.18); pointer-events:auto}
 #voyage .v-rail button{position:absolute; left:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; border:1.5px solid rgba(255,200,140,.75); background:rgba(14,8,20,.8); padding:0}
 #voyage .v-rail button:hover, #voyage .v-rail button:focus-visible{background:var(--ember)}
-#voyage .v-rail .edge{position:absolute; left:-7px; width:16px; height:2px; background:linear-gradient(90deg,#7a5cff,#ff4fb0)}
+#voyage .v-rail button.edge{border-color:#b98cff; border-radius:3px; transform:rotate(45deg)}
+#voyage .v-rail button[aria-current]{background:var(--ember); box-shadow:0 0 12px rgba(255,140,40,.8)}
+#voyage .v-glow{position:absolute; left:0; top:0; width:420px; height:420px; margin:-210px 0 0 -210px; border-radius:50%; background:radial-gradient(circle, rgba(255,150,60,.28) 0%, rgba(255,110,40,.12) 30%, rgba(255,90,30,0) 65%); mix-blend-mode:screen; will-change:transform}
+body.v-touch #voyage .v-glow{display:none}
+#voyage .v-cap{position:absolute; left:50%; top:22vh; transform:translate(-50%,10px); margin:0; text-align:center; opacity:0; transition:opacity 1.2s, transform 1.2s; pointer-events:none}
+#voyage .v-cap.on{opacity:1; transform:translate(-50%,0)}
+#voyage .v-cap b{display:block; font:600 clamp(28px,3.6vw,54px)/1 var(--f-display); letter-spacing:-.03em; color:#fff; text-shadow:0 0 40px rgba(160,110,255,.6)}
+#voyage .v-cap span{display:block; margin-top:10px; font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:#d7c4ff}
 #voyage .v-rail .ship{position:absolute; left:50%; width:6px; height:22px; margin:-11px 0 0 -3px; border-radius:3px; background:linear-gradient(var(--ember2),var(--ember)); box-shadow:0 0 12px rgba(255,140,40,.8); transition:top .1s linear}
 #voyage .v-sound{position:absolute; left:clamp(20px,5vw,72px); bottom:clamp(22px,4vh,40px); pointer-events:auto; display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:99px; border:1px solid rgba(236,230,216,.25); background:rgba(14,8,20,.45); color:var(--fg); font-size:12px; letter-spacing:.14em; text-transform:uppercase}
 #voyage .v-sound[aria-pressed="true"]{border-color:rgba(255,170,80,.7)}
@@ -852,7 +859,9 @@ body.on-voyage:not(.v-touch), body.on-voyage:not(.v-touch) a, body.on-voyage:not
     <nav aria-label="Main"><a href="#" data-nav="home">Work</a><a href="#voyage" data-nav="voyage">AI</a><a href="#about" data-nav="about">About</a><a href="#contact" data-nav="contact">Contact</a></nav>
   </header>
   <div class="v-ui">
+    <div class="v-glow" aria-hidden="true"></div>
     <div class="v-labels"></div>
+    <p class="v-cap"><b>The edge of the world</b><span>Beyond it, the experiments drift</span></p>
     <div class="v-rail" aria-label="Islands"></div>
     <div class="v-hint"><i></i><span>Scroll to set sail</span></div>
     <button type="button" class="v-sound" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg><span>Sound off</span></button>
@@ -1388,7 +1397,7 @@ addEventListener('resize', () => { if (wallOn !== ((view === 'about' || view ===
 const mouse = { x: innerWidth / 2, y: innerHeight * .4, on: false, overRail: false };
 const head = { x: mouse.x, y: mouse.y, vx: 0, vy: 0 }, prev = { x: mouse.x, y: mouse.y };
 const zoneBoxes = () => { const inP = document.body.classList.contains('in-proj'); return [navBox(), (document.querySelector(inP ? '#proj .fbar .soc' : '#homeFoot .soc') || { getBoundingClientRect: () => null }).getBoundingClientRect()].filter(r => r && r.width); };
-const navBox = () => { const n = document.querySelector(document.body.classList.contains('in-proj') ? '#proj .ptop nav' : 'header.top nav'); return n ? n.getBoundingClientRect() : null; };
+const navBox = () => { const b = document.body.classList; const n = document.querySelector(b.contains('on-voyage') ? '#voyage .v-top nav' : b.contains('in-proj') ? '#proj .ptop nav' : 'header.top nav'); return n ? n.getBoundingClientRect() : null; };
 const touchAt = (x, y, start) => { mouse.x = x; mouse.y = y; mouse.on = true; mouse.t = performance.now(); if (start) { head.x = prev.x = x; head.y = prev.y = y; head.vx = head.vy = 0; } };
 addEventListener('touchmove', e => { if ((view === 'home' || wallOn) && e.cancelable && !e.target.closest('.track, input, textarea, .strip')) e.preventDefault(); }, { passive: false });
 let dragDone = false;
@@ -1462,9 +1471,9 @@ function updateFire(now, dt){
     const dist = Math.hypot(head.x - prev.x, head.y - prev.y), n = Math.max(1, Math.min(4, Math.ceil(dist / 9)));
     for (let i = 1; i <= n; i++) {
       const u = i / n;
-      pts.push({ x: prev.x + (head.x - prev.x) * u + rnd(-3, 3), y: prev.y + (head.y - prev.y) * u + rnd(-2, 2), r0: (tiny ? 2.6 : small ? 5 : 8.5) * rnd(.85, 1.15), r: 0, age: 0, life: tiny ? rnd(.12, .16) : small ? rnd(.2, .28) : rnd(.42, .58), vx: -head.vx * .05 + rnd(-.35, .35), rise: rnd(85, 130) });
+      pts.push({ x: prev.x + (head.x - prev.x) * u + rnd(-3, 3), y: prev.y + (head.y - prev.y) * u + rnd(-2, 2), r0: (tiny ? 2.6 : small ? 5 : 8.5) * (view === 'voyage' && !tiny ? 1.45 : 1) * rnd(.85, 1.15), r: 0, age: 0, life: tiny ? rnd(.12, .16) : small ? rnd(.2, .28) : rnd(.42, .58), vx: -head.vx * .05 + rnd(-.35, .35), rise: rnd(85, 130) });
     }
-    if (!tiny && Math.random() < (small ? .02 : .07 + Math.min(.18, speed * .012)))
+    if (!tiny && Math.random() < (small ? .02 : (view === 'voyage' ? .12 : .07) + Math.min(.18, speed * .012)))
       embers.push({ x: head.x + rnd(-10, 10), y: head.y - rnd(18, 42), vx: rnd(-.9, .9) - head.vx * .08, vy: rnd(-95, -45), r0: rnd(3, 4.8), r: 0, age: 0, life: rnd(.9, 1.6), seed: rnd(0, 6.3) });
   }
   prev.x = head.x; prev.y = head.y;
