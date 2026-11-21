@@ -72,7 +72,7 @@ export function createVoyage(root){
   const mist = makeMist(EDGE_Z, COSMIC_Y, touch ? 160 : 320); scene.add(mist.points);
 
   const sun = new THREE.DirectionalLight(0xffc89a, 2.2); sun.position.copy(SUN_DIR).multiplyScalar(100); scene.add(sun);
-  const hemi = new THREE.HemisphereLight(0xc9a8ff, 0x0a3340, 0.9); scene.add(hemi);
+  const hemi = new THREE.HemisphereLight(0xe8d6ff, 0x0a3340, 0.75); scene.add(hemi);
   const fill = new THREE.DirectionalLight(0x8a7dff, 0.8); fill.position.set(30, 20, 40); scene.add(fill);
 
   // environment maps for the pearl reflections (one per world, built once)
@@ -108,9 +108,9 @@ export function createVoyage(root){
     const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? `media/${p.slug}/poster.jpg` : null, cosmic: s.u > EDGE_U });
     const at = routePos(s.u), dir = routeDir(s.u);
     const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(s.side);
-    isl.group.position.copy(at).addScaledVector(side, 22).add(new THREE.Vector3(0, 5.5, 0)).addScaledVector(dir, 10);
-    // face the incoming ship
-    const look = routePos(Math.max(0, s.u - 0.04)); look.y = isl.group.position.y;
+    isl.group.position.copy(at).addScaledVector(side, s.side > 0 ? 20 : 36).add(new THREE.Vector3(0, 6, 0)).addScaledVector(dir, 34);
+    // face where the camera will be when the ship stops here
+    const look = at.clone().addScaledVector(dir, -14).addScaledVector(new THREE.Vector3(-dir.z, 0, dir.x), 13); look.y = isl.group.position.y;
     isl.group.lookAt(look);
     scene.add(isl.group);
     // HTML label
@@ -207,9 +207,10 @@ export function createVoyage(root){
     mouseS.lerp(hasMouse && !touch ? mouse : mouseS.set(0, 0), 1 - Math.exp(-dt * 3));
     const fwdH = new THREE.Vector3(fwd.x, 0, fwd.z).normalize();   // camera keeps looking at the horizon, even while the ship dives
     const right = tmp.crossVectors(fwdH, up).normalize();
+    const tall = camera.aspect < 0.85;   // phones in portrait: frame the ship from straight behind
     const dip = smooth(EDGE_U - 0.01, EDGE_U + 0.06, u) * (1 - smooth(EDGE_U + 0.08, EDGE_U + 0.14, u));
-    camPos.copy(shipPos).addScaledVector(fwdH, -17).addScaledVector(right, -6.5 + mouseS.x * 1.6).add(new THREE.Vector3(0, 5.2 + mouseS.y * 1.2 + dip * 4, 0));
-    camLook.copy(shipPos).addScaledVector(fwdH, 14).addScaledVector(right, -4.5).add(new THREE.Vector3(0, 1.6 - dip * 5, 0));
+    camPos.copy(shipPos).addScaledVector(fwdH, tall ? -30 : -21).addScaledVector(right, (tall ? -3.5 : -13) + mouseS.x * 1.6).add(new THREE.Vector3(0, (tall ? 7.5 : 5.6) + mouseS.y * 1.2 + dip * 4, 0));
+    camLook.copy(shipPos).addScaledVector(fwdH, tall ? 12 : 18).addScaledVector(right, tall ? -1 : -5).add(new THREE.Vector3(0, 1.6 - dip * 5, 0));
     // lean towards a hovered island
     if (hoverI >= 0) camLook.lerp(islands[hoverI].group.position, 0.12);
     if (first) { camPosS.copy(camPos); camLookS.copy(camLook); first = false; }
@@ -224,7 +225,7 @@ export function createVoyage(root){
     fall.update(t, mix); fall.mesh.visible = mist.points.visible = Math.abs(u - EDGE_U) < 0.2;
     mist.update(t);
     sun.color.setRGB(lerp(1, 0.55, mix), lerp(0.78, 0.6, mix), lerp(0.6, 1, mix)); sun.intensity = lerp(2.2, 1.3, mix);
-    hemi.color.setRGB(lerp(0.79, 0.45, mix), lerp(0.66, 0.4, mix), 1); hemi.groundColor.setRGB(lerp(0.04, 0.12, mix), lerp(0.2, 0.05, mix), lerp(0.25, 0.3, mix));
+    hemi.color.setRGB(lerp(0.91, 0.5, mix), lerp(0.84, 0.42, mix), 1); hemi.groundColor.setRGB(lerp(0.04, 0.12, mix), lerp(0.2, 0.05, mix), lerp(0.25, 0.3, mix));
     scene.environment = mix > 0.5 ? envCosmic : envSunset;
     mats.update(t, mix);
 
@@ -245,7 +246,9 @@ export function createVoyage(root){
       const vis = near > 0.05 && tmp.z < 1;
       s.el.style.opacity = vis ? Math.min(1, near * 1.4).toFixed(2) : 0;
       s.el.style.pointerEvents = vis && near > 0.5 ? 'auto' : 'none';
-      if (vis) s.el.style.transform = `translate(${((tmp.x + 1) / 2 * w).toFixed(1)}px, ${((1 - tmp.y) / 2 * h).toFixed(1)}px) translate(-50%, -100%)`;
+      if (vis) { const lw = s.el.offsetWidth || 200, lh = s.el.offsetHeight || 60;
+        const lx = Math.min(w - lw / 2 - 16, Math.max(lw / 2 + 16, (tmp.x + 1) / 2 * w)), ly = Math.min(h - 16, Math.max(lh + 84, (1 - tmp.y) / 2 * h));
+        s.el.style.transform = `translate(${lx.toFixed(1)}px, ${ly.toFixed(1)}px) translate(-50%, -100%)`; }
     }
     railShip.style.top = (u * 100).toFixed(2) + '%';
     root.style.setProperty('--v-mix', mix.toFixed(3));
@@ -271,6 +274,7 @@ export function createVoyage(root){
       canvas.addEventListener('wheel', onWheel, { passive: false }); ui.addEventListener('wheel', onWheel, { passive: false });
       root.addEventListener('touchstart', onTS, { passive: true }); root.addEventListener('touchmove', onTM, { passive: false }); root.addEventListener('touchend', onTE);
       root.addEventListener('pointermove', onMove); canvas.addEventListener('click', onClick);
+      if (touch) hintEl.querySelector('span').textContent = 'Swipe up to set sail';
       hint(prog < 0.01);
     },
     exit(){

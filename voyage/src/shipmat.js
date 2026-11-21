@@ -6,7 +6,7 @@ export function shipMaterials(){
   // pearl bone: baked cream/violet patches (vertex colour) + thin-film iridescence + ember glow in the hollows + neon rim
   const bone = new THREE.MeshPhysicalMaterial({
     vertexColors: true, roughness: 0.32, metalness: 0.08, clearcoat: 0.55, clearcoatRoughness: 0.16,
-    iridescence: 1, iridescenceIOR: 1.45, iridescenceThicknessMinimum: 260, iridescenceThicknessMaximum: 640, envMapIntensity: 1.15
+    iridescence: 0.75, iridescenceIOR: 1.45, iridescenceThicknessMinimum: 260, iridescenceThicknessMaximum: 640, envMapIntensity: 1.15
   });
   bone.onBeforeCompile = s => {
     Object.assign(s.uniforms, shared);
@@ -16,6 +16,7 @@ export function shipMaterials(){
     s.fragmentShader = s.fragmentShader
       .replace('#include <common>', '#include <common>\nuniform float uTime, uMix; varying float vEmber;')
       .replace('#include <color_fragment>', `#include <color_fragment>
+        diffuseColor.rgb = mix(vec3(0.86, 0.83, 0.78), diffuseColor.rgb, 0.5);   // keep the cream bone, patches as a tint
         float em = smoothstep(0.12, 0.85, vEmber);
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.28, 0.03, 0.01), em * 0.85);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>

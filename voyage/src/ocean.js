@@ -36,10 +36,10 @@ export function makeOcean({ segments, size, mode, edgeZ, sunDir, level = 0 }){
         vec2 p = vW.xz; float e = 0.25;
         float h0 = waveH(p, uTime);
         vec3 N = normalize(vec3(-(waveH(p + vec2(e, 0.), uTime) - h0) / e, 1.0, -(waveH(p + vec2(0., e), uTime) - h0) / e));
-        float ripple = fbm(vec3(p * 0.35, uTime * 0.25));
-        N = normalize(N + vec3(ripple - 0.5, 0.0, fbm(vec3(p * 0.35 + 9.0, uTime * 0.25)) - 0.5) * 0.09);
+        float ripple = fbm3(vec3(p * 0.35, uTime * 0.25));
+        N = normalize(N + vec3(ripple - 0.5, 0.0, vnoise(vec3(p * 0.5 + 9.0, uTime * 0.25)) - 0.5) * 0.09);
         vec3 V = normalize(uCam - vW); float dist = length(uCam - vW);
-        float warp = fbm(vec3(p * 0.045, uTime * 0.05)); float t01 = clamp(h0 * 0.7 + 0.5 + (ripple - 0.5) * 0.35 + (warp - 0.5) * 0.6, 0.0, 1.0);
+        float warp = vnoise(vec3(p * 0.045, uTime * 0.05)); float t01 = clamp(h0 * 0.7 + 0.5 + (ripple - 0.5) * 0.35 + (warp - 0.5) * 0.6, 0.0, 1.0);
         // painterly bands: deep → turquoise → cyan crests
         vec3 deepA = vec3(0.008, 0.05, 0.10), midA = vec3(0.015, 0.22, 0.30), crestA = vec3(0.10, 0.52, 0.58);
         vec3 deepB = vec3(0.02, 0.01, 0.07), midB = vec3(0.09, 0.035, 0.24), crestB = vec3(0.20, 0.30, 0.85);
@@ -48,23 +48,23 @@ export function makeOcean({ segments, size, mode, edgeZ, sunDir, level = 0 }){
         c = mix(c, mix(crestA, crestB, cm), smoothstep(0.76, 0.92, t01) * mix(0.8, 0.35, cm));
         // reflection of the sky + sun glitter
         vec3 R = reflect(-V, N); R.y = abs(R.y);
-        vec3 refl = mix(sunsetSky(R, uSun), cosmicSky(R), cm);
+        vec3 refl = cm < 0.01 ? sunsetSky(R, uSun) : (cm > 0.99 ? cosmicSky(R) : mix(sunsetSky(R, uSun), cosmicSky(R), cm));
         float fres = 0.03 + 0.97 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
         c = mix(c, refl * mix(0.7, 0.5, cm), clamp(fres, 0.0, mix(0.45, 0.4, cm)));
         float s = max(dot(R, uSun), 0.0);
         c += mix(vec3(1.0, 0.72, 0.4), vec3(0.6, 0.7, 1.0), cm) * (pow(s, 350.0) * 2.6 + pow(s, 30.0) * 0.22) * (1.0 - cm * 0.6);
         // crest foam
-        float foam = smoothstep(0.84, 0.97, t01 + (fbm(vec3(p * 1.4, uTime * 0.6)) - 0.5) * 0.5);
+        float foam = smoothstep(0.84, 0.97, t01 + (vnoise(vec3(p * 1.4, uTime * 0.6)) - 0.5) * 0.5);
         c = mix(c, mix(vec3(0.85, 0.95, 0.92), vec3(0.75, 0.7, 1.0), cm), foam * 0.3 * (1.0 - cm * 0.85));
         // cosmic water: star glints
         if (cm > 0.01) { vec2 cell = floor(p * 0.9); float st = step(0.985, hash3(vec3(cell, 3.0))) * (0.6 + 0.4 * sin(uTime * 3.0 + hash3(vec3(cell, 7.0)) * 30.0));
           c += vec3(0.8, 0.85, 1.0) * st * cm * smoothstep(0.35, 0.0, length(fract(p * 0.9) - 0.5)); }
         // near the edge: water speeds up into streaks
-        if (uMode < 0.5) { float k = smoothstep(uEdge + 70.0, uEdge + 2.0, vW.z);
-          float streak = smoothstep(0.6, 0.95, fbm(vec3(vW.x * 0.25, vW.z * 0.02 + uTime * 0.9, 1.0)));
+        if (uMode < 0.5 && vW.z < uEdge + 70.0) { float k = smoothstep(uEdge + 70.0, uEdge + 2.0, vW.z);
+          float streak = smoothstep(0.6, 0.95, fbm3(vec3(vW.x * 0.25, vW.z * 0.02 + uTime * 0.9, 1.0)));
           c = mix(c, vec3(0.75, 0.95, 0.95), streak * k * 0.55); c += vec3(0.25, 0.4, 0.45) * k * k * 0.35; }
         // distance haze into the horizon colour
-        vec3 hz = mix(sunsetSky(normalize(vec3(-V.x, 0.02, -V.z)), uSun), cosmicSky(normalize(vec3(-V.x, -0.05, -V.z))) * 1.4, cm);
+        vec3 hzS = sunsetSky(normalize(vec3(-V.x, 0.02, -V.z)), uSun); vec3 hz = cm < 0.01 ? hzS : mix(hzS, cosmicSky(normalize(vec3(-V.x, -0.05, -V.z))) * 1.4, cm);
         c = mix(c, hz, 1.0 - exp(-dist * mix(0.0032, 0.0022, cm)));
         gl_FragColor = vec4(c, 1.0);
         #include <tonemapping_fragment>
