@@ -1,0 +1,13 @@
+{
+  "name": "evokai-ai-voyage",
+  "private": true,
+  "description": "AI Voyage 3D scene for the Evokai portfolio. Source in src/, bundled to voyage.js (which is committed and served as-is).",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --format=esm --minify --target=es2020 --outfile=voyage.js",
+    "watch": "esbuild src/main.js --bundle --format=esm --target=es2020 --sourcemap --outfile=voyage.js --watch"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "three": "0.187.0"
+  }
+}
