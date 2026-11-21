@@ -165,7 +165,7 @@ export function createVoyage(root){
   const qU = parseFloat(new URLSearchParams(location.search).get('vu'));
   const SNAP = new URLSearchParams(location.search).has('vsnap'); // ?vu=0.5 starts there (testing)
   let stop = isFinite(qU) ? STOPS.reduce((b, s, i) => Math.abs(s.u - qU) < Math.abs(STOPS[b].u - qU) ? i : b, 0) : 0;
-  let prog = STOPS[stop].u, anim = null, arrived = performance.now(), inspect = 0, vel = 0;
+  let prog = STOPS[stop].u, anim = null, arrived = performance.now(), inspect = 0, vel = 0, animK = 0;
   // the ship always sails bow-first: heading back means turning around first (face 0 = towards the edge, 1 = back home)
   let face = 0, faceTo = 0, turnA = null;
   const TURN_MS = reduce ? 300 : 1500;
@@ -246,14 +246,14 @@ export function createVoyage(root){
     const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime, now = performance.now();
     if (turnA) { const k = Math.min(1, (now - turnA.t0) / TURN_MS); face = lerp(turnA.from, turnA.to, ease(k)); if (k >= 1) turnA = null; }
     if (anim) {
-      const k = Math.min(1, Math.max(0, now - anim.t0) / anim.dur); prog = lerp(anim.from, anim.to, ease(k));
+      const k = Math.min(1, Math.max(0, now - anim.t0) / anim.dur); animK = k; prog = lerp(anim.from, anim.to, ease(k));
       if (k >= 1) { anim = null; arrived = now; }
     }
     vel = lerp(vel, (prog - lastU) / Math.max(dt, 1e-3), 1 - Math.exp(-dt * 6)); lastU = prog;
     const u = prog, mix = smooth(EDGE_U - 0.015, EDGE_U + 0.1, u);
     const st = STOPS[stop];
-    const wantInspect = !anim && st.island != null ? 1 : 0;
-    inspect += (wantInspect - inspect) * (1 - Math.exp(-dt * (wantInspect ? 9 : 5)));   // snappy zoom on arrival (~0.5 s)
+    const wantInspect = st.island != null && (!anim || animK > 0.72) ? 1 : 0;   // start zooming in during the slow final stretch of the sail, not after the full stop
+    inspect += (wantInspect - inspect) * (1 - Math.exp(-dt * (wantInspect ? 2.2 : 5)));   // original zoom speed
     if (SNAP) { inspect = wantInspect; first = true; }                 // ?vsnap: settle instantly (headless tests)
     const insp = ease(Math.min(1, Math.max(0, inspect)));
 
@@ -290,7 +290,7 @@ export function createVoyage(root){
     }
     if (hoverI >= 0 && !anim) camLook.lerp(islands[hoverI].board.lengthSq() ? islands[hoverI].board : islands[hoverI].group.position, 0.1);
     if (first) { camPosS.copy(camPos); camLookS.copy(camLook); first = false; }
-    const camK = 3.5 + insp * 5; camPosS.lerp(camPos, 1 - Math.exp(-dt * camK)); camLookS.lerp(camLook, 1 - Math.exp(-dt * camK));   // camera follows faster while zooming in
+    camPosS.lerp(camPos, 1 - Math.exp(-dt * 3.5)); camLookS.lerp(camLook, 1 - Math.exp(-dt * 3.5));
     if (insp < 0.5) {                                                  // while swinging round, never cut through the ship or dip low
       tmp.copy(camPosS).sub(ship.position); tmp.y = 0; const dd = tmp.length(), minD = tall ? 22 : 17;
       if (dd < minD) camPosS.addScaledVector(tmp.normalize(), minD - dd);
