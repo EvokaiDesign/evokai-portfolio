@@ -40,23 +40,24 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
   const uniforms = {
     uTime: { value: 0 }, uMix: { value: 0 }, uEdge: { value: edgeZ }, uSun: { value: sunDir.clone() }, uCam: { value: new THREE.Vector3() }, uCen: { value: new THREE.Vector3() },
     uShip: { value: new THREE.Vector4(0, 0, 0, -1) }, uWake: { value: 1 },
+    uRefl: { value: null }, uReflMat: { value: new THREE.Matrix4() }, uReflOn: { value: 0 },   // live mirror of ship + islands (desktop)
     uW: { value: WAVES.map(w => new THREE.Vector4(...w)) }
   };
   const mat = new THREE.ShaderMaterial({ defines: LITE_DEF,
     uniforms,
     vertexShader: GERSTNER + `
-      uniform float uTime, uEdge; uniform vec3 uCam, uCen; varying vec3 vW; varying vec3 vN; varying float vCrest;
+      uniform float uTime, uEdge; uniform vec3 uCam, uCen; uniform mat4 uReflMat; varying vec3 vW; varying vec3 vN; varying float vCrest; varying vec4 vRP;
       void main(){
         vec3 w = vec3(position.x + uCen.x, 0.0, position.z + uCen.z);   // grid centre stays on the water side of the edge, so the detailed rings are where the water is
         float dist = length(position.xz); vec3 N;
         vec3 o = gerstner(w.xz, uTime, dist, N, vCrest);
         w += o;
         float dz = (uEdge + 18.0) - w.z; if (dz > 0.0) w.y -= dz * dz * 0.026;   // water rolls over the lip
-        vW = w; vN = N;
+        vW = w; vN = N; vRP = uReflMat * vec4(w.x, 0.0, w.z, 1.0);
         gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
       }`,
     fragmentShader: NOISE + SKYFN + `
-      uniform float uTime, uMix, uEdge, uWake; uniform vec3 uSun, uCam; uniform vec4 uShip;
+      uniform float uTime, uMix, uEdge, uWake, uReflOn; uniform vec3 uSun, uCam; uniform vec4 uShip; uniform sampler2D uRefl; varying vec4 vRP;
       varying vec3 vW; varying vec3 vN; varying float vCrest;
       #ifdef LITE
       #define DETAIL_N 3
@@ -87,6 +88,11 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
         // reflection of the sky
         vec3 R = reflect(-V, N); R.y = abs(R.y) + 0.01;
         vec3 refl = sunsetSky(normalize(R), uSun);
+        if (uReflOn > 0.5) {                                                        // what is above the water, mirrored and rippled by the waves
+          vec2 ruv = vRP.xy / vRP.w + N.xz * 0.045 * (1.0 - smoothstep(30.0, 160.0, dist));
+          vec4 rt = texture2D(uRefl, ruv);
+          refl = mix(refl, rt.rgb, clamp(rt.a, 0.0, 1.0));
+        }
         float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
         vec3 c = mix(body, refl, clamp(fres, 0.0, 0.85));
         // sun: sharp core + wide glitter path

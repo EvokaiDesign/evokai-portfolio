@@ -86,7 +86,7 @@ export function createVoyage(root){
 
   const sun = new THREE.DirectionalLight(0xffc49a, 2.4); sun.position.copy(KEY_DIR).multiplyScalar(100); scene.add(sun); scene.add(sun.target);
   if (!touch) { sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = sc.bottom = -38; sc.right = sc.top = 38; sc.near = 1; sc.far = 260;
-    sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04; sun.shadow.radius = 3; }
+    sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04; sun.shadow.radius = 5; sun.shadow.blurSamples = 12; }   // softer shadow edges
   const hemi = new THREE.HemisphereLight(0xe8d6ff, 0x0a3340, 0.7); scene.add(hemi);
   const back = new THREE.DirectionalLight(0x9a7dff, 0.9); back.position.set(40, 25, 60); scene.add(back);
   const engineLight = new THREE.PointLight(0xff7a2a, 22, 14, 2);
@@ -100,6 +100,36 @@ export function createVoyage(root){
   scene.environment = envSunset;
 
   const post = makePost(gl, scene, camera, { mobile: touch });
+
+  // ---------- live water reflections (computers only): the scene mirrored in the plane y = 0 ----------
+  const REFL = !touch;
+  const reflRT = REFL ? new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType }) : null;
+  const reflCam = new THREE.PerspectiveCamera(), _rm = new THREE.Matrix4(), _rv = new THREE.Vector3(), _rt = new THREE.Vector3(), _rl = new THREE.Vector3();
+  const _N = new THREE.Vector3(0, 1, 0), _plane = new THREE.Plane(), _clip = new THREE.Vector4(), _q = new THREE.Vector4();
+  if (REFL) { ocean.uniforms.uRefl.value = reflRT.texture; ocean.uniforms.uReflOn.value = 1; }
+  const _sunP = new THREE.Vector3(), _sunUV = new THREE.Vector2();
+  function renderReflection(){
+    if (!REFL || !ocean.mesh.visible) return;
+    camera.updateMatrixWorld();
+    _rv.setFromMatrixPosition(camera.matrixWorld); _rv.y = -_rv.y;                       // camera position mirrored
+    _rm.extractRotation(camera.matrixWorld);
+    _rl.set(0, 0, -1).applyMatrix4(_rm).add(new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld)); _rt.copy(_rl); _rt.y = -_rt.y;
+    reflCam.position.copy(_rv); reflCam.up.set(0, 1, 0).applyMatrix4(_rm).reflect(_N); reflCam.lookAt(_rt);
+    reflCam.far = camera.far; reflCam.near = camera.near; reflCam.updateMatrixWorld(); reflCam.projectionMatrix.copy(camera.projectionMatrix);
+    // oblique near plane = the water surface, so nothing below the water ends up in the mirror
+    _plane.setFromNormalAndCoplanarPoint(_N, new THREE.Vector3(0, 0.05, 0)).applyMatrix4(reflCam.matrixWorldInverse);
+    _clip.set(_plane.normal.x, _plane.normal.y, _plane.normal.z, _plane.constant);
+    const pm = reflCam.projectionMatrix.elements;
+    _q.x = (Math.sign(_clip.x) + pm[8]) / pm[0]; _q.y = (Math.sign(_clip.y) + pm[9]) / pm[5]; _q.z = -1; _q.w = (1 + pm[10]) / pm[14];
+    _clip.multiplyScalar(2 / _clip.dot(_q)); pm[2] = _clip.x; pm[6] = _clip.y; pm[10] = _clip.z + 1; pm[14] = _clip.w;
+    ocean.uniforms.uReflMat.value.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1).multiply(reflCam.projectionMatrix).multiply(reflCam.matrixWorldInverse);
+    const hide = [sky.mesh, stars.points, galaxies.group, ocean.mesh, aura.group], was = hide.map(o => o.visible);
+    hide.forEach(o => o.visible = false);
+    const au = gl.shadowMap.autoUpdate; gl.shadowMap.autoUpdate = false;                // reuse this frame's shadows
+    const ca = gl.getClearAlpha(); gl.setClearAlpha(0);
+    gl.setRenderTarget(reflRT); gl.clear(); gl.render(scene, reflCam); gl.setRenderTarget(null);
+    gl.setClearAlpha(ca); gl.shadowMap.autoUpdate = au; hide.forEach((o, i) => o.visible = was[i]);
+  }
 
   // ---------- loading screen: water rises with real progress (12% = code downloaded, then models/textures, then shader warm-up) ----------
   const loadEl = root.querySelector('.v-load'), portEl = loadEl.querySelector('.v-port'), pctEl = loadEl.querySelector('.v-pct b');
@@ -231,6 +261,7 @@ export function createVoyage(root){
   function resize(){
     W = root.clientWidth || innerWidth; H = root.clientHeight || innerHeight;
     gl.setPixelRatio(dpr); gl.setSize(W, H, false); post.setSize(W, H, dpr);
+    if (reflRT) reflRT.setSize(Math.max(1, W * dpr * 0.5 | 0), Math.max(1, H * dpr * 0.5 | 0));
     camera.aspect = W / H; camera.updateProjectionMatrix();
   }
 
@@ -356,6 +387,11 @@ export function createVoyage(root){
     root.style.setProperty('--v-mix', mix.toFixed(3));
     sound.update(mix, u);
 
+    // sunbeams follow the sun on screen; fade when it is far off screen, gentler in the cosmic ocean
+    _sunP.copy(camera.position).addScaledVector(SUN_DIR, 800).project(camera);
+    { const onScr = _sunP.z < 1 ? 1 - smooth(0.9, 1.6, Math.max(Math.abs(_sunP.x), Math.abs(_sunP.y))) : 0;
+      _sunUV.set(_sunP.x * 0.5 + 0.5, _sunP.y * 0.5 + 0.5); post.setSun(_sunUV, onScr * (1 - mix * 0.75)); }
+    renderReflection();
     post.render(t, mix);
 
     if (quality > 0 && clock.elapsedTime > (touch ? 1 : 2)) {
