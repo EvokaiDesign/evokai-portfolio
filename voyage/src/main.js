@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { makeSky, makeStars, makeGalaxies } from './sky.js';
-import { makeOcean, makeWaterfall, makeAura, makeMotes } from './ocean.js';
+import { makeOcean, makeWaterfall, makeAura, makeMotes, waterHeight } from './ocean.js';
 import { makeIsland } from './islands.js';
 import { shipMaterials } from './shipmat.js';
 import { makePost } from './post.js';
@@ -272,6 +272,7 @@ export function createVoyage(root){
   const shipPos = new THREE.Vector3(), fwd = new THREE.Vector3(), camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
   const camPosS = new THREE.Vector3(), camLookS = new THREE.Vector3(); let first = true, first2 = true, fovS = 50;
   const tmp = new THREE.Vector3(), right = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), fogA = new THREE.Color(0xe39a74), fogB = new THREE.Color(0x1c0f33);
+  let rideY = 0, rideP = 0, rideR = 0;
   let raf = 0, active = false, lastU = prog, wasMoving = false, lastMix = -1;
   function frame(){
     raf = requestAnimationFrame(frame);
@@ -292,14 +293,25 @@ export function createVoyage(root){
 
     // ship on the route
     routePos(u, shipPos); routeDir(u, fwd);
-    const bob = reduce ? 0 : Math.sin(t * 1.1) * 0.16 + Math.sin(t * 0.63) * 0.09;
+    const ride = 1 - smooth(0.3, 2.5, shipPos.y);                       // 1 = sitting in the water, 0 = floating beyond the edge
+    const bob = reduce ? 0 : (Math.sin(t * 1.1) * 0.16 + Math.sin(t * 0.63) * 0.09) * (1 - ride);   // the old float bob only beyond the edge
     ship.position.copy(shipPos); ship.position.y += bob;
     const fc = Math.cos(face * Math.PI), swing = Math.sin(face * Math.PI);           // 1 → -1 while turning; swing peaks mid-turn
     const yaw = Math.atan2(-fwd.x, -fwd.z) + face * Math.PI;
     const turn = (routeDir(Math.min(1, u + 0.01), tmp).x - fwd.x) * 30;     // bank into the curves
     ship.position.addScaledVector(tmp.set(-fwd.z, 0, fwd.x), swing * 2.2);         // turns in a small arc, not on the spot
-    ship.rotation.set(Math.asin(Math.max(-0.3, Math.min(0.3, fwd.y))) * 0.8 * fc + (reduce ? 0 : Math.sin(t * 0.9) * 0.02), yaw,
-      (reduce ? 0 : Math.sin(t * 0.7) * 0.035) - THREE.MathUtils.clamp(turn * vel * 3 * fc, -0.25, 0.25) - swing * 0.2, 'YXZ');
+    // ride the real waves: sample the water under bow, stern and both sides, sit on it and tilt with it (heavy hull: smoothed)
+    let wy = 0, wp = 0, wr = 0;
+    if (ride > 0.001) {
+      const cen = ocean.uniforms.uCen.value, sx = ship.position.x, sz = ship.position.z, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+      const hb = waterHeight(sx + fx * 4, sz + fz * 4, t, cen), hs = waterHeight(sx - fx * 4, sz - fz * 4, t, cen);
+      const hr = waterHeight(sx + rx * 1.6, sz + rz * 1.6, t, cen), hl = waterHeight(sx - rx * 1.6, sz - rz * 1.6, t, cen);
+      wy = (hb + hs + hr + hl) * 0.25 * 0.85; wp = Math.atan2(hb - hs, 8) * 0.75; wr = Math.atan2(hr - hl, 3.2) * 0.45;
+    }
+    const kr = first ? 1 : 1 - Math.exp(-dt * 5); rideY = lerp(rideY, wy, kr); rideP = lerp(rideP, wp, kr); rideR = lerp(rideR, wr, kr);
+    ship.position.y += rideY * ride;
+    ship.rotation.set(Math.asin(Math.max(-0.3, Math.min(0.3, fwd.y))) * 0.8 * fc + (reduce ? 0 : Math.sin(t * 0.9) * 0.02) * (1 - ride) + rideP * ride, yaw,
+      (reduce ? 0 : Math.sin(t * 0.7) * 0.035) * (1 - ride) + rideR * ride - THREE.MathUtils.clamp(turn * vel * 3 * fc, -0.25, 0.25) - swing * 0.2, 'YXZ');
 
     // follow camera: behind and to the left, ship on the right third
     mouseS.lerp(hasMouse && !touch ? mouse : tmp.set(0, 0, 0), 1 - Math.exp(-dt * 3));
@@ -340,7 +352,7 @@ export function createVoyage(root){
     galaxies.update(camera.position, mix);
     const lookBack = face > 0.01 || faceTo === 1;                       // turned towards home: the edge, the waterfall and the ocean are in view
     ocean.mesh.visible = u < EDGE_U + 0.14 || lookBack;
-    ocean.update(t, camera.position, mix, ship.position, yaw, (0.2 + Math.min(0.8, Math.abs(vel) * 18 + swing * 0.5)) * (1 - smooth(0.3, 2.5, ship.position.y)));
+    ocean.update(t, camera.position, mix, ship.position, yaw, (0.2 + Math.min(0.8, Math.abs(vel) * 18 + swing * 0.5)) * ride, ride);
     const nearEdge = Math.abs(u - EDGE_U) < 0.22;
     fall.mesh.visible = !fallOff && (nearEdge || (lookBack && u > EDGE_U)); fall.update(t, mix);
     aura.group.visible = u > EDGE_U - 0.2;                                   // nebula only near and past the edge

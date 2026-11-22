@@ -24,6 +24,24 @@ vec3 gerstner(vec2 p, float t, float dist, inout vec3 N, out float crest){
   N = normalize(n); return o;
 }`;
 
+// same Gerstner sum on the CPU: height of the water surface at (x, z), so the ship rides the real waves
+const _sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const WN = WAVES.map(([x, y, q, L]) => { const n = Math.hypot(x, y), k = 6.2831853 / L; return [x / n, y / n, q, L, k, Math.sqrt(9.8 / k)]; });
+function waveOff(x, z, t, dist, out){
+  out[0] = out[1] = out[2] = 0;
+  for (const [dx, dy, q, L, k, c] of WN) {
+    const Q = q * (1 - _sm(L * 7, L * 16, dist)), A = Q / k * 0.55, f = k * (dx * x + dy * z - c * t * 0.55), cf = Math.cos(f);
+    out[0] += Q * A * dx * cf; out[2] += Q * A * dy * cf; out[1] += A * Math.sin(f);
+  }
+  return out;
+}
+const _wo = [0, 0, 0];
+export function waterHeight(x, z, t, cen){
+  const dist = Math.hypot(x - cen.x, z - cen.z); let px = x, pz = z;
+  for (let i = 0; i < 3; i++) { waveOff(px, pz, t, dist, _wo); px = x - _wo[0]; pz = z - _wo[2]; }   // find the grid point that the waves carry to (x, z)
+  return waveOff(px, pz, t, dist, _wo)[1];
+}
+
 function polarGrid(rings, segs, rMax){
   const pos = [], idx = []; const g = Math.pow(rMax / 0.6, 1 / rings);
   pos.push(0, 0, 0);
@@ -112,7 +130,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
         float fn = fbm3(vec3(vW.xz * 0.5, uTime * 0.4));
         float foam = smoothstep(0.62, 0.95, vCrest * 0.9 + fn * 0.55) * (1.0 - smoothstep(60.0, 200.0, dist));
         // ship wake: kelvin V + turbulent trail
-        if (uShip.w > -0.5 && uWake > 0.01) {
+        if (uShip.w > 0.01 && uWake > 0.01) {
           vec2 dd = vW.xz - uShip.xy; vec2 dir = vec2(-sin(uShip.z), -cos(uShip.z));      // ship forward
           float along = dot(dd, -dir), lat = dot(dd, vec2(dir.y, -dir.x));
           if (along > -2.0 && along < 140.0) {
@@ -122,6 +140,18 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
             float wake = (arms * 0.8 + trail) * (1.0 - smoothstep(40.0, 140.0, a)) * smoothstep(0.35, 0.75, fbm3(vec3(vW.xz * 0.7, uTime * 0.8)) + 0.25);
             foam = max(foam, wake * uWake);
           }
+        }
+        // where the hull meets the water: a hugging foam collar, a bow wave and darker wet water pressed against the sides
+        if (uShip.w > 0.01) {
+          vec2 hd = vW.xz - uShip.xy; vec2 hf = vec2(-sin(uShip.z), -cos(uShip.z));
+          float al = dot(hd, hf), lt = dot(hd, vec2(-hf.y, hf.x));
+          float e = length(vec2(al / 5.0, lt / 1.05));
+          float churn = fbm3(vec3(vW.xz * 1.6, uTime * 1.3));
+          float collar = exp(-pow((e - 1.0) / (0.22 + churn * 0.25), 2.0));
+          float bow = exp(-pow((al - 4.6) / 1.6, 2.0)) * exp(-pow(lt / (1.0 + max(al - 4.0, 0.0) * 0.6), 2.0)) * (0.6 + uWake);
+          float hull = clamp(collar * (0.55 + churn * 0.6) + bow * 0.8, 0.0, 1.0);
+          c *= 1.0 - 0.35 * exp(-pow((e - 1.05) / 0.5, 2.0)) * uShip.w;      // wet, shadowed water right against the hull
+          foam = max(foam, hull * uShip.w);
         }
         vec3 foamCol = mix(vec3(0.85, 0.9, 0.88), vec3(1.0, 0.85, 0.75), max(dot(N, L), 0.0));
         c = mix(c, foamCol, clamp(foam, 0.0, 1.0) * 0.55);
@@ -140,9 +170,9 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
   const mesh = new THREE.Mesh(polarGrid(rings, segs, 1500), mat); mesh.frustumCulled = false;
   return {
     mesh, uniforms,
-    update(t, cam, mix, ship, heading, wake){
+    update(t, cam, mix, ship, heading, wake, inWater = 1){
       uniforms.uTime.value = t; uniforms.uMix.value = mix; uniforms.uCam.value.copy(cam); uniforms.uCen.value.set(cam.x, 0, Math.max(cam.z, edgeZ + 40));
-      uniforms.uShip.value.set(ship.x, ship.z, heading, 1); uniforms.uWake.value = wake;
+      uniforms.uShip.value.set(ship.x, ship.z, heading, inWater); uniforms.uWake.value = wake;
     }
   };
 }
