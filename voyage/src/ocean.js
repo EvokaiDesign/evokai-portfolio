@@ -59,6 +59,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
     uTime: { value: 0 }, uMix: { value: 0 }, uEdge: { value: edgeZ }, uSun: { value: sunDir.clone() }, uCam: { value: new THREE.Vector3() }, uCen: { value: new THREE.Vector3() },
     uShip: { value: new THREE.Vector4(0, 0, 0, -1) }, uWake: { value: 1 },
     uRefl: { value: null }, uReflMat: { value: new THREE.Matrix4() }, uReflOn: { value: 0 },   // live mirror of ship + islands (desktop)
+    uIsl: { value: Array.from({ length: 5 }, () => new THREE.Vector4()) }, uHit: { value: Array.from({ length: 6 }, () => new THREE.Vector4()) },   // island waterlines, wing tips touching the water
     uGlowA: { value: new THREE.Vector4() }, uGlowAC: { value: new THREE.Color() }, uGlowB: { value: new THREE.Vector4() }, uGlowBC: { value: new THREE.Color() },   // engine + torch light on the water (desktop)
     uW: { value: WAVES.map(w => new THREE.Vector4(...w)) }
   };
@@ -76,7 +77,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
         gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
       }`,
     fragmentShader: NOISE + SKYFN + `
-      uniform float uTime, uMix, uEdge, uWake, uReflOn; uniform vec3 uSun, uCam; uniform vec4 uShip; uniform sampler2D uRefl; varying vec4 vRP; uniform vec4 uGlowA, uGlowB; uniform vec3 uGlowAC, uGlowBC;
+      uniform float uTime, uMix, uEdge, uWake, uReflOn; uniform vec3 uSun, uCam; uniform vec4 uShip; uniform sampler2D uRefl; varying vec4 vRP; uniform vec4 uIsl[5]; uniform vec4 uHit[6]; uniform vec4 uGlowA, uGlowB; uniform vec3 uGlowAC, uGlowBC;
       // a warm point light on the water: soft pool + glittering streak that dances on the ripples
       vec3 glowOn(vec4 G, vec3 col, vec3 N, vec3 V, vec3 P, float reach){
         if (G.w < 0.01) return vec3(0.0);
@@ -124,7 +125,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
         vec3 c = mix(body, refl, clamp(fres, 0.0, 0.85));
         // sun: sharp core + wide glitter path
         float s = max(dot(R, L), 0.0);
-        c += vec3(1.0, 0.72, 0.42) * (pow(s, 900.0) * 9.0 + pow(s, 120.0) * 0.9 + pow(s, 18.0) * 0.12);
+        c += vec3(1.0, 0.72, 0.42) * (pow(s, 900.0) * 4.5 + pow(s, 120.0) * 0.55 + pow(s, 18.0) * 0.09);
         if (uReflOn > 0.5) { c += glowOn(uGlowA, uGlowAC, N, V, vW, 7.0) * 1.4; c += glowOn(uGlowB, uGlowBC, N, V, vW, 16.0); }
         // crest foam
         float fn = fbm3(vec3(vW.xz * 0.5, uTime * 0.4));
@@ -152,6 +153,28 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
           float hull = clamp(collar * (0.55 + churn * 0.6) + bow * 0.8, 0.0, 1.0);
           c *= 1.0 - 0.35 * exp(-pow((e - 1.05) / 0.5, 2.0)) * uShip.w;      // wet, shadowed water right against the hull
           foam = max(foam, hull * uShip.w);
+        }
+        // islands: churning foam and darker wet water where the rock goes into the sea, with small rings pushed outwards
+        for (int i = 0; i < 5; i++) {
+          vec4 I = uIsl[i]; if (I.z <= 0.0) continue;
+          float x = length(vW.xz - I.xy) - (I.z + I.w * vW.y);
+          if (x > 7.0) continue;
+          float n = fbm3(vec3(vW.xz * 1.1, uTime * 0.7));
+          float band = exp(-pow(max(x, 0.0) / (0.45 + n * 1.1), 1.6));
+          float rings = smoothstep(0.75, 1.0, sin(x * 2.6 - uTime * 2.2 + n * 3.0)) * exp(-max(x, 0.0) * 0.45) * 0.45;
+          foam = max(foam, clamp(band * (0.45 + n * 0.8) + rings, 0.0, 1.0));
+          c *= 1.0 - 0.32 * exp(-max(x, 0.0) * 0.7);
+        }
+        // wing tips dipping into the water: splash foam + ripples spreading out
+        for (int i = 0; i < 6; i++) {
+          vec4 S = uHit[i]; if (S.w < 0.01) continue;
+          float x = length(vW.xz - S.xy) - S.z;
+          if (x > 5.0) continue;
+          float n = fbm3(vec3(vW.xz * 2.0, uTime * 1.6));
+          float blob = exp(-pow(max(x, 0.0) / (0.35 + n * 0.6), 1.5));
+          float rip = smoothstep(0.7, 1.0, sin(x * 4.0 - uTime * 5.0)) * exp(-max(x, 0.0) * 0.9) * 0.4;
+          foam = max(foam, clamp(blob * (0.5 + n) + rip, 0.0, 1.0) * S.w);
+          c *= 1.0 - 0.2 * exp(-max(x, 0.0)) * S.w;
         }
         vec3 foamCol = mix(vec3(0.85, 0.9, 0.88), vec3(1.0, 0.85, 0.75), max(dot(N, L), 0.0));
         c = mix(c, foamCol, clamp(foam, 0.0, 1.0) * 0.55);

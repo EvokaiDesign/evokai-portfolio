@@ -133,7 +133,9 @@ function islandBody(R, pal, scale = 1, depth = 10.5){
   band(B, under[0], () => C(pal.soil[(R() * 3) | 0], R));
   for (let i = 0; i < under.length - 1; i++) { const d = i / 3; band(under[i], under[i + 1], () => { const c = new THREE.Color(pal.soil[(R() * 3) | 0]).lerp(new THREE.Color(pal.deep), d * 0.8 + R() * 0.15); return [c.r, c.g, c.b]; }); }
   const last = under[under.length - 1]; for (let k = 0; k < N; k++) tri(pos, cols, last[k], last[nx(k)], apex, C(pal.deep, R));
-  return { geo: faceted(pos, cols), top, rim: A, under, outR: out };
+  const avgR = r => r.reduce((s, p) => s + Math.hypot(p[0], p[2]), 0) / r.length, avgY = r => r.reduce((s, p) => s + p[1], 0) / r.length;
+  const profile = [[apex[1], 0], ...[...under].reverse().map(r => [avgY(r), avgR(r)]), [avgY(B), avgR(B)], [avgY(A), avgR(A)]];   // bottom to top
+  return { geo: faceted(pos, cols), top, rim: A, under, outR: out, profile };
 }
 
 function lowRock(R, col, sx, sy, sz, detail = 0){
@@ -289,7 +291,7 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, theme =
   mergeStatic(group, mat); mergeStatic(group, woodMat, true); mergeStatic(group, ironMat);
   const baseY = { v: null };
   return {
-    group, hit: img, labelAnchor: new THREE.Vector3(0, fy + bh / 2 + 1.9, 0), boardCenter: new THREE.Vector3(0, fy, 0),
+    group, profile: body.profile, hit: img, labelAnchor: new THREE.Vector3(0, fy + bh / 2 + 1.9, 0), boardCenter: new THREE.Vector3(0, fy, 0),
     update(t, hover, mix){
       shared.uMix.value = mix; waterU.uTime.value = t; for (const c of chunks) c.position.y = c.userData.y + Math.sin(t * 0.6 + c.userData.ph) * 0.35; shared.uRim.value.setRGB(1.0 - mix * 0.5, 0.55 - mix * 0.15, 0.3 + mix * 0.7);
       if (baseY.v == null) baseY.v = group.position.y;

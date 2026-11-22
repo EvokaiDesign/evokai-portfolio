@@ -33,7 +33,7 @@ const GRADE = {
         float j = h(vUv * 517.3 + uTime) * 0.9;                      // dither the start so the steps do not band
         p += dlt * j;
         for (int i = 0; i < 28; i++) { p += dlt; vec3 sm = texture2D(tDiffuse, clamp(p, 0.001, 0.999)).rgb; acc += max(dot(sm, vec3(0.299, 0.587, 0.114)) - 0.72, 0.0) * w; w *= 0.955; }
-        c += vec3(1.0, 0.66, 0.38) * acc * (uShaft * 0.06);
+        c += vec3(1.0, 0.66, 0.38) * acc * (uShaft * 0.045);
       }
       // vignette
       c *= mix(1.0, 0.62, smoothstep(0.38, 1.0, r));

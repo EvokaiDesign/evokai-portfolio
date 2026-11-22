@@ -151,6 +151,8 @@ export function createVoyage(root){
   const mats = shipMaterials();
   if (!touch) { mats.bone.clearcoat = 0.7; mats.bone.clearcoatRoughness = 0.07; mats.bone.envMapIntensity = 0.85; }   // glossier pearl: crisper reflections of the sky
   let shipReady = false, onShip = () => {};
+  // wing probes: points spread over the wings (model space); each frame we check which of them are under the waves
+  const probes = [], HB = 6, hitS = new Float32Array(HB), hitP = Array.from({ length: HB }, () => new THREE.Vector3()), _pv = new THREE.Vector3(), _hx = new Float32Array(HB), _hz = new Float32Array(HB), _hn = new Float32Array(HB);
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
   loader.load(SHIP_URL, g => {
     const m = g.scene;
@@ -160,6 +162,9 @@ export function createVoyage(root){
       o.material = n.includes('sail') ? mats.sail : n.includes('glow') ? mats.glow : mats.bone;
       o.frustumCulled = false;
     });
+    m.traverse(o => { if (!o.isMesh) return; const P = o.geometry.attributes.position, cand = [];
+      for (let i = 0; i < P.count; i++) { _pv.fromBufferAttribute(P, i); if (Math.abs(_pv.z) > 1.8 && _pv.y < 2.5) cand.push(_pv.clone()); }
+      const st = Math.max(1, Math.ceil(cand.length / 160)); for (let i = 0; i < cand.length; i += st) probes.push({ p: cand[i], mesh: o }); });
     m.position.x = -5; m.position.y = 0.15;            // model: bow at -X, 10 units long → centre it…
     shipInner.add(m); shipInner.rotation.y = -Math.PI / 2; // …and turn the bow to -Z
     shipReady = true; onShip();
@@ -353,6 +358,32 @@ export function createVoyage(root){
     const lookBack = face > 0.01 || faceTo === 1;                       // turned towards home: the edge, the waterfall and the ocean are in view
     ocean.mesh.visible = u < EDGE_U + 0.14 || lookBack;
     ocean.update(t, camera.position, mix, ship.position, yaw, (0.2 + Math.min(0.8, Math.abs(vel) * 18 + swing * 0.5)) * ride, ride);
+    // where the wings touch the water: group the wet probe points into 6 spots (3 along each wing)
+    _hn.fill(0); _hx.fill(0); _hz.fill(0);
+    if (ride > 0.01 && probes.length) {
+      ship.updateMatrixWorld(true); const cen = ocean.uniforms.uCen.value;
+      for (const pr of probes) {
+        const lat = Math.abs(pr.p.z), fl = Math.max(lat - 0.9, 0);
+        _pv.copy(pr.p); _pv.y += Math.sin(t * 1.45 - lat * 0.22) * fl * 0.05; _pv.applyMatrix4(pr.mesh.matrixWorld);   // same wing flap as the shader
+        const wh = waterHeight(_pv.x, _pv.z, t, cen); if (_pv.y > wh + 0.2) continue;
+        const b = (pr.p.z > 0 ? 3 : 0) + Math.min(2, Math.max(0, Math.floor(pr.p.x / 3.6)));
+        _hn[b]++; _hx[b] += _pv.x; _hz[b] += _pv.z;
+      }
+    }
+    for (let b = 0; b < HB; b++) {
+      const want = _hn[b] ? Math.min(1, 0.35 + _hn[b] * 0.08) : 0;
+      if (_hn[b]) hitP[b].set(_hx[b] / _hn[b], 0, _hz[b] / _hn[b]);
+      hitS[b] += (want - hitS[b]) * (1 - Math.exp(-dt * (want > hitS[b] ? 10 : 2.5)));     // splash quickly, settle slowly
+      ocean.uniforms.uHit.value[b].set(hitP[b].x, hitP[b].z, 0.3 + Math.min(1.2, _hn[b] * 0.06), hitS[b] * ride);
+    }
+    // islands: radius of the rock at the water's surface (they bob, so recomputed every frame)
+    for (let i = 0; i < islands.length; i++) {
+      const s = islands[i], U = ocean.uniforms.uIsl.value[i], yl = -s.group.position.y, pf = s.profile;
+      if (s.u > EDGE_U || !pf || yl < pf[0][0] || yl > pf[pf.length - 1][0]) { U.set(0, 0, 0, 0); continue; }
+      let k = 0; while (k < pf.length - 2 && pf[k + 1][0] < yl) k++;
+      const [y0, r0] = pf[k], [y1, r1] = pf[k + 1], sl = (r1 - r0) / Math.max(1e-3, y1 - y0);
+      U.set(s.group.position.x, s.group.position.z, r0 + (yl - y0) * sl, sl);
+    }
     const nearEdge = Math.abs(u - EDGE_U) < 0.22;
     fall.mesh.visible = !fallOff && (nearEdge || (lookBack && u > EDGE_U)); fall.update(t, mix);
     aura.group.visible = u > EDGE_U - 0.2;                                   // nebula only near and past the edge

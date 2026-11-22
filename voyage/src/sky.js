@@ -31,8 +31,8 @@ vec3 sunsetSky(vec3 d, vec3 sun){
   float az = max(dot(normalize(vec3(d.x, 0., d.z)), normalize(vec3(sun.x, 0., sun.z))), 0.0);
   c *= mix(0.78, 1.12, az);                                         // warmer towards the sun
   float s = max(dot(d, sun), 0.0);
-  c += vec3(1.0, 0.55, 0.22) * (pow(s, 10.0) * 0.45 + pow(s, 90.0) * 0.9);
-  c = mix(c, vec3(1.0, 0.95, 0.78) * 3.0, smoothstep(0.99955, 0.9998, s)); // sun disc
+  c += vec3(1.0, 0.55, 0.22) * (pow(s, 10.0) * 0.34 + pow(s, 90.0) * 0.55);
+  c = mix(c, vec3(1.0, 0.9, 0.72) * 1.7, smoothstep(0.99955, 0.9998, s)); // sun disc (toned down: was blinding)
   return c;
 }
 
