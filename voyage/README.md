@@ -20,8 +20,3 @@ Scroll-driven 3D section: sunset ocean → edge of the world → cosmic ocean, w
 - Loading screen: `.v-load` in `index.html`; progress = 12% code, then GLB bytes + texture count, 90% shader warm-up (`compileAsync`), 100% → instructions → fades after 2.4 s or any input.
 - Phones (`hover: none`): 1× resolution, no post passes or shadows, `LITE` shader define (fewer noise octaves), one nebula layer, fewer particles.
 - Tests: `?vu=0.42&vsnap` starts at a stop and settles the camera instantly (also skips the shader warm-up).
-
-## Cel-shaded ship (Nov 2026)
-- `src/shipmat.js`: bone + sails use `MeshToonMaterial` with a 3-band gradient map (`bands()`), calm lilac pearl, ember/sail/engine glow kept, one hard rim band.
-- Ink outline: `inkBone` (inverted hull, back faces pushed along the normal, same wing flap) added as a child of every bone mesh in `main.js`. Sails have no outline (flat sheets; their ribs carry the ink).
-- Blender reference: `builder/ship-cel-test/ship_cel_test.blend`.

@@ -129,8 +129,6 @@ export function createVoyage(root){
       o.frustumCulled = false;
     });
     m.position.x = -5; m.position.y = 0.15;            // model: bow at -X, 10 units long → centre it…
-    const inked = []; m.traverse(o => { if (o.isMesh && o.material === mats.bone) inked.push(o); });
-    for (const o of inked) { const ol = new THREE.Mesh(o.geometry, mats.inkBone); ol.frustumCulled = false; o.add(ol); }   // cel ink outline
     shipInner.add(m); shipInner.rotation.y = -Math.PI / 2; // …and turn the bow to -Z
     shipReady = true; onShip();
   }, e => { if (e.total) { glbFrac = e.loaded / e.total; upd(); } }, err => { console.error('AI Voyage: ship failed to load', err); root.classList.add('v-noship'); shipReady = true; onShip(); });
