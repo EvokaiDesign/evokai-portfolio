@@ -217,7 +217,7 @@ export function createVoyage(root){
     if (touch) {                                       // phones: drop resolution further, then the extras
       if (quality === 3) { dpr = 0.85; motes.points.visible = false; galaxies.group.visible = false; }
       else if (quality === 2) { dpr = 0.7; stars.points.visible = false; aura.group.visible = false; }
-      else if (quality === 1) { dpr = 0.55; fall.mesh.visible = false; }
+      else if (quality === 1) { dpr = 0.55; fallOff = true; }
     } else if (quality === 2) { dpr = Math.max(1, dpr * 0.75); post.lower(); }
     else if (quality === 1) { post.noBloom(); motes.points.visible = false; dpr = 1; }
     quality--; resize();
@@ -226,7 +226,7 @@ export function createVoyage(root){
   const fpsEl = new URLSearchParams(location.search).has('vfps') ? Object.assign(document.createElement('div'), { style: 'position:absolute;left:8px;top:8px;z-index:9;font:12px/1.3 monospace;color:#fff;background:rgba(0,0,0,.6);padding:4px 8px;border-radius:6px;pointer-events:none' }) : null;
   if (fpsEl) root.appendChild(fpsEl);
   let fpsShowT = 0, fpsShowN = 0;
-  let lastDraw = 0;                                    // phones: never draw faster than 60 fps (120 Hz screens would double the work and the heat)
+  let lastDraw = 0, fallOff = false;                                    // phones: never draw faster than 60 fps (120 Hz screens would double the work and the heat)
   let W = 1, H = 1;
   function resize(){
     W = root.clientWidth || innerWidth; H = root.clientHeight || innerHeight;
@@ -305,10 +305,11 @@ export function createVoyage(root){
     sky.uniforms.uMix.value = mix; sky.uniforms.uTime.value = t; sky.mesh.position.copy(camera.position);
     stars.points.position.copy(camera.position); stars.uniforms.uMix.value = mix; stars.uniforms.uTime.value = t;
     galaxies.update(camera.position, mix);
-    ocean.mesh.visible = u < EDGE_U + 0.14;
+    const lookBack = face > 0.01 || faceTo === 1;                       // turned towards home: the edge, the waterfall and the ocean are in view
+    ocean.mesh.visible = u < EDGE_U + 0.14 || lookBack;
     ocean.update(t, camera.position, mix, ship.position, yaw, (0.2 + Math.min(0.8, Math.abs(vel) * 18 + swing * 0.5)) * (1 - smooth(0.3, 2.5, ship.position.y)));
     const nearEdge = Math.abs(u - EDGE_U) < 0.22;
-    fall.mesh.visible = nearEdge; fall.update(t, mix);
+    fall.mesh.visible = !fallOff && (nearEdge || (lookBack && u > EDGE_U)); fall.update(t, mix);
     aura.group.visible = u > EDGE_U - 0.2;                                   // nebula only near and past the edge
     if (aura.group.visible) aura.update(t, camera.position, mix, nearEdge); motes.update(t, camera.position, mix);
     scene.fog.color.copy(fogA).lerp(fogB, mix); scene.fog.density = lerp(0.0022, 0.0016, mix);
@@ -373,6 +374,7 @@ export function createVoyage(root){
       const go = async () => {
         if (loadState === 'done') { stop = 0; prog = STOPS[0].u; lastU = prog; anim = null; vel = 0; inspect = 0; arrived = performance.now(); face = faceTo = 0; turnA = null; first = true; hint(true); root.classList.add('v-ready');   /* every visit starts at the beginning */ if (!raf) { clock.getDelta(); frame(); } return; }
         if (loadState !== 'loading') return; loadState = 'warming'; glbFrac = 1; upd(); setP(90);
+        ocean.mesh.visible = fall.mesh.visible = aura.group.visible = true;   // prepare every part now (hidden parts would otherwise stall the first time they appear)
         if (!SNAP) try { await gl.compileAsync(scene, camera); } catch (e) {}      // compile shaders in parallel now, not on the first scroll
         if (!active) { loadState = 'loading'; return; }
         if (!raf) { clock.getDelta(); frame(); }                        // start drawing behind the loader
