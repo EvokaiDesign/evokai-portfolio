@@ -99,6 +99,7 @@ export function createVoyage(root){
   envSky.uniforms.uMix.value = 1; const envCosmic = pm.fromScene(envScene, 0.02).texture;
   scene.environment = envSunset;
 
+  for (const o of [sky.mesh, stars.points, galaxies.group, ocean.mesh, fall.mesh, aura.group, motes.points]) o.userData.noAO = true;
   const post = makePost(gl, scene, camera, { mobile: touch });
 
   // ---------- live water reflections (computers only): the scene mirrored in the plane y = 0 ----------
@@ -107,7 +108,7 @@ export function createVoyage(root){
   const reflCam = new THREE.PerspectiveCamera(), _rm = new THREE.Matrix4(), _rv = new THREE.Vector3(), _rt = new THREE.Vector3(), _rl = new THREE.Vector3();
   const _N = new THREE.Vector3(0, 1, 0), _plane = new THREE.Plane(), _clip = new THREE.Vector4(), _q = new THREE.Vector4();
   if (REFL) { ocean.uniforms.uRefl.value = reflRT.texture; ocean.uniforms.uReflOn.value = 1; }
-  const _sunP = new THREE.Vector3(), _sunUV = new THREE.Vector2();
+  const _sunP = new THREE.Vector3(), _sunUV = new THREE.Vector2(), _gp = new THREE.Vector3();
   function renderReflection(){
     if (!REFL || !ocean.mesh.visible) return;
     camera.updateMatrixWorld();
@@ -148,6 +149,7 @@ export function createVoyage(root){
   const shipInner = new THREE.Group(); ship.add(shipInner);
   engineLight.position.set(0, 0.9, 5.2); ship.add(engineLight);
   const mats = shipMaterials();
+  if (!touch) { mats.bone.clearcoat = 0.7; mats.bone.clearcoatRoughness = 0.07; mats.bone.envMapIntensity = 0.85; }   // glossier pearl: crisper reflections of the sky
   let shipReady = false, onShip = () => {};
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
   loader.load(SHIP_URL, g => {
@@ -391,6 +393,10 @@ export function createVoyage(root){
     _sunP.copy(camera.position).addScaledVector(SUN_DIR, 800).project(camera);
     { const onScr = _sunP.z < 1 ? 1 - smooth(0.9, 1.6, Math.max(Math.abs(_sunP.x), Math.abs(_sunP.y))) : 0;
       _sunUV.set(_sunP.x * 0.5 + 0.5, _sunP.y * 0.5 + 0.5); post.setSun(_sunUV, onScr * (1 - mix * 0.75)); }
+    if (REFL) { engineLight.getWorldPosition(_gp); ocean.uniforms.uGlowA.value.set(_gp.x, _gp.y, _gp.z, 1);
+      ocean.uniforms.uGlowAC.value.copy(engineLight.color);
+      ocean.uniforms.uGlowB.value.set(islandLight.position.x, islandLight.position.y, islandLight.position.z, islandLight.intensity / 45);
+      ocean.uniforms.uGlowBC.value.copy(islandLight.color); }
     renderReflection();
     post.render(t, mix);
 

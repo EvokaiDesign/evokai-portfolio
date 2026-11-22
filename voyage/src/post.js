@@ -4,6 +4,12 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+
+// ambient occlusion that skips the sky, ocean, waterfall and nebula (their shaders move vertices, the AO normal pass would not)
+class ContactAO extends GTAOPass {
+  _overrideVisibility(){ super._overrideVisibility(); const c = this._visibilityCache; this.scene.traverse(o => { if ((o.userData.noAO || o.isSprite || (o.material && o.material.transparent)) && o.visible) { o.visible = false; c.push(o); } }); }
+}
 
 const GRADE = {
   uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uMix: { value: 0 }, uGrain: { value: 0.035 }, uAspect: { value: 1 }, uSunUV: { value: new THREE.Vector2(0.5, 0.5) }, uShaft: { value: 0 } },
@@ -43,15 +49,20 @@ export function makePost(gl, scene, camera, { mobile }){
   }
   const composer = new EffectComposer(gl);
   composer.addPass(new RenderPass(scene, camera));
+  // soft contact shadows where things meet (gummies on the grass, posts in the ground, ribs of the ship)
+  const ao = new ContactAO(scene, camera, 1, 1); ao.blendIntensity = 0.85;
+  ao.updateGtaoMaterial({ radius: 1.6, distanceExponent: 1.4, thickness: 2.5, distanceFallOff: 1, scale: 1.15, samples: 12 });
+  ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+  composer.addPass(ao);
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.5, 1.05);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
   const grade = new ShaderPass(GRADE); composer.addPass(grade);
   let bloomScale = mobile ? 0.4 : 0.5, bk = 1;
   return {
-    composer, bloom, grade,
+    composer, bloom, grade, ao,
     setSize(w, h, dpr){ composer.setPixelRatio(dpr); composer.setSize(w, h); bloom.resolution.set(w * bloomScale, h * bloomScale); grade.uniforms.uAspect.value = w / h; },
-    lower(){ bloomScale = 0.33; bk = 0.85; grade.uniforms.uGrain.value = 0.02; },
+    lower(){ ao.enabled = false; bloomScale = 0.33; bk = 0.85; grade.uniforms.uGrain.value = 0.02; },
     setSun(uv, k){ grade.uniforms.uSunUV.value.copy(uv); grade.uniforms.uShaft.value = k; },
     noBloom(){ bloom.enabled = false; },
     render(t, mix){ grade.uniforms.uTime.value = t; grade.uniforms.uMix.value = mix; bloom.strength = (0.42 + mix * 0.3) * bk; composer.render(); }

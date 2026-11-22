@@ -41,6 +41,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
     uTime: { value: 0 }, uMix: { value: 0 }, uEdge: { value: edgeZ }, uSun: { value: sunDir.clone() }, uCam: { value: new THREE.Vector3() }, uCen: { value: new THREE.Vector3() },
     uShip: { value: new THREE.Vector4(0, 0, 0, -1) }, uWake: { value: 1 },
     uRefl: { value: null }, uReflMat: { value: new THREE.Matrix4() }, uReflOn: { value: 0 },   // live mirror of ship + islands (desktop)
+    uGlowA: { value: new THREE.Vector4() }, uGlowAC: { value: new THREE.Color() }, uGlowB: { value: new THREE.Vector4() }, uGlowBC: { value: new THREE.Color() },   // engine + torch light on the water (desktop)
     uW: { value: WAVES.map(w => new THREE.Vector4(...w)) }
   };
   const mat = new THREE.ShaderMaterial({ defines: LITE_DEF,
@@ -57,7 +58,15 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
         gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
       }`,
     fragmentShader: NOISE + SKYFN + `
-      uniform float uTime, uMix, uEdge, uWake, uReflOn; uniform vec3 uSun, uCam; uniform vec4 uShip; uniform sampler2D uRefl; varying vec4 vRP;
+      uniform float uTime, uMix, uEdge, uWake, uReflOn; uniform vec3 uSun, uCam; uniform vec4 uShip; uniform sampler2D uRefl; varying vec4 vRP; uniform vec4 uGlowA, uGlowB; uniform vec3 uGlowAC, uGlowBC;
+      // a warm point light on the water: soft pool + glittering streak that dances on the ripples
+      vec3 glowOn(vec4 G, vec3 col, vec3 N, vec3 V, vec3 P, float reach){
+        if (G.w < 0.01) return vec3(0.0);
+        vec3 d = G.xyz - P; float dd = dot(d, d); vec3 Lp = d * inversesqrt(dd);
+        float fall = 1.0 / (1.0 + dd / (reach * reach));
+        float spec = pow(max(dot(N, normalize(Lp + V)), 0.0), 140.0) * 6.0 + pow(max(dot(N, normalize(Lp + V)), 0.0), 24.0) * 0.5;
+        return col * G.w * fall * (spec + max(dot(N, Lp), 0.0) * 0.1);
+      }
       varying vec3 vW; varying vec3 vN; varying float vCrest;
       #ifdef LITE
       #define DETAIL_N 3
@@ -98,6 +107,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
         // sun: sharp core + wide glitter path
         float s = max(dot(R, L), 0.0);
         c += vec3(1.0, 0.72, 0.42) * (pow(s, 900.0) * 9.0 + pow(s, 120.0) * 0.9 + pow(s, 18.0) * 0.12);
+        if (uReflOn > 0.5) { c += glowOn(uGlowA, uGlowAC, N, V, vW, 7.0) * 1.4; c += glowOn(uGlowB, uGlowBC, N, V, vW, 16.0); }
         // crest foam
         float fn = fbm3(vec3(vW.xz * 0.5, uTime * 0.4));
         float foam = smoothstep(0.62, 0.95, vCrest * 0.9 + fn * 0.55) * (1.0 - smoothstep(60.0, 200.0, dist));
