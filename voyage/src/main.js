@@ -98,13 +98,8 @@ export function createVoyage(root){
   envSky.uniforms.uMix.value = 0; let envSunset = pm.fromScene(envScene, 0.02).texture;
   envSky.uniforms.uMix.value = 1; let envCosmic = pm.fromScene(envScene, 0.02).texture;
   scene.environment = envSunset;
-  // hand-painted skies: once loaded, the sky, the water and the pearl reflections all use them
-  loadPano(() => {
-    const was = scene.environment === envCosmic;
-    envSky.uniforms.uMix.value = 0; envSunset = pm.fromScene(envScene, 0.02).texture;
-    envSky.uniforms.uMix.value = 1; envCosmic = pm.fromScene(envScene, 0.02).texture;
-    scene.environment = was ? envCosmic : envSunset;
-  });
+  // painted skies (sky dome only)
+  loadPano();                                                    // lighting and reflections keep the original skies
 
   for (const o of [sky.mesh, stars.points, galaxies.group, ocean.mesh, fall.mesh, aura.group, motes.points]) o.userData.noAO = true;
   const post = makePost(gl, scene, camera, { mobile: touch });
