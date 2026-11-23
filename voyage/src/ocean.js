@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { NOISE, SKYFN, LITE, LITE_DEF } from './sky.js';
+import { NOISE, SKYFN, LITE, LITE_DEF, PANO } from './sky.js';
 
 // ---------- sunset ocean: Gerstner waves on a polar grid that is dense near the camera ----------
 // waves: dir.x, dir.y, steepness, wavelength
@@ -55,7 +55,7 @@ function polarGrid(rings, segs, rMax){
 }
 
 export function makeOcean({ rings, segs, edgeZ, sunDir }){
-  const uniforms = {
+  const uniforms = { ...PANO,
     uTime: { value: 0 }, uMix: { value: 0 }, uEdge: { value: edgeZ }, uSun: { value: sunDir.clone() }, uCam: { value: new THREE.Vector3() }, uCen: { value: new THREE.Vector3() },
     uShip: { value: new THREE.Vector4(0, 0, 0, -1) }, uWake: { value: 1 },
     uRefl: { value: null }, uReflMat: { value: new THREE.Matrix4() }, uReflOn: { value: 0 },   // live mirror of ship + islands (desktop)
