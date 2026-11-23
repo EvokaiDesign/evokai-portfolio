@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { makeSky, makeStars, makeGalaxies, loadPano } from './sky.js';
+import { makeSky, makeStars, makeGalaxies } from './sky.js';
 import { makeOcean, makeWaterfall, makeAura, makeMotes, waterHeight } from './ocean.js';
 import { makeIsland } from './islands.js';
 import { shipMaterials } from './shipmat.js';
@@ -95,16 +95,9 @@ export function createVoyage(root){
   // environment maps for the pearl reflections (one per world, built once)
   const pm = new THREE.PMREMGenerator(gl);
   const envScene = new THREE.Scene(); const envSky = makeSky(SUN_DIR); envScene.add(envSky.mesh);
-  envSky.uniforms.uMix.value = 0; let envSunset = pm.fromScene(envScene, 0.02).texture;
-  envSky.uniforms.uMix.value = 1; let envCosmic = pm.fromScene(envScene, 0.02).texture;
+  envSky.uniforms.uMix.value = 0; const envSunset = pm.fromScene(envScene, 0.02).texture;
+  envSky.uniforms.uMix.value = 1; const envCosmic = pm.fromScene(envScene, 0.02).texture;
   scene.environment = envSunset;
-  // hand-painted skies: once loaded, the sky, the water and the pearl reflections all use them
-  loadPano(() => {
-    const was = scene.environment === envCosmic;
-    envSky.uniforms.uMix.value = 0; envSunset = pm.fromScene(envScene, 0.02).texture;
-    envSky.uniforms.uMix.value = 1; envCosmic = pm.fromScene(envScene, 0.02).texture;
-    scene.environment = was ? envCosmic : envSunset;
-  });
 
   for (const o of [sky.mesh, stars.points, galaxies.group, ocean.mesh, fall.mesh, aura.group, motes.points]) o.userData.noAO = true;
   const post = makePost(gl, scene, camera, { mobile: touch });

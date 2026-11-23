@@ -18,26 +18,9 @@ float fbm(vec3 p){ float a = .5, s = 0.; for (int i = 0; i < FBM_N; i++){ s += a
 float fbm3(vec3 p){ float a = .5, s = 0.; for (int i = 0; i < FBM3_N; i++){ s += a * vnoise(p); p = p * 2.03 + 1.7; a *= .5; } return s * 1.14; }
 `;
 
-// painted 360° skies (equirectangular, centre = ahead / -Z, u grows to the right / +X, middle row = horizon); shared by the sky and the ocean
-export const PANO = { tPanoA: { value: null }, tPanoB: { value: null }, uPano: { value: 0 }, uPanoK: { value: new THREE.Vector4(0.7, 1.2, 0.55, 1.35) } };   // gain A, contrast A, gain B, contrast B
-if (typeof window !== 'undefined') window.__pano = PANO;
-export function loadPano(onReady){
-  const L = new THREE.TextureLoader(), suf = LITE ? '-2k' : '', names = ['sky-sunset-g2', 'sky-cosmic-g1'];
-  let n = 0;
-  names.forEach((nm, i) => L.load('media/voyage/' + nm + suf + '.webp', t => {
-    t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = false; t.minFilter = THREE.LinearFilter; t.wrapS = THREE.RepeatWrapping;
-    PANO[i ? 'tPanoB' : 'tPanoA'].value = t;
-    if (++n === 2) { PANO.uPano.value = 1; onReady && onReady(); }
-  }));
-}
 // shared sky colour so the ocean can reflect the same sky
 export const SKYFN = /* glsl */`
-uniform sampler2D tPanoA, tPanoB; uniform float uPano; uniform vec4 uPanoK;
-vec2 panoUV(vec3 d){ return vec2(0.5 + atan(d.x, -d.z) * 0.15915494, 0.5 + asin(clamp(d.y, -1.0, 1.0)) * 0.31830989); }
-vec3 panoA(vec3 d){ return pow(texture2D(tPanoA, panoUV(d)).rgb, vec3(uPanoK.y)) * uPanoK.x; }
-vec3 panoB(vec3 d){ return pow(texture2D(tPanoB, panoUV(d)).rgb, vec3(uPanoK.w)) * uPanoK.z; }
 vec3 sunsetSky(vec3 d, vec3 sun){
-  if (uPano > 0.5) { vec3 p = panoA(vec3(d.x, max(d.y, 0.0), d.z)); float s = max(dot(d, sun), 0.0); return p + vec3(1.0, 0.55, 0.22) * pow(s, 90.0) * 0.25; }
   float e = max(d.y, 0.0);
   vec3 c = vec3(1.0, 0.72, 0.30);                                  // golden horizon
   c = mix(c, vec3(1.0, 0.42, 0.12), smoothstep(0.00, 0.05, e));    // orange
@@ -83,7 +66,6 @@ vec3 milkyWay(vec3 d){
   return col * (band * (0.18 + clouds * 0.55) + core * 0.35 * along + grain * band * 0.5) * (1.0 - dust * 0.85);
 }
 vec3 cosmicSky(vec3 d){
-  if (uPano > 0.5) return panoB(d);
   vec3 c = vec3(0.025, 0.018, 0.075);
   float n = fbm(d * 2.6 + vec3(3.1, 0.0, 1.7));
   float m = fbm(d * 5.0 - vec3(1.0, 2.0, 0.5));
@@ -96,7 +78,7 @@ vec3 cosmicSky(vec3 d){
 `;
 
 export function makeSky(sunDir){
-  const uniforms = { uMix: { value: 0 }, uSun: { value: sunDir.clone() }, uTime: { value: 0 }, ...PANO };
+  const uniforms = { uMix: { value: 0 }, uSun: { value: sunDir.clone() }, uTime: { value: 0 } };
   const mat = new THREE.ShaderMaterial({
     defines: LITE_DEF, uniforms, side: THREE.BackSide, depthWrite: false, fog: false,
     vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
@@ -106,7 +88,7 @@ export function makeSky(sunDir){
         vec3 d = normalize(vDir);
         float below = 1.0 - smoothstep(-0.06, 0.01, d.y);         // under the horizon: the cosmos is always there
         vec3 c;
-        if (uMix < 0.999) { if (uPano > 0.5) c = panoA(d); else { vec3 s = sunsetSky(d, uSun); s += milkyWay(d) * smoothstep(0.1, 0.4, d.y) * 0.7; c = cloudLayer(d, uSun, s, uTime); } }
+        if (uMix < 0.999) { vec3 s = sunsetSky(d, uSun); s += milkyWay(d) * smoothstep(0.1, 0.4, d.y) * 0.7; c = cloudLayer(d, uSun, s, uTime); }
         if (uMix > 0.001 || below > 0.001) { vec3 cs = cosmicSky(d); c = uMix < 0.999 ? mix(c, cs, max(uMix, below)) : cs; }
         c += vec3(0.55, 0.32, 0.95) * exp(-abs(d.y + 0.05) * 22.0) * below * (1.0 - uMix) * 0.7; // glow of the cosmos under the edge
         gl_FragColor = vec4(c, 1.0);
