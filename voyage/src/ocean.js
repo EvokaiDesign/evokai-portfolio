@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { NOISE, SKYFN, LITE, LITE_DEF } from './sky.js';
+import { NOISE, SKYFN, LITE, LITE_DEF, TEX_DEF, NOISE_TEX } from './sky.js';
 
 // ---------- sunset ocean: Gerstner waves on a polar grid that is dense near the camera ----------
 // waves: dir.x, dir.y, steepness, wavelength
@@ -61,9 +61,9 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
     uRefl: { value: null }, uReflMat: { value: new THREE.Matrix4() }, uReflOn: { value: 0 },   // live mirror of ship + islands (desktop)
     uIsl: { value: Array.from({ length: 5 }, () => new THREE.Vector4()) }, uHit: { value: Array.from({ length: 6 }, () => new THREE.Vector4()) },   // island waterlines, wing tips touching the water
     uGlowA: { value: new THREE.Vector4() }, uGlowAC: { value: new THREE.Color() }, uGlowB: { value: new THREE.Vector4() }, uGlowBC: { value: new THREE.Color() },   // engine + torch light on the water (desktop)
-    uW: { value: WAVES.map(w => new THREE.Vector4(...w)) }
+    uW: { value: WAVES.map(w => new THREE.Vector4(...w)) }, tNoise: { value: NOISE_TEX }
   };
-  const mat = new THREE.ShaderMaterial({ defines: LITE_DEF,
+  const mat = new THREE.ShaderMaterial({ defines: TEX_DEF,
     uniforms,
     vertexShader: GERSTNER + `
       uniform float uTime, uEdge; uniform vec3 uCam, uCen; uniform mat4 uReflMat; varying vec3 vW; varying vec3 vN; varying float vCrest; varying vec4 vRP;
@@ -88,7 +88,7 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
       }
       varying vec3 vW; varying vec3 vN; varying float vCrest;
       #ifdef LITE
-      #define DETAIL_N 3
+      #define DETAIL_N 5
       #else
       #define DETAIL_N 7
       #endif
@@ -202,14 +202,14 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
 
 // ---------- waterfall at the edge of the world ----------
 export function makeWaterfall(edgeZ, depth){
-  const uniforms = { uTime: { value: 0 }, uMix: { value: 0 } };
-  const g = new THREE.PlaneGeometry(1800, 1, 160, 50);
+  const uniforms = { uTime: { value: 0 }, uMix: { value: 0 }, tNoise: { value: NOISE_TEX } };
+  const g = new THREE.PlaneGeometry(1800, 1, LITE ? 80 : 160, LITE ? 25 : 50);
   const pos = g.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const v = 0.5 - pos.getY(i); // 0 top → 1 bottom
     pos.setXYZ(i, pos.getX(i), 0.2 - v * depth, edgeZ - 10 * (1 - Math.exp(-v * 6)));
   }
-  const mat = new THREE.ShaderMaterial({ defines: LITE_DEF,
+  const mat = new THREE.ShaderMaterial({ defines: TEX_DEF,
     uniforms, transparent: true, depthWrite: false, side: THREE.DoubleSide,
     vertexShader: `varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vW = (modelMatrix * vec4(position, 1.)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.); }`,
     fragmentShader: NOISE + `
@@ -242,9 +242,9 @@ function cloudTexture(){
 }
 export function makeAura(edgeZ, endZ, n){
   const group = new THREE.Group();
-  const shared = { uTime: { value: 0 }, uMix: { value: 0 }, uCam: { value: new THREE.Vector3() } };
+  const shared = { uTime: { value: 0 }, uMix: { value: 0 }, uCam: { value: new THREE.Vector3() }, tNoise: { value: NOISE_TEX } };
   const layer = (y, scale, speed, bright) => {
-    const m = new THREE.ShaderMaterial({ defines: LITE_DEF,
+    const m = new THREE.ShaderMaterial({ defines: TEX_DEF,
       uniforms: { ...shared, uY: { value: y }, uS: { value: scale }, uSp: { value: speed }, uB: { value: bright }, uEdge: { value: edgeZ } },
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
       vertexShader: `uniform vec3 uCam; uniform float uY; varying vec3 vW; void main(){ vW = position + vec3(uCam.x, uY, uCam.z); gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.); }`,

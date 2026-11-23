@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { makeSky, makeStars, makeGalaxies } from './sky.js';
+import { makeSky, makeStars, makeGalaxies, bakeSky, makeBakedSky, LITE } from './sky.js';
 import { makeOcean, makeWaterfall, makeAura, makeMotes, waterHeight } from './ocean.js';
 import { makeIsland } from './islands.js';
 import { shipMaterials } from './shipmat.js';
@@ -29,7 +29,7 @@ const ISLANDS = [
 // every scroll step moves to the next stop: start, islands, and the edge of the world
 const STOPS = [{ u: 0 }, ...ISLANDS.map((s, i) => ({ u: s.u, island: i })), { u: EDGE_U + 0.004, edge: true }].sort((a, b) => a.u - b.u);
 
-const touch = matchMedia('(hover: none)').matches;
+const touch = LITE;   // phones / tablets (or ?vlite)
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -64,9 +64,9 @@ export function createVoyage(root){
   const bySlug = Object.fromEntries(P.map(p => [p.slug, p]));
 
   let gl;
-  try { gl = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' }); }
+  try { gl = new THREE.WebGLRenderer({ canvas, antialias: touch, powerPreference: 'high-performance' }); }   // phones: MSAA (almost free on phone GPUs) — clean edges instead of jaggies
   catch (e) { root.classList.add('v-nogl'); return { enter(){}, exit(){} }; }
-  const maxDpr = touch ? 1 : 1.75; let dpr = Math.min(devicePixelRatio || 1, maxDpr);   // phones render at 1× — the biggest single saving
+  const maxDpr = touch ? 1.5 : 1.75; let dpr = Math.min(devicePixelRatio || 1, maxDpr);   // phones: sharp 1.5× thanks to the cheap baked sky / texture noise; drops if the phone can't keep up
   gl.setPixelRatio(dpr); gl.outputColorSpace = THREE.SRGBColorSpace;
   gl.toneMapping = THREE.ACESFilmicToneMapping; gl.toneMappingExposure = 0.95;
   if (!touch) { gl.shadowMap.enabled = true; gl.shadowMap.type = THREE.PCFShadowMap; }
@@ -76,7 +76,7 @@ export function createVoyage(root){
   scene.fog = new THREE.FogExp2(0xe8946a, 0.0022);
 
   // ---------- world ----------
-  const sky = makeSky(SUN_DIR); scene.add(sky.mesh);
+  const sky = touch ? makeBakedSky(bakeSky(gl, SUN_DIR)) : makeSky(SUN_DIR); scene.add(sky.mesh);   // phones: sky painted once at load, then just looked up
   const stars = makeStars(touch ? 1400 : 5200); scene.add(stars.points);
   const galaxies = makeGalaxies(touch ? 5 : 11); scene.add(galaxies.group);
   const ocean = makeOcean({ rings: touch ? 72 : 150, segs: touch ? 120 : 288, edgeZ: EDGE_Z, sunDir: SUN_DIR }); scene.add(ocean.mesh);
@@ -148,6 +148,13 @@ export function createVoyage(root){
   const ship = new THREE.Group(); scene.add(ship);
   const shipInner = new THREE.Group(); ship.add(shipInner);
   engineLight.position.set(0, 0.9, 5.2); ship.add(engineLight);
+  // phones have no bloom: a soft additive glow sprite on the engine gives the same warm flare for almost nothing
+  let engineGlow = null;
+  if (touch) { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.18, 'rgba(255,255,255,.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    engineGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0.55 }));
+    engineGlow.position.set(0, 0.9, 5.4); engineGlow.scale.setScalar(4.2); ship.add(engineGlow); }
   const mats = shipMaterials();
   if (!touch) { mats.bone.clearcoat = 0.7; mats.bone.clearcoatRoughness = 0.07; mats.bone.envMapIntensity = 0.85; }   // glossier pearl: crisper reflections of the sky
   let shipReady = false, onShip = () => {};
@@ -249,12 +256,13 @@ export function createVoyage(root){
   sBtn.addEventListener('click', () => { const on = sound.toggle(); sBtn.setAttribute('aria-pressed', on); sBtn.querySelector('span').textContent = on ? 'Sound on' : 'Sound off'; });
 
   // ---------- adaptive quality ----------
-  let fpsT = 0, fpsN = 0, quality = touch ? 3 : 2;
+  let fpsT = 0, fpsN = 0, quality = touch ? 4 : 2;
   const degrade = () => {
-    if (touch) {                                       // phones: drop resolution further, then the extras
-      if (quality === 3) { dpr = 0.85; motes.points.visible = false; galaxies.group.visible = false; }
-      else if (quality === 2) { dpr = 0.7; stars.points.visible = false; aura.group.visible = false; }
-      else if (quality === 1) { dpr = 0.55; fallOff = true; }
+    if (touch) {                                       // phones: step resolution down first, then the extras
+      if (quality === 4) dpr = Math.min(dpr, 1.25);
+      else if (quality === 3) { dpr = Math.min(dpr, 1); motes.points.visible = false; }
+      else if (quality === 2) { dpr = 0.85; galaxies.group.visible = false; }
+      else if (quality === 1) { dpr = 0.7; fallOff = true; }
     } else if (quality === 2) { dpr = Math.max(1, dpr * 0.75); post.lower(); }
     else if (quality === 1) { post.noBloom(); motes.points.visible = false; dpr = 1; }
     quality--; resize();
@@ -393,6 +401,7 @@ export function createVoyage(root){
     hemi.color.setRGB(lerp(0.91, 0.5, mix), lerp(0.84, 0.42, mix), 1); hemi.groundColor.setRGB(lerp(0.04, 0.12, mix), lerp(0.16, 0.04, mix), lerp(0.22, 0.25, mix));
     back.intensity = lerp(0.7, 1.1, mix);
     engineLight.color.setRGB(lerp(1, 0.35, mix), lerp(0.48, 0.6, mix), lerp(0.16, 1, mix));
+    if (engineGlow) engineGlow.material.color.copy(engineLight.color);
     scene.environment = mix > 0.5 ? envCosmic : envSunset;
     mats.update(t, mix);
 

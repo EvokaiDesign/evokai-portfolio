@@ -1,13 +1,32 @@
 import * as THREE from 'three';
 
-export const LITE = typeof matchMedia !== 'undefined' && matchMedia('(hover: none)').matches;   // phones
+export const LITE = typeof matchMedia !== 'undefined' && (matchMedia('(hover: none)').matches || /[?&]vlite/.test(location.search));   // phones (?vlite forces the phone version on a computer, for testing)
 export const LITE_DEF = LITE ? { LITE: 1 } : {};
+// phones: value noise read from a small random texture (2 lookups) instead of 8 hashes per sample — same look, much cheaper
+function noiseTexture(){
+  const n = 256, d = new Uint8Array(n * n); let st = 20261123;
+  for (let i = 0; i < d.length; i++) { st = (st * 16807) % 2147483647; d[i] = st & 255; }
+  const t = new THREE.DataTexture(d, n, n, THREE.RedFormat); t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true; return t;
+}
+export const NOISE_TEX = LITE ? noiseTexture() : null;
+export const TEX_DEF = LITE ? { LITE: 1, TEXNOISE: 1 } : {};
 export const NOISE = /* glsl */`
 float hash3(vec3 p){ p = fract(p * 0.3183099 + .1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+#ifdef TEXNOISE
+uniform sampler2D tNoise;
+float vnoise(vec3 x){ vec3 i = floor(x), f = fract(x); vec2 u = f.xy * f.xy * (3.0 - 2.0 * f.xy);
+  vec2 uv = (i.xy + u + 0.5 + i.z * vec2(37.0, 17.0)) / 256.0;
+  return mix(texture2D(tNoise, uv).r, texture2D(tNoise, uv + vec2(37.0, 17.0) / 256.0).r, f.z * f.z * (3.0 - 2.0 * f.z)); }
+#else
 float vnoise(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(mix(hash3(i), hash3(i + vec3(1,0,0)), f.x), mix(hash3(i + vec3(0,1,0)), hash3(i + vec3(1,1,0)), f.x), f.y),
              mix(mix(hash3(i + vec3(0,0,1)), hash3(i + vec3(1,0,1)), f.x), mix(hash3(i + vec3(0,1,1)), hash3(i + vec3(1,1,1)), f.x), f.y), f.z); }
-#ifdef LITE
+#endif
+#if defined(TEXNOISE)
+#define FBM_N 4
+#define FBM3_N 3
+#elif defined(LITE)
 #define FBM_N 3
 #define FBM3_N 2
 #else
@@ -77,12 +96,46 @@ vec3 cosmicSky(vec3 d){
 }
 `;
 
-export function makeSky(sunDir){
-  const uniforms = { uMix: { value: 0 }, uSun: { value: sunDir.clone() }, uTime: { value: 0 } };
+// phones: the same sky, painted once into two cube textures at load (full detail), then the dome only looks them up
+// bake: 1 = sunset final look (uMix 0), 2 = cosmic final look (uMix 1); written tone-mapped + sRGB, like the screen
+const BAKE_OUT = /* glsl */`
+vec3 bakeFit(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
+vec3 bakeOut(vec3 c){
+  c *= 0.95 / 0.6;                                                    // same exposure + ACES as the renderer
+  c = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777)) * c;
+  c = bakeFit(c);
+  c = clamp(mat3(vec3(1.60475, -0.10208, -0.00327), vec3(-0.53108, 1.10813, -0.07276), vec3(-0.07367, -0.00605, 1.07602)) * c, 0.0, 1.0);
+  return mix(pow(c, vec3(0.41666)) * 1.055 - 0.055, c * 12.92, vec3(lessThanEqual(c, vec3(0.0031308))));
+}`;
+export function bakeSky(gl, sunDir){
+  const rts = [768, 512].map(n => new THREE.WebGLCubeRenderTarget(n, { type: THREE.UnsignedByteType, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }));
+  const sc = new THREE.Scene(), cam = new THREE.CubeCamera(1, 4000, rts[0]);
+  [1, 2].forEach((part, i) => {
+    const sky = makeSky(sunDir, { bake: part }); sc.add(sky.mesh);
+    cam.renderTarget = rts[i]; cam.update(gl, sc);
+    sc.remove(sky.mesh); sky.mesh.geometry.dispose(); sky.mesh.material.dispose();
+  });
+  return rts.map(r => r.texture);
+}
+export function makeBakedSky(tex){
+  const uniforms = { uMix: { value: 0 }, uTime: { value: 0 }, tA: { value: tex[0] }, tB: { value: tex[1] } };
   const mat = new THREE.ShaderMaterial({
-    defines: LITE_DEF, uniforms, side: THREE.BackSide, depthWrite: false, fog: false,
+    uniforms, side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false,
+    vertexShader: `varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
+    fragmentShader: `uniform samplerCube tA, tB; uniform float uMix; varying vec3 vDir;
+      void main(){ vec3 d = normalize(vDir); vec3 c = textureCube(tA, d).rgb; if (uMix > 0.001) c = mix(c, textureCube(tB, d).rgb, uMix); gl_FragColor = vec4(c, 1.0); }`
+  });
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(1500, 32, 16), mat);
+  mesh.renderOrder = -10; mesh.frustumCulled = false;
+  return { mesh, uniforms };
+}
+
+export function makeSky(sunDir, { bake = 0 } = {}){
+  const uniforms = { uMix: { value: bake === 2 ? 1 : 0 }, uSun: { value: sunDir.clone() }, uTime: { value: 0 } };
+  const mat = new THREE.ShaderMaterial({
+    defines: bake ? { BAKE: bake } : LITE_DEF, uniforms, side: THREE.BackSide, depthWrite: false, fog: false,
     vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
-    fragmentShader: NOISE + SKYFN + `
+    fragmentShader: NOISE + SKYFN + (bake ? BAKE_OUT : '') + `
       uniform float uMix, uTime; uniform vec3 uSun; varying vec3 vDir;
       void main(){
         vec3 d = normalize(vDir);
@@ -91,9 +144,13 @@ export function makeSky(sunDir){
         if (uMix < 0.999) { vec3 s = sunsetSky(d, uSun); s += milkyWay(d) * smoothstep(0.1, 0.4, d.y) * 0.7; c = cloudLayer(d, uSun, s, uTime); }
         if (uMix > 0.001 || below > 0.001) { vec3 cs = cosmicSky(d); c = uMix < 0.999 ? mix(c, cs, max(uMix, below)) : cs; }
         c += vec3(0.55, 0.32, 0.95) * exp(-abs(d.y + 0.05) * 22.0) * below * (1.0 - uMix) * 0.7; // glow of the cosmos under the edge
+        #ifdef BAKE
+        gl_FragColor = vec4(bakeOut(c), 1.0);
+        #else
         gl_FragColor = vec4(c, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
+        #endif
       }`
   });
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(1500, 48, 24), mat);
