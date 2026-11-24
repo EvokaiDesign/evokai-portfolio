@@ -22,7 +22,7 @@ const KEY_DIR = new THREE.Vector3(-0.5, 0.42, -1).normalize();   // light comes 
 const ISLANDS = [
   { u: 0.12, side: 1,  slug: 'ummy', theme: 'ummy' },
   { u: 0.27, side: -1, slug: 'the-gulag', theme: 'gulag' },
-  { u: 0.42, side: 1,  slug: null },
+  { u: 0.42, side: 1,  slug: null, theme: 'grove' },
   { u: 0.80, side: -1, slug: null },
   { u: 0.93, side: 1,  slug: null },
 ];
