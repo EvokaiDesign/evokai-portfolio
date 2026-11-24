@@ -224,6 +224,7 @@ export function createVoyage(root){
   const qU = parseFloat(new URLSearchParams(location.search).get('vu'));
   const SNAP = new URLSearchParams(location.search).has('vsnap'); // ?vu=0.5 starts there (testing)
   let stop = isFinite(qU) ? STOPS.reduce((b, s, i) => Math.abs(s.u - qU) < Math.abs(STOPS[b].u - qU) ? i : b, 0) : 0;
+  let beenOut = false;
   let prog = STOPS[stop].u, anim = null, arrived = performance.now(), inspect = 0, vel = 0, animK = 0;
   // the ship always sails bow-first: heading back means turning around first (face 0 = towards the edge, 1 = back home)
   let face = 0, faceTo = 0, turnA = null;
@@ -452,7 +453,8 @@ export function createVoyage(root){
       sun.target.position.lerp(f, first2 ? 1 : 1 - Math.exp(-dt * 4)); first2 = false; sun.position.copy(sun.target.position).addScaledVector(KEY_DIR, 120); }
     if (nearest) { nearest.group.localToWorld(islandLight.position.set(0, 4.5, 5)); islandLight.intensity = (0.35 + nearest.hover) * 45 * (1 - smooth(0.04, 0.1, nd)); islandLight.color.setRGB(1, lerp(0.62, 0.5, mix), lerp(0.3, 0.6, mix)); }
     cap.classList.toggle('on', !anim && !!st.edge);
-    if (quoteEl) quoteEl.classList.toggle('on', face > 0.6 && u > 0.03 && !(!anim && st.edge));   // turned around, heading home: Einstein in the sky
+    if (stop > 0) beenOut = true;
+    if (quoteEl) quoteEl.classList.toggle('on', beenOut && stop === 0 && !anim);   // back at the first dot, looking at the horizon: Einstein fades in; gone as soon as you sail off
     const moving = !!anim || Math.abs(vel) > 0.004; if (moving !== wasMoving) { wasMoving = moving; root.classList.toggle('v-moving', moving); }
     if (glowEl && Math.abs(mix - lastMix) > 0.01) { lastMix = mix;
       glowEl.style.setProperty('--c1', `${lerp(255, 200, mix) | 0},${lerp(214, 190, mix) | 0},${lerp(150, 255, mix) | 0}`);
@@ -487,7 +489,7 @@ export function createVoyage(root){
     enter(){
       if (active) return; active = true; root.hidden = false; resize(); if (!hasMouse) root.classList.add('v-nomouse');
       const go = async () => {
-        if (loadState === 'done') { stop = 0; prog = STOPS[0].u; lastU = prog; anim = null; vel = 0; inspect = 0; arrived = performance.now(); face = faceTo = 0; turnA = null; first = true; hint(true); root.classList.add('v-ready');   /* every visit starts at the beginning */ if (!raf) { clock.getDelta(); frame(); } return; }
+        if (loadState === 'done') { beenOut = false; stop = 0; prog = STOPS[0].u; lastU = prog; anim = null; vel = 0; inspect = 0; arrived = performance.now(); face = faceTo = 0; turnA = null; first = true; hint(true); root.classList.add('v-ready');   /* every visit starts at the beginning */ if (!raf) { clock.getDelta(); frame(); } return; }
         if (loadState !== 'loading') return; loadState = 'warming'; buildFrac = glbFrac = 1; upd(); capP = 99.5;   // last stretch: shader warm-up
         ocean.mesh.visible = fall.mesh.visible = aura.group.visible = true;   // prepare every part now (hidden parts would otherwise stall the first time they appear)
         if (!SNAP) { await Promise.all(pend); await warm(scene); }               // finish compiling in parallel now (whatever is left: the ship), not on the first scroll
