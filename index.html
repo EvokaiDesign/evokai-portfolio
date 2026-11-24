@@ -551,8 +551,8 @@ body.wallpage .cvbtn{padding:0; font-size:clamp(10px,.8vw,14px); -webkit-backdro
 /* 3i: Fernando's stone frame (painted into the wall with Gemini), laid exactly over the right niche; the photo sits in its opening.
    Dark like the wall; a lit copy shows only around the flame cursor */
 .gframe{display:none}
-body.wallpage .gframe{display:block; z-index:4!important; pointer-events:none; object-fit:fill; filter:brightness(.36) saturate(.85)}
-body.wallpage .gframe.glit{z-index:5!important; filter:brightness(.95) sepia(.08); -webkit-mask-image:radial-gradient(circle var(--fr,0px) at var(--fx,50%) var(--fy,50%), #000 0%, rgba(0,0,0,.5) 45%, transparent 100%); mask-image:radial-gradient(circle var(--fr,0px) at var(--fx,50%) var(--fy,50%), #000 0%, rgba(0,0,0,.5) 45%, transparent 100%)}
+body.wallpage .gframe{display:block; z-index:4!important; pointer-events:none; object-fit:fill}   /* colour-matched to the wall and darkened exactly like it (7% stone over #07090B) */
+body.wallpage .gframe.glit{z-index:5!important; -webkit-mask-image:radial-gradient(circle var(--fr,0px) at var(--fx,50%) var(--fy,50%), rgba(0,0,0,.5) 0%, rgba(0,0,0,.25) 40%, transparent 100%); mask-image:radial-gradient(circle var(--fr,0px) at var(--fx,50%) var(--fy,50%), rgba(0,0,0,.5) 0%, rgba(0,0,0,.25) 40%, transparent 100%)}   /* firelight: the same orange tint the wall gets */
 body.wallpage .aphoto2{border-radius:0!important; box-shadow:none!important}
 /* version 3h: the flame-lit photo (original size) in a wooden picture frame painted to look like the wall's stone (frame generated with Gemini, drawn as a 9-slice border so its corners stay crisp) */
 .aphoto2 .wframe{display:none}
@@ -905,7 +905,7 @@ body.v-touch #voyage .v-mouse:after{top:auto; bottom:6px; width:8px; height:8px;
         </div>
         <span class="abar" aria-hidden="true"></span>
         <div id="figGlow" aria-hidden="true"><i></i><span class="egghint">click me!</span></div>
-        <div class="aphwrap"><figure class="aphoto2 has" id="aPhoto" title="Fernando on LinkedIn" role="link" tabindex="0" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><span class="shield" aria-hidden="true"></span></figure><img class="gframe" id="gFrame" src="media/about-frame-j.webp" alt="" aria-hidden="true" draggable="false"><img class="gframe glit" id="gFrameLit" src="media/about-frame-j.webp" alt="" aria-hidden="true" draggable="false"><button type="button" class="cvbtn" id="cvBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download CV</button></div>
+        <div class="aphwrap"><figure class="aphoto2 has" id="aPhoto" title="Fernando on LinkedIn" role="link" tabindex="0" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><span class="shield" aria-hidden="true"></span></figure><img class="gframe" id="gFrame" src="media/about-frame-k.webp" alt="" aria-hidden="true" draggable="false"><img class="gframe glit" id="gFrameLit" src="media/about-frame-k-lit.webp" alt="" aria-hidden="true" draggable="false"><button type="button" class="cvbtn" id="cvBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download CV</button></div>
       </div>
     </main>
 
