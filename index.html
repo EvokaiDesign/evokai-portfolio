@@ -531,7 +531,8 @@ body.wallpage .aphoto2 > img:first-child{filter:brightness(.2) saturate(.35) sep
 body.wallpage .aphoto2 .lit{display:block; filter:sepia(.28) saturate(1.05) brightness(1.06) contrast(1.04); -webkit-mask-image:radial-gradient(circle var(--lr,0px) at var(--lx,50%) var(--ly,50%), #000 0%, rgba(0,0,0,.55) 45%, transparent 100%); mask-image:radial-gradient(circle var(--lr,0px) at var(--lx,50%) var(--ly,50%), #000 0%, rgba(0,0,0,.55) 45%, transparent 100%)}
 /* 3d: the photo seen through a broken stone window (stone generated with Gemini, edges faded into the wall) */
 body.wallpage .aphoto2{background:transparent!important; box-shadow:none!important; overflow:visible}
-body.wallpage .aphoto2 > img:not(.frame){inset:25% 19% 13% 19%; width:auto; height:auto}
+body.wallpage .aphoto2 > img:not(.frame){inset:22% 29% 15% 29%; width:auto; height:auto; object-position:50% 22%}
+body.wallpage .aphoto2::before{display:none}
 .aphoto2 .frame{display:none}
 body.wallpage .aphoto2 .frame{display:block; position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; filter:brightness(.5) saturate(.6) hue-rotate(10deg)}
 body.wallpage .aphoto2::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:soft-light; background:radial-gradient(circle calc(var(--lr,0px) * 1.2) at var(--gx,50%) var(--gy,50%), rgba(255,140,50,.85), rgba(255,140,50,0) 100%)}
