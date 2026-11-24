@@ -519,8 +519,8 @@ body.wallpage.on-contact #proj .pfoot .talk{display:none!important}
 /* About */
 body.wallpage #proj h1.ah{display:block; font-size:var(--fs); white-space:nowrap; padding-left:.32em; background:linear-gradient(90deg,#FF4D1A,#FF9A3C 55%,#FFD58A); -webkit-background-clip:text; background-clip:text; color:transparent}
 body.wallpage #proj h1.ah em{background:none; color:transparent; -webkit-text-fill-color:transparent}
-body.wallpage #aBio{display:flex; flex-direction:column; justify-content:center; padding:0 4% 0 4%; max-width:none}
-body.wallpage #aBio p{font-size:var(--fs)!important; line-height:1.48!important; margin:0 0 .65em!important; color:rgba(236,230,216,.82)}
+body.wallpage #aBio{display:flex; flex-direction:column; justify-content:center; padding:0 2% 0 2.4%; max-width:none}
+body.wallpage #aBio p{font-size:var(--fs)!important; line-height:1.5!important; margin:0 0 .7em!important; color:rgba(236,230,216,.82)}
 body.wallpage #aBio p:last-child{margin-bottom:0!important}
 body.wallpage #proj .pfoot .talk{display:block!important; font-size:var(--fs)!important; white-space:nowrap; padding:0 0 0 .4em!important; max-width:none!important}
 body.wallpage .aphoto2{border:0; border-radius:2px; max-width:none!important; aspect-ratio:auto!important; justify-self:auto; box-shadow:inset 0 0 40px rgba(0,0,0,.6), 0 18px 30px -18px rgba(0,0,0,.9)}
@@ -529,7 +529,7 @@ body.wallpage .aphoto2 img{object-position:50% 30%}
 #figGlow i{position:absolute; inset:0; background:url(media/fig-glow2.png) 0 0/100% 100% no-repeat}
 body.wallpage.on-about #figGlow{display:block}
 #figGlow.on{opacity:1}
-#figGlow{cursor:pointer}
+#figGlow{cursor:default} #figGlow.on{cursor:pointer}
 #figGlow .egghint{position:absolute; left:36%; top:91%; transform:translate(-50%,0); white-space:nowrap; font-size:13px; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:#FFD9A8; pointer-events:none}
 #egg{position:fixed; inset:0; z-index:9000; background:#000; overflow:hidden; cursor:grab} #egg:active{cursor:grabbing} #egg img{position:absolute; display:block; max-width:none; -webkit-user-drag:element}
 /* Contact */
@@ -1419,7 +1419,7 @@ const homeImg = () => { if (phoneLayout()) { if (!WALLS.phone.src) { WALLS.phone
 let stone = homeImg(), wallKey = 'home', wallOn = false;
 /* landmarks measured on the 2576 x 1438 Gemini walls: niche back walls and the top of each ledge */
 const WL = {
-  about:   { A: [205, 205, 860, 420], B: [228, 508, 1360, 1050], C: [200, 1104, 1495, 1242], D: [1842, 210, 2438, 968], F: [1400, 320, 1720, 1040] },
+  about:   { A: [205, 205, 860, 420], B: [238, 522, 1250, 975], C: [200, 1104, 1495, 1242], D: [1842, 210, 2438, 968], F: [1400, 320, 1720, 1040] },
   contact: { A: [205, 232, 1140, 622], T: [160, 770, 1145, 1255], B: [1490, 336, 2400, 1166] }
 };
 const wallCapable = () => !reduce && innerWidth >= 900 && innerWidth / innerHeight >= 1.35;
@@ -1433,14 +1433,21 @@ function setWallPage(slug){
   size();
 }
 window.setWallPage = setWallPage;
-$('#figGlow').addEventListener('pointerenter', () => $('#figGlow').classList.add('on'));
+// the figure lights up only while the mouse is over the carved figure itself (its glow image's shape), not the whole box around it
+const figMask = { a: null, w: 0, h: 0 };
+{ const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = figMask.w = 160; c.height = figMask.h = 360; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, 160, 360); figMask.a = x.getImageData(0, 0, 160, 360).data; }; im.src = 'media/fig-glow2.png'; }
+const overFig = e => { const f = $('#figGlow'), r = f.getBoundingClientRect(); if (!figMask.a) return true;
+  const cx = Math.floor((e.clientX - r.left) / r.width * figMask.w), cy = Math.floor((e.clientY - r.top) / r.height * figMask.h);
+  for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) { const x = cx + dx, y = cy + dy; if (x >= 0 && y >= 0 && x < figMask.w && y < figMask.h && figMask.a[(y * figMask.w + x) * 4 + 3] > 60) return true; }
+  return false; };
+$('#figGlow').addEventListener('pointermove', e => { if (e.pointerType === 'touch') return; $('#figGlow').classList.toggle('on', overFig(e)); });
 // easter egg: clicking the glowing figure plays an impact-frame sequence (12 fps), lined up with the carved figure
 const EGG = Array.from({ length: 29 }, (_, i) => `media/egg/f${String(i).padStart(2, '0')}.webp`); let eggImgs = null, eggOn = false;
 const eggLoad = () => eggImgs || (eggImgs = EGG.map(src => { const im = new Image(); im.decoding = 'async'; im.src = src; return im; }));
 let eggSnd = null; const eggAudio = () => eggSnd || (eggSnd = Object.assign(new Audio('media/egg/impact.mp3'), { preload: 'auto' }));
 $('#figGlow').addEventListener('pointerenter', () => { eggLoad(); eggAudio(); }, { once: true });
-$('#figGlow').addEventListener('click', async () => {
-  if (eggOn || !cover) return; eggOn = true; const ims = eggLoad();
+$('#figGlow').addEventListener('click', async e => {
+  if (eggOn || !cover || (e.pointerType !== 'touch' && !touch && !overFig(e))) return; eggOn = true; const ims = eggLoad();
   await Promise.all(ims.map(im => im.decode ? im.decode().catch(() => {}) : null));
   const box = document.createElement('div'); box.id = 'egg'; box.setAttribute('aria-hidden', 'true');
   const img = document.createElement('img'); img.alt = ''; Object.assign(img.style, { left: cover.x + 'px', top: cover.y + 'px', width: cover.w + 'px', height: cover.h + 'px' });
@@ -1469,7 +1476,7 @@ function layoutWall(){
   if (wallKey === 'about') {
     const h = $('#proj h1.ah'), bio = $('#aBio'), talk = $('#pfoot .talk'), ph = $('#aPhoto'), fg = $('#figGlow');
     place(h, L.A, [56, 30, 0, 20]); h.style.lineHeight = h.style.height; fit(h, (L.A[3] - L.A[1]) * s * .58, 18, () => h.scrollWidth > h.clientWidth + 1);
-    place(bio, L.B, [10, 0, 10, 0]); fit(bio, 26 * s / .74, 10, () => bio.scrollHeight > bio.clientHeight + 1);
+    place(bio, L.B, [8, 0, 8, 0]); fit(bio, 26 * s / .74, 10, () => bio.scrollHeight > bio.clientHeight + 1);
     place(talk, L.C, [0, 30, 4, 20]); talk.style.lineHeight = talk.style.height; fit(talk, (L.C[3] - L.C[1]) * s * .62, 14, () => talk.scrollWidth > talk.clientWidth + 1);
     place(ph, L.D, [22, 26, 26, 26]);
     place(fg, L.F);
