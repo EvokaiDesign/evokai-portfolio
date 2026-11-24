@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { RT, detail, hqBody, heightGrid, hqRock, hqTree, leafMaterial, grass, hqTorch, hqWaterfallMat, spray, makeFlag } from './realism.js';
+import { RT, detail, flameMaterial, hqBody, heightGrid, hqRock, hqTree, leafMaterial, grass, hqTorch, hqWaterfallMat, spray, makeFlag } from './realism.js';
 
 // Low-poly floating islands (style reference: faceted orange grass slab, dark rock underside studded with stones,
 // a turquoise pond spilling into a waterfall, round red trees, sometimes a grey peak) carrying a notice board
@@ -423,6 +423,13 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, hq = fa
     }
     box(0.18, 2.8, 0.18, x, top + 1.4, 0.8);
     const bowl = new THREE.Mesh(orb ? new THREE.IcosahedronGeometry(0.42, hq ? 5 : 1) : new THREE.CylinderGeometry(0.34, 0.16, 0.36, 8), orb ? new THREE.MeshStandardMaterial({ color: 0xfff2f8, emissive: new THREE.Color(...pal.orb), emissiveIntensity: 1, flatShading: !hq, roughness: hq ? 0.15 : 1 }) : ironMat); bowl.position.set(x, top + (orb ? 3.15 : 2.9), 0.8); group.add(bowl);
+    if (!orb) {                                                       // phones: the same soft shader flame as on computers (the old picture frames showed as squares)
+      const fm = flameMaterial(seed * 3.1 + s), fg = new THREE.PlaneGeometry(0.85, 1.5, 1, 1); fg.translate(0, 0.75, 0);
+      const flame = new THREE.Mesh(fg, fm); flame.position.set(x, top + 2.98, 0.8); flame.frustumCulled = false; flame.renderOrder = 3; group.add(flame);
+      const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: new THREE.Color(1.6, 1.1, 0.8), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .5, toneMapped: false, fog: false }));
+      gl.position.set(x, top + 3.5, 0.8); gl.scale.set(5, 5, 1); group.add(gl);
+      torches.push({ hq: { flame, mat: fm }, gl, ph: R() * 10 }); continue;
+    }
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: fr[0], color: new THREE.Color(2.2, 1.7, 1.4), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false }));
     fl.position.set(x, top + 3.0, 0.8); fl.scale.set(1.4, 1.75, 1); fl.center.set(0.5, 0.12); fl.visible = !orb; group.add(fl);
     const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: orb ? new THREE.Color(...pal.orb) : new THREE.Color(1.6, 1.1, 0.8), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .5, toneMapped: false, fog: false }));

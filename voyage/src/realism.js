@@ -233,7 +233,7 @@ export function grass(heightAt, pal, R, count, avoid){
 }
 
 // ---- torch: wooden pole with iron bands, an iron brazier basket of glowing coals, a shader flame and rising embers ----
-function flameMaterial(seed){
+export function flameMaterial(seed){
   return new THREE.ShaderMaterial({
     uniforms: { ...RT, uSeed: { value: seed }, uK: { value: 1 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv;

@@ -108,7 +108,7 @@ vec3 bakeOut(vec3 c){
   return mix(pow(c, vec3(0.41666)) * 1.055 - 0.055, c * 12.92, vec3(lessThanEqual(c, vec3(0.0031308))));
 }`;
 export async function bakeSky(gl, sunDir){
-  const rts = [768, 512].map(n => new THREE.WebGLCubeRenderTarget(n, { type: THREE.UnsignedByteType, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }));
+  const rts = [1024, 1024].map(n => new THREE.WebGLCubeRenderTarget(n, { type: THREE.UnsignedByteType, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }));
   const sc = new THREE.Scene(), cam = new THREE.CubeCamera(1, 4000, rts[0]);
   const skies = [1, 2].map(part => makeSky(sunDir, { bake: part }));
   skies.forEach(s => sc.add(s.mesh)); gl.setRenderTarget(rts[0]);                  // compile both bake shaders in the background first (no freeze)

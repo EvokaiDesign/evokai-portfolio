@@ -270,6 +270,8 @@ export function createVoyage(root){
   const hintEl = ui.querySelector('.v-hint');
   const hint = on => hintEl.classList.toggle('off', !on);
   const sound = new Sound(); const sBtn = ui.querySelector('.v-sound');
+  window.vSetSound = on => { if (on !== sound.on) sBtn.click(); };    // Sound on / off from the site's loading screen
+  if (window.vWantSound) setTimeout(() => window.vSetSound(true), 0);
   sBtn.addEventListener('click', () => { const on = sound.toggle(); sBtn.setAttribute('aria-pressed', on); sBtn.querySelector('span').textContent = on ? 'Sound on' : 'Sound off'; });
 
   // ---------- adaptive quality ----------
@@ -438,9 +440,10 @@ export function createVoyage(root){
       s.hover += ((i === hoverI ? 1 : focus) - s.hover) * (1 - Math.exp(-dt * 6));
       s.update(t, s.hover, mix);
       tmp.copy(s.labelAnchor).applyMatrix4(s.group.matrixWorld).project(camera);
-      const vis = near > 0.05 && tmp.z < 1;
-      s.el.style.opacity = vis ? Math.min(1, near * 1.4 * (0.35 + focus * 0.65 + (i === hoverI ? 0.65 : 0))).toFixed(2) : 0;
-      s.el.style.pointerEvents = vis && near > 0.5 ? 'auto' : 'none';
+      const here = st.island === i && !anim ? 1 : 0, lab = Math.max(here * smooth(0.25, 0.7, focus), i === hoverI ? 1 : 0);
+      const vis = near > 0.05 && tmp.z < 1 && lab > 0.01;
+      s.el.style.opacity = vis ? lab.toFixed(2) : 0;
+      s.el.style.pointerEvents = vis && lab > 0.5 ? 'auto' : 'none';
       if (vis) { const lw = s.el.offsetWidth || 200, lh = s.el.offsetHeight || 60;
         const lx = Math.min(W - lw / 2 - 16, Math.max(lw / 2 + 16, (tmp.x + 1) / 2 * W)), ly = Math.min(H - 16, Math.max(lh + 84, (1 - tmp.y) / 2 * H));
         s.el.style.transform = `translate(${lx.toFixed(1)}px, ${ly.toFixed(1)}px) translate(-50%, -100%)`; }
