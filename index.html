@@ -529,7 +529,11 @@ body.wallpage .aphoto2 img{object-position:50% 30%}
 .aphoto2 .lit{display:none}
 body.wallpage .aphoto2 > img:first-child{filter:brightness(.2) saturate(.35) sepia(.45)}
 body.wallpage .aphoto2 .lit{display:block; filter:sepia(.28) saturate(1.05) brightness(1.06) contrast(1.04); -webkit-mask-image:radial-gradient(circle var(--lr,0px) at var(--lx,50%) var(--ly,50%), #000 0%, rgba(0,0,0,.55) 45%, transparent 100%); mask-image:radial-gradient(circle var(--lr,0px) at var(--lx,50%) var(--ly,50%), #000 0%, rgba(0,0,0,.55) 45%, transparent 100%)}
-body.wallpage .aphoto2::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:soft-light; background:radial-gradient(circle calc(var(--lr,0px) * 1.2) at var(--lx,50%) var(--ly,50%), rgba(255,140,50,.85), rgba(255,140,50,0) 100%)}
+/* version 3b: rough, broken edge instead of a straight one, with the stone's shadow and a lit rim along it */
+body.wallpage .aphoto2{background:transparent!important; box-shadow:none!important; -webkit-mask-image:url(media/about-mask-b.png); mask-image:url(media/about-mask-b.png); -webkit-mask-size:100% 100%; mask-size:100% 100%}
+body.wallpage .aphoto2 .edge{display:block; position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none}
+.aphoto2 .edge{display:none}
+body.wallpage .aphoto2::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:soft-light; background:radial-gradient(circle calc(var(--lr,0px) * 1.2) at var(--gx,50%) var(--gy,50%), rgba(255,140,50,.85), rgba(255,140,50,0) 100%)}
 #figGlow{display:none; pointer-events:auto; filter:drop-shadow(0 0 5px rgba(255,130,40,.85)) drop-shadow(0 0 22px rgba(255,90,20,.5)); opacity:0; transition:opacity .45s ease}
 #figGlow i{position:absolute; inset:0; background:url(media/fig-glow2.png) 0 0/100% 100% no-repeat}
 body.wallpage.on-about #figGlow{display:block}
@@ -874,7 +878,7 @@ body.v-touch #voyage .v-mouse:after{top:auto; bottom:6px; width:8px; height:8px;
         </div>
         <span class="abar" aria-hidden="true"></span>
         <div id="figGlow" aria-hidden="true"><i></i><span class="egghint">click me!</span></div>
-        <figure class="aphoto2 has" id="aPhoto" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><span class="shield" aria-hidden="true"></span></figure>
+        <figure class="aphoto2 has" id="aPhoto" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><img class="edge" src="media/about-edge-b.webp" alt="" aria-hidden="true" draggable="false"><span class="shield" aria-hidden="true"></span></figure>
       </div>
     </main>
 
@@ -1694,7 +1698,7 @@ setTimeout(() => { if (!alive) { useTimer = true; setInterval(frame, 33); } }, 4
 (() => { const ph = document.getElementById('aPhoto'); if (!ph) return;
   addEventListener('pointermove', e => { if (!document.body.classList.contains('wallpage') || !document.body.classList.contains('on-about')) return;
     const r = ph.getBoundingClientRect(), dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right), dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom), k = Math.max(0, 1 - Math.hypot(dx, dy) / 380);
-    ph.style.setProperty('--lx', (e.clientX - r.left).toFixed(0) + 'px'); ph.style.setProperty('--ly', (e.clientY - r.top).toFixed(0) + 'px'); ph.style.setProperty('--lr', (k * k * r.width * 1.05).toFixed(0) + 'px'); }, { passive: true });
+    const li = ph.querySelector('.lit'), lr = li ? li.getBoundingClientRect() : r; ph.style.setProperty('--lx', (e.clientX - lr.left).toFixed(0) + 'px'); ph.style.setProperty('--ly', (e.clientY - lr.top).toFixed(0) + 'px'); ph.style.setProperty('--gx', (e.clientX - r.left).toFixed(0) + 'px'); ph.style.setProperty('--gy', (e.clientY - r.top).toFixed(0) + 'px'); ph.style.setProperty('--lr', (k * k * r.width * 1.05).toFixed(0) + 'px'); }, { passive: true });
   document.addEventListener('pointerleave', () => ph.style.setProperty('--lr', '0px'));
 })();
 </script>
