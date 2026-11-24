@@ -179,7 +179,7 @@ export function createVoyage(root){
     const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? (p.poster || `media/${p.slug}/poster.jpg`) : null, cosmic: s.u > EDGE_U, shadows: !touch, hq: !touch, theme: s.theme });
     const at = routePos(s.u), dir = routeDir(s.u);
     const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(s.side);
-    isl.group.position.copy(at).addScaledVector(side, s.side > 0 ? 26 : 34).add(new THREE.Vector3(0, s.u > EDGE_U ? 3 : 5, 0)).addScaledVector(dir, 6);   // beside the stop, so it works sailing either way
+    isl.group.position.copy(at).addScaledVector(side, s.side > 0 ? 26 : 34).add(new THREE.Vector3(0, s.u > EDGE_U ? 3 : 4.2, 0)).addScaledVector(dir, 6);   // beside the stop, so it works sailing either way
     const look = at.clone(); look.y = isl.group.position.y;   // board faces the route
     isl.group.lookAt(look);
     scene.add(isl.group); isl.group.updateMatrixWorld(true);
@@ -218,7 +218,7 @@ export function createVoyage(root){
     + `<i class="ship"></i>`;
   const railShip = rail.querySelector('.ship'), railBtns = [...rail.querySelectorAll('button')]; let railStop = -1;
   rail.addEventListener('click', e => { const b = e.target.closest('button'); if (b) goTo(+b.dataset.i); });
-  const cap = ui.querySelector('.v-cap');
+  const cap = ui.querySelector('.v-cap'), quoteEl = ui.querySelector('.v-quote');
 
   // ---------- stop-to-stop travel ----------
   const qU = parseFloat(new URLSearchParams(location.search).get('vu'));
@@ -383,7 +383,7 @@ export function createVoyage(root){
     stars.points.position.copy(camera.position); stars.uniforms.uMix.value = mix; stars.uniforms.uTime.value = t;
     galaxies.update(camera.position, mix);
     const lookBack = face > 0.01 || faceTo === 1;                       // turned towards home: the edge, the waterfall and the ocean are in view
-    ocean.mesh.visible = u < EDGE_U + 0.14 || lookBack;
+    ocean.mesh.visible = u < EDGE_U + 0.22 || lookBack;
     ocean.update(t, camera.position, mix, ship.position, yaw, (0.2 + Math.min(0.8, Math.abs(vel) * 18 + swing * 0.5)) * ride, ride);
     // where the wings touch the water: group the wet probe points into 6 spots (3 along each wing)
     _hn.fill(0); _hx.fill(0); _hz.fill(0);
@@ -452,6 +452,7 @@ export function createVoyage(root){
       sun.target.position.lerp(f, first2 ? 1 : 1 - Math.exp(-dt * 4)); first2 = false; sun.position.copy(sun.target.position).addScaledVector(KEY_DIR, 120); }
     if (nearest) { nearest.group.localToWorld(islandLight.position.set(0, 4.5, 5)); islandLight.intensity = (0.35 + nearest.hover) * 45 * (1 - smooth(0.04, 0.1, nd)); islandLight.color.setRGB(1, lerp(0.62, 0.5, mix), lerp(0.3, 0.6, mix)); }
     cap.classList.toggle('on', !anim && !!st.edge);
+    if (quoteEl) quoteEl.classList.toggle('on', face > 0.6 && u > 0.03 && !(!anim && st.edge));   // turned around, heading home: Einstein in the sky
     const moving = !!anim || Math.abs(vel) > 0.004; if (moving !== wasMoving) { wasMoving = moving; root.classList.toggle('v-moving', moving); }
     if (glowEl && Math.abs(mix - lastMix) > 0.01) { lastMix = mix;
       glowEl.style.setProperty('--c1', `${lerp(255, 200, mix) | 0},${lerp(214, 190, mix) | 0},${lerp(150, 255, mix) | 0}`);

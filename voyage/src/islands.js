@@ -154,7 +154,7 @@ const SHAPES = {
   2: { n: 20, sx: 1.06, sz: 0.96, sq: 4.5, lobes: 0, lobe: 0, under: [[1.2, 0.98], [3.4, 0.92], [6.6, 0.6], [9.6, 0.26]], depth: 13.5, drips: 3 },       // Gulag: square fortress block, deep keel
   3: { n: 18, sx: 1.3, sz: 0.82, sq: 2, lobes: 2, lobe: 0.1, ph: 0.6, under: [[1.8, 0.84], [3.6, 0.52], [5.6, 0.3], [8.4, 0.12]], depth: 12.5, drips: 1, apexX: 2.6 },   // long kidney, one bent spike
   4: { n: 20, sx: 1.04, sz: 1.04, sq: 2, lobes: 5, lobe: 0.13, under: [[1.6, 0.9], [3.8, 0.7], [7.0, 0.4], [10.6, 0.16]], depth: 15, drips: 4 },        // star-shaped, deep spire
-  5: { n: 18, sx: 0.98, sz: 1.18, sq: 2.6, lobes: 4, lobe: 0.07, ph: 0.4, under: [[0.9, 1.0], [1.8, 0.82], [2.8, 0.5], [4.0, 0.22]], depth: 5.6, drips: 5 }, // flat floating disc
+  5: { n: 18, sx: 0.98, sz: 1.18, sq: 2.6, lobes: 4, lobe: 0.07, ph: 0.4, under: [[1.0, 1.0], [2.4, 0.9], [4.0, 0.66], [5.6, 0.36]], depth: 6.8, drips: 0, geode: true }, // floating disc with a crystal geode underneath
 };
 const DEF_SHAPE = { n: 14, sx: 1, sz: 1, sq: 2, lobes: 0, lobe: 0, under: [[1.6, 0.9], [3.6, 0.68], [6.0, 0.42], [8.3, 0.17]], depth: 10.5, drips: 0 };
 
@@ -185,7 +185,7 @@ function islandBody(R, pal, scale = 1, depth = null, shape = DEF_SHAPE){
   const last = under[under.length - 1]; for (let k = 0; k < N; k++) tri(pos, cols, last[k], last[nx(k)], apex, C(pal.deep, R));
   const avgR = r => r.reduce((s, p) => s + Math.hypot(p[0], p[2]), 0) / r.length, avgY = r => r.reduce((s, p) => s + p[1], 0) / r.length;
   const profile = [[apex[1], 0], ...[...under].reverse().map(r => [avgY(r), avgR(r)]), [avgY(B), avgR(B)], [avgY(A), avgR(A)]];   // bottom to top
-  return { geo: faceted(pos, cols), top, rim: A, under, outR: out, profile, ang, drips: SH.drips };
+  return { geo: faceted(pos, cols), top, rim: A, under, outR: out, profile, ang, drips: SH.drips, geode: !!SH.geode, apex };
 }
 
 function rimAt(body, ang){ let best = 1e9, r = 7; for (const p of body.rim) { const d = Math.abs(Math.atan2(Math.sin(Math.atan2(p[2], p[0]) - ang), Math.cos(Math.atan2(p[2], p[0]) - ang))); if (d < best) { best = d; r = Math.hypot(p[0], p[2]); } } return r; }
@@ -283,12 +283,12 @@ function waterworks(group, R, pal, body, at, cosmic, shadows, hq){
   const dir = new THREE.Vector2(px, pz).normalize(), len = rimR - Math.hypot(px, pz) - 0.6;
   const ch = new THREE.Mesh(new THREE.PlaneGeometry(0.9, len).rotateX(-Math.PI / 2), pondMat);
   ch.position.set(px + dir.x * len / 2, body.top + 0.19, pz + dir.y * len / 2); ch.rotation.y = -Math.atan2(dir.y, dir.x) + Math.PI / 2; group.add(ch);
-  const H = 9.5, rb = fallRibbon(rimR, body.top, dir, H, hq), fm = hq ? hqWaterfallMat(pal.water) : waterfallMat(pal.water);
+  const H = cosmic ? 70 : 9.5, rb = fallRibbon(rimR, body.top, dir, H, hq), fm = hq ? hqWaterfallMat(pal.water) : waterfallMat(pal.water);
   if (hq) fm.uniforms.uLip.value = rb.lip;
   const fall = new THREE.Mesh(rb.geo, fm); fall.renderOrder = 1; group.add(fall);
   const mist = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: new THREE.Color(pal.water).multiplyScalar(0.8), transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, fog: true }));
-  mist.position.set(dir.x * (rimR + 1.6), body.top - H + 1, dir.y * (rimR + 1.6)); mist.scale.setScalar(3.2); group.add(mist);
-  if (hq) { const sp = spray(pal.water); sp.position.set(dir.x * (rimR + 1.7), body.top - H + 1.6, dir.y * (rimR + 1.7)); group.add(sp);
+  mist.position.set(dir.x * (rimR + 1.6), body.top - H + 1, dir.y * (rimR + 1.6)); mist.scale.setScalar(3.2); if (!cosmic) group.add(mist);
+  if (hq) { const sp = spray(pal.water); sp.position.set(dir.x * (rimR + 1.7), body.top - H + 1.6, dir.y * (rimR + 1.7)); if (!cosmic) group.add(sp);
     const lip = spray(pal.water); lip.position.set(dir.x * (rimR + 0.7), body.top - 0.3, dir.y * (rimR + 0.7)); lip.scale.setScalar(0.35); group.add(lip); }
 }
 
@@ -365,6 +365,21 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, hq = fa
     const cryMat = new THREE.MeshStandardMaterial({ color: 0x6a3cff, emissive: new THREE.Color(0.6, 0.35, 2.2), roughness: 0.2, flatShading: true });
     for (let k = 0; k < 6; k++) { const h = 1.2 + R() * 2.4, cr = new THREE.Mesh(new THREE.ConeGeometry(0.22 + R() * 0.25, h, 5), cryMat);
       const a = R() * 6.28, rr = 1.2 + R() * 2.6; cr.position.set(Math.cos(a) * rr, -3 - R() * 5, Math.sin(a) * rr); cr.rotation.set(Math.PI + (R() - .5) * .8, R() * 6, (R() - .5) * .8); group.add(cr); }
+    if (body.geode) {                                                // a cluster of big crystals bursting out of the underside, a glowing core and a few orbiting stones
+      const [ax, ay, az] = body.apex, core = new THREE.Vector3(ax * 0.5, ay + 1.6, az * 0.5);
+      for (let k = 0; k < 13; k++) {
+        const L = 2.6 + R() * 4.2, r = 0.35 + R() * 0.45, cr = new THREE.Mesh(new THREE.ConeGeometry(r, L, 6), cryMat);
+        const a = k / 13 * 6.28 + R() * 0.4, tilt = 0.35 + R() * 0.75, d = new THREE.Vector3(Math.cos(a) * Math.sin(tilt), -Math.cos(tilt), Math.sin(a) * Math.sin(tilt));
+        cr.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d); cr.position.copy(core).addScaledVector(d, L * 0.5 - 0.4); group.add(cr);
+      }
+      const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9, hq ? 4 : 1), new THREE.MeshStandardMaterial({ color: 0xe8dcff, emissive: new THREE.Color(0.55, 0.35, 1.25), roughness: 0.2, flatShading: !hq }));
+      orb.position.copy(core).add(new THREE.Vector3(0, -0.6, 0)); group.add(orb);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: new THREE.Color(0.6, 0.4, 1.1), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.32, toneMapped: false, fog: true }));
+      halo.position.copy(orb.position); halo.scale.setScalar(5.5); group.add(halo);
+      const orbitG = new THREE.Group(); group.add(orbitG);   // own group, so the merge below leaves them free to float
+      for (let k = 0; k < 5; k++) { const g = hq ? hqRock(R, pal.stone, 0.5 + R() * 0.5, 0.45, 0.5 + R() * 0.4, 2) : lowRock(R, pal.stone, 0.6, 0.45, 0.55);
+        const a = R() * 6.28, rr = 4.5 + R() * 2.5, m = new THREE.Mesh(g, mat); m.position.set(Math.cos(a) * rr, ay + 2 + R() * 3, Math.sin(a) * rr); orbitG.add(m); chunks.push(Object.assign(m, { userData: { y: m.position.y, ph: R() * 6 } })); }
+    }
     mergeStatic(group, cryMat);
   }
   const top = body.top;
