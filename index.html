@@ -548,11 +548,7 @@ body.wallpage .cvbtn{padding:0; font-size:clamp(10px,.8vw,14px); -webkit-backdro
 #cvPop .cvopts a:hover, #cvPop .cvopts a:focus-visible{background:linear-gradient(135deg,#FF4D1A,#FF9A3C); border-color:transparent; color:#fff}
 #cvPop .cvx{position:absolute; right:12px; top:8px; background:none; border:0; color:var(--fg2); font-size:24px; line-height:1}
 @media (max-width:900px){ .aphwrap{align-items:flex-start; width:100%} }
-/* 3i: Fernando's stone frame (painted into the wall with Gemini), laid exactly over the right niche; the photo sits in its opening.
-   Dark like the wall; a lit copy shows only around the flame cursor */
-.gframe{display:none}
-body.wallpage .gframe{display:block; z-index:4!important; pointer-events:none; object-fit:fill}   /* colour-matched to the wall and darkened exactly like it (7% stone over #07090B) */
-body.wallpage .gframe.glit{z-index:5!important; -webkit-mask-image:radial-gradient(circle var(--fr,0px) at var(--fx,50%) var(--fy,50%), rgba(0,0,0,.5) 0%, rgba(0,0,0,.25) 40%, transparent 100%); mask-image:radial-gradient(circle var(--fr,0px) at var(--fx,50%) var(--fy,50%), rgba(0,0,0,.5) 0%, rgba(0,0,0,.25) 40%, transparent 100%)}   /* firelight: the same orange tint the wall gets */
+/* 3i: the stone frame is painted into the About wall image itself (media/wall-about-2.webp), so the wall's own light and colour apply to it */
 body.wallpage .aphoto2{border-radius:0!important; box-shadow:none!important}
 /* version 3h: the flame-lit photo (original size) in a wooden picture frame painted to look like the wall's stone (frame generated with Gemini, drawn as a 9-slice border so its corners stay crisp) */
 .aphoto2 .wframe{display:none}
@@ -905,7 +901,7 @@ body.v-touch #voyage .v-mouse:after{top:auto; bottom:6px; width:8px; height:8px;
         </div>
         <span class="abar" aria-hidden="true"></span>
         <div id="figGlow" aria-hidden="true"><i></i><span class="egghint">click me!</span></div>
-        <div class="aphwrap"><figure class="aphoto2 has" id="aPhoto" title="Fernando on LinkedIn" role="link" tabindex="0" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><span class="shield" aria-hidden="true"></span></figure><img class="gframe" id="gFrame" src="media/about-frame-k.webp" alt="" aria-hidden="true" draggable="false"><img class="gframe glit" id="gFrameLit" src="media/about-frame-k-lit.webp" alt="" aria-hidden="true" draggable="false"><button type="button" class="cvbtn" id="cvBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download CV</button></div>
+        <div class="aphwrap"><figure class="aphoto2 has" id="aPhoto" title="Fernando on LinkedIn" role="link" tabindex="0" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><span class="shield" aria-hidden="true"></span></figure><button type="button" class="cvbtn" id="cvBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>Download CV</button></div>
       </div>
     </main>
 
@@ -1464,7 +1460,7 @@ function setWallPage(slug){
   const want = (slug === 'about' || slug === 'contact') && wallCapable() ? slug : null;
   wallOn = !!want; document.body.classList.toggle('wallpage', wallOn);
   const key = want || 'home';
-  if (key !== 'home' && !WALLS[key].src) WALLS[key].src = `media/wall-${key}.webp`;
+  if (key !== 'home' && !WALLS[key].src) WALLS[key].src = ({ about: 'media/wall-about-2.webp' })[key] || `media/wall-${key}.webp`;   // about-2: with the stone picture frame in the right niche
   if (key !== wallKey || (key === 'home' && stone !== homeImg())) { wallKey = key; stone = key === 'home' ? homeImg() : WALLS[key]; if (!stone.complete) stone.onload = () => { if (stone === WALLS[key]) size(); }; lightX && lightX.clearRect(0, 0, lightC.width, lightC.height); }
   if (!wallOn) document.querySelectorAll('.wp').forEach(el => { el.classList.remove('wp'); el.removeAttribute('style'); });
   size();
@@ -1515,7 +1511,7 @@ function layoutWall(){
     place(h, L.A, [56, 30, 0, 20]); h.style.lineHeight = h.style.height; fit(h, (L.A[3] - L.A[1]) * s * .58, 18, () => h.scrollWidth > h.clientWidth + 1);
     place(bio, L.B, [8, 0, 8, 0]); fit(bio, 26 * s / .74, 10, () => bio.scrollHeight > bio.clientHeight + 1);
     place(talk, L.C, [0, 30, 4, 20]); talk.style.lineHeight = talk.style.height; fit(talk, (L.C[3] - L.C[1]) * s * .62, 14, () => talk.scrollWidth > talk.clientWidth + 1);
-    place(ph, L.D, [76, 82, 59, 59]); place($('#gFrame'), L.D); place($('#gFrameLit'), L.D); place($('#cvBtn'), [2030, 1176, 2250, 1238]);
+    place(ph, L.D, [76, 82, 59, 59]); place($('#cvBtn'), [2030, 1176, 2250, 1238]);
     place(fg, L.F);
   } else {
     const hd = $('#vContact .chead'), rows = $('#vContact .crows'), form = $('#cForm');
@@ -1740,12 +1736,6 @@ setTimeout(() => { if (!alive) { useTimer = true; setInterval(frame, 33); } }, 4
   addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) close(); });
 })();
 
-// 3i: the flame lights the stone frame around the cursor
-(() => { const f = document.getElementById('gFrameLit'); if (!f) return;
-  addEventListener('pointermove', e => { if (!document.body.classList.contains('wallpage') || !document.body.classList.contains('on-about')) return;
-    const r = f.getBoundingClientRect(), dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right), dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom), k = Math.max(0, 1 - Math.hypot(dx, dy) / 300);
-    f.style.setProperty('--fx', (e.clientX - r.left).toFixed(0) + 'px'); f.style.setProperty('--fy', (e.clientY - r.top).toFixed(0) + 'px'); f.style.setProperty('--fr', (k * k * r.width * 0.75).toFixed(0) + 'px'); }, { passive: true });
-})();
 </script>
 </body>
 </html>
