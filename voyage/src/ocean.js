@@ -201,21 +201,37 @@ export function makeOcean({ rings, segs, edgeZ, sunDir }){
 }
 
 // ---------- waterfall at the edge of the world ----------
-export function makeWaterfall(edgeZ, depth){
+export function makeWaterfall(edgeZ, depth, hq = false){
   const uniforms = { uTime: { value: 0 }, uMix: { value: 0 }, tNoise: { value: NOISE_TEX } };
-  const g = new THREE.PlaneGeometry(1800, 1, LITE ? 80 : 160, LITE ? 25 : 50);
+  const g = new THREE.PlaneGeometry(1800, 1, LITE ? 80 : hq ? 320 : 160, LITE ? 25 : hq ? 90 : 50);
   const pos = g.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const v = 0.5 - pos.getY(i); // 0 top → 1 bottom
     pos.setXYZ(i, pos.getX(i), 0.2 - v * depth, edgeZ - 10 * (1 - Math.exp(-v * 6)));
   }
-  const mat = new THREE.ShaderMaterial({ defines: TEX_DEF,
+  const mat = new THREE.ShaderMaterial({ defines: hq ? { HQ: 1 } : TEX_DEF,
     uniforms, transparent: true, depthWrite: false, side: THREE.DoubleSide,
     vertexShader: `varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vW = (modelMatrix * vec4(position, 1.)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.); }`,
     fragmentShader: NOISE + `
       uniform float uTime; varying vec2 vUv; varying vec3 vW;
       void main(){
         float v = 1.0 - vUv.y;
+        #ifdef HQ
+        // white water tumbling over the lip, long streaks pulled down by gravity, clear water between them, spray at the bottom
+        float s = fbm(vec3(vW.x * 0.08, vW.y * 0.02 + uTime * 1.0, 2.0));
+        float streak = fbm(vec3(vW.x * 0.7, vW.y * 0.03 + uTime * 1.7, 7.0));
+        float fine = fbm3(vec3(vW.x * 2.4, vW.y * 0.11 + uTime * 2.9, 5.0));
+        float lip = smoothstep(0.08, 0.0, v) * (0.25 + 0.35 * fine);
+        vec3 water = mix(vec3(0.22, 0.72, 0.76), vec3(0.24, 0.3, 0.9), smoothstep(0.0, 0.45, v)); water = mix(water, vec3(0.62, 0.32, 1.0), smoothstep(0.4, 1.0, v));
+        float foam = clamp(smoothstep(0.52, 0.82, streak) * 0.85 + smoothstep(0.58, 0.85, fine) * 0.6 * (1.0 - v * 0.7) + lip, 0.0, 1.0);
+        vec3 c = mix(water, vec3(0.85, 0.95, 0.98), foam * 0.6);
+        c *= 1.0 + (1.0 - v) * 0.5;
+        float mist = smoothstep(0.25, 0.6, v) * smoothstep(0.35, 0.7, s) * 0.4;
+        c = mix(c, vec3(0.7, 0.55, 1.0), mist);
+        float a = (0.2 + 0.5 * smoothstep(0.3, 0.75, s) + foam * 0.15 + mist * 0.2) * (1.0 - smoothstep(0.45, 1.0, v));
+        a *= 1.0 - smoothstep(650.0, 880.0, abs(vW.x));
+        gl_FragColor = vec4(c, clamp(a, 0.0, 1.0));
+        #else
         float s = fbm(vec3(vW.x * 0.1, vW.y * 0.025 + uTime * 1.2, 2.0));
         float fine = fbm3(vec3(vW.x * 0.55, vW.y * 0.1 + uTime * 2.4, 5.0));
         vec3 c = mix(vec3(0.4, 0.9, 0.88), vec3(0.3, 0.35, 0.95), smoothstep(0.0, 0.4, v)); c = mix(c, vec3(0.75, 0.35, 1.0), smoothstep(0.35, 1.0, v));
@@ -224,6 +240,7 @@ export function makeWaterfall(edgeZ, depth){
         float a = (0.2 + 0.5 * smoothstep(0.3, 0.75, s)) * (1.0 - smoothstep(0.45, 1.0, v));
         a *= 1.0 - smoothstep(650.0, 880.0, abs(vW.x));
         gl_FragColor = vec4(c, a);
+        #endif
       }`
   });
   const mesh = new THREE.Mesh(g, mat); mesh.frustumCulled = false; mesh.renderOrder = 2;

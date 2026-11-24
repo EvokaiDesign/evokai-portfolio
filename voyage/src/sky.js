@@ -107,14 +107,17 @@ vec3 bakeOut(vec3 c){
   c = clamp(mat3(vec3(1.60475, -0.10208, -0.00327), vec3(-0.53108, 1.10813, -0.07276), vec3(-0.07367, -0.00605, 1.07602)) * c, 0.0, 1.0);
   return mix(pow(c, vec3(0.41666)) * 1.055 - 0.055, c * 12.92, vec3(lessThanEqual(c, vec3(0.0031308))));
 }`;
-export function bakeSky(gl, sunDir){
+export async function bakeSky(gl, sunDir){
   const rts = [768, 512].map(n => new THREE.WebGLCubeRenderTarget(n, { type: THREE.UnsignedByteType, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }));
   const sc = new THREE.Scene(), cam = new THREE.CubeCamera(1, 4000, rts[0]);
-  [1, 2].forEach((part, i) => {
-    const sky = makeSky(sunDir, { bake: part }); sc.add(sky.mesh);
+  const skies = [1, 2].map(part => makeSky(sunDir, { bake: part }));
+  skies.forEach(s => sc.add(s.mesh)); gl.setRenderTarget(rts[0]);                  // compile both bake shaders in the background first (no freeze)
+  const p = gl.compileAsync(sc, new THREE.PerspectiveCamera()); gl.setRenderTarget(null); try { await p; } catch (e) {}
+  skies.forEach((s, i) => {
+    skies.forEach(o => o.mesh.visible = o === s);
     cam.renderTarget = rts[i]; cam.update(gl, sc);
-    sc.remove(sky.mesh); sky.mesh.geometry.dispose(); sky.mesh.material.dispose();
   });
+  skies.forEach(s => { sc.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); });
   return rts.map(r => r.texture);
 }
 export function makeBakedSky(tex){

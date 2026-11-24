@@ -75,15 +75,9 @@ export function createVoyage(root){
   const camera = new THREE.PerspectiveCamera(50, 1, 0.3, 4000);
   scene.fog = new THREE.FogExp2(0xe8946a, 0.0022);
 
-  // ---------- world ----------
-  const sky = touch ? makeBakedSky(bakeSky(gl, SUN_DIR)) : makeSky(SUN_DIR); scene.add(sky.mesh);   // phones: sky painted once at load, then just looked up
-  const stars = makeStars(touch ? 1400 : 5200); scene.add(stars.points);
-  const galaxies = makeGalaxies(touch ? 5 : 11); scene.add(galaxies.group);
-  const ocean = makeOcean({ rings: touch ? 72 : 150, segs: touch ? 120 : 288, edgeZ: EDGE_Z, sunDir: SUN_DIR }); scene.add(ocean.mesh);
-  const fall = makeWaterfall(EDGE_Z, 150); scene.add(fall.mesh);
-  const aura = makeAura(EDGE_Z, -L, touch ? 22 : 70); scene.add(aura.group);
-  const motes = makeMotes(touch ? 140 : 520); scene.add(motes.points);
-
+  // ---------- world (built step by step in build(), so the loading screen keeps moving) ----------
+  let sky, stars, galaxies, ocean, fall, aura, motes, envSunset, envCosmic;
+  const islands = [];
   const sun = new THREE.DirectionalLight(0xffc49a, 2.4); sun.position.copy(KEY_DIR).multiplyScalar(100); scene.add(sun); scene.add(sun.target);
   if (!touch) { sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); const sc = sun.shadow.camera; sc.left = sc.bottom = -38; sc.right = sc.top = 38; sc.near = 1; sc.far = 260;
     sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04; sun.shadow.radius = 5; sun.shadow.blurSamples = 12; }   // softer shadow edges
@@ -92,14 +86,6 @@ export function createVoyage(root){
   const engineLight = new THREE.PointLight(0xff7a2a, 22, 14, 2);
   const islandLight = new THREE.PointLight(0xffa050, 0, 26, 2); scene.add(islandLight);
 
-  // environment maps for the pearl reflections (one per world, built once)
-  const pm = new THREE.PMREMGenerator(gl);
-  const envScene = new THREE.Scene(); const envSky = makeSky(SUN_DIR); envScene.add(envSky.mesh);
-  envSky.uniforms.uMix.value = 0; const envSunset = pm.fromScene(envScene, 0.02).texture;
-  envSky.uniforms.uMix.value = 1; const envCosmic = pm.fromScene(envScene, 0.02).texture;
-  scene.environment = envSunset;
-
-  for (const o of [sky.mesh, stars.points, galaxies.group, ocean.mesh, fall.mesh, aura.group, motes.points]) o.userData.noAO = true;
   const post = makePost(gl, scene, camera, { mobile: touch });
 
   // ---------- live water reflections (computers only): the scene mirrored in the plane y = 0 ----------
@@ -107,7 +93,6 @@ export function createVoyage(root){
   const reflRT = REFL ? new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType }) : null;
   const reflCam = new THREE.PerspectiveCamera(), _rm = new THREE.Matrix4(), _rv = new THREE.Vector3(), _rt = new THREE.Vector3(), _rl = new THREE.Vector3();
   const _N = new THREE.Vector3(0, 1, 0), _plane = new THREE.Plane(), _clip = new THREE.Vector4(), _q = new THREE.Vector4();
-  if (REFL) { ocean.uniforms.uRefl.value = reflRT.texture; ocean.uniforms.uReflOn.value = 1; }
   const _sunP = new THREE.Vector3(), _sunUV = new THREE.Vector2(), _gp = new THREE.Vector3();
   function renderReflection(){
     if (!REFL || !ocean.mesh.visible) return;
@@ -132,14 +117,25 @@ export function createVoyage(root){
     gl.setClearAlpha(ca); gl.shadowMap.autoUpdate = au; hide.forEach((o, i) => o.visible = was[i]);
   }
 
-  // ---------- loading screen: water rises with real progress (12% = code downloaded, then models/textures, then shader warm-up) ----------
+  // ---------- loading screen: the water rises with real progress and never sits still ----------
+  // 0–12 % code download (index.html) · 12–84 % world build + ship + images (in parallel) · 84–99 % shader warm-up · 100 % ready
   const loadEl = root.querySelector('.v-load'), portEl = loadEl.querySelector('.v-port'), pctEl = loadEl.querySelector('.v-pct b');
   portEl.dataset.own = 1;
-  let shownP = parseFloat(pctEl.textContent) || 0, glbFrac = 0, items = [0, 0], loadState = 'loading';
-  const setP = p => { p = Math.max(shownP, Math.min(100, p)); shownP = p; portEl.style.setProperty('--p', p.toFixed(1)); pctEl.textContent = p | 0; };
-  const upd = () => setP(12 + 78 * (0.65 * glbFrac + 0.35 * (items[1] ? items[0] / items[1] : 0)));
+  let shownP = parseFloat(pctEl.textContent) || 0, targetP = shownP, glbFrac = 0, buildFrac = 0, items = [0, 0], loadState = 'loading', capP = 84;
+  const setP = p => { targetP = Math.max(targetP, Math.min(100, p)); };
+  const drawP = () => { portEl.style.setProperty('--p', shownP.toFixed(1)); pctEl.textContent = shownP | 0; };
+  const upd = () => setP(12 + 72 * (0.5 * buildFrac + 0.35 * glbFrac + 0.15 * (items[1] ? items[0] / items[1] : 0)));
   THREE.DefaultLoadingManager.onProgress = (url, l, t) => { items = [l, t]; upd(); };
-  const creep = setInterval(() => { if (loadState !== 'loading') return clearInterval(creep); if (!glbFrac) setP(shownP + (60 - shownP) * 0.03); }, 200);   // keeps moving if sizes are unknown
+  // the number counts up smoothly towards the real progress (no jumps), and creeps towards the end of the current stage so it never sits still
+  const creep = setInterval(() => {
+    if (loadState === 'loading' || loadState === 'warming') targetP = Math.max(targetP, targetP + (capP - 1 - targetP) * 0.012);
+    if (shownP < targetP) { shownP = Math.min(targetP, shownP + Math.max(0.25, (targetP - shownP) * 0.12)); drawP(); }
+    if (loadState === 'done' && shownP >= 100) clearInterval(creep);
+  }, 40);
+  const warmRT = new THREE.WebGLRenderTarget(4, 4), pend = [];
+  // compile shaders in the background while the next pieces are built (computers draw through post-processing, i.e. into a render target)
+  const warm = (obj, target = scene, rt = !touch) => { if (rt) gl.setRenderTarget(warmRT); const p = gl.compileAsync(obj, camera, target).catch(() => {}); gl.setRenderTarget(null); pend.push(p); return p; };
+  const nextFrame = () => new Promise(r => { let d = 0; const go = () => { if (!d) { d = 1; setTimeout(r, 0); } }; requestAnimationFrame(go); setTimeout(go, 60); });   // let the browser paint the loading screen between steps
   if (touch) { loadEl.querySelector('.v-how1').textContent = 'Swipe up to set sail'; loadEl.querySelector('.v-how2').textContent = 'Swipe down to sail back'; }
   const dismiss = () => { if (loadState !== 'loaded') return; loadState = 'done'; root.classList.add('v-ready'); hint(stop === 0 && !anim); };
   for (const ev of ['wheel', 'pointerdown', 'touchstart']) loadEl.addEventListener(ev, e => { if (ev === 'wheel') e.preventDefault(); dismiss(); }, { passive: ev !== 'wheel' });
@@ -175,12 +171,12 @@ export function createVoyage(root){
     m.position.x = -5; m.position.y = 0.15;            // model: bow at -X, 10 units long → centre it…
     shipInner.add(m); shipInner.rotation.y = -Math.PI / 2; // …and turn the bow to -Z
     shipReady = true; onShip();
-  }, e => { if (e.total) { glbFrac = e.loaded / e.total; upd(); } }, err => { console.error('AI Voyage: ship failed to load', err); root.classList.add('v-noship'); shipReady = true; onShip(); });
+  }, e => { glbFrac = e.total ? e.loaded / e.total : Math.min(0.95, e.loaded / 600000); upd(); }, err => { console.error('AI Voyage: ship failed to load', err); root.classList.add('v-noship'); shipReady = true; onShip(); });
 
   // ---------- islands ----------
-  const islands = ISLANDS.map((s, i) => {
+  function addIsland(s, i){
     const p = s.slug && bySlug[s.slug];
-    const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? `media/${p.slug}/poster.jpg` : null, cosmic: s.u > EDGE_U, shadows: !touch, theme: s.theme });
+    const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? `media/${p.slug}/poster.jpg` : null, cosmic: s.u > EDGE_U, shadows: !touch, hq: !touch, theme: s.theme });
     const at = routePos(s.u), dir = routeDir(s.u);
     const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(s.side);
     isl.group.position.copy(at).addScaledVector(side, s.side > 0 ? 26 : 34).add(new THREE.Vector3(0, s.u > EDGE_U ? 3 : 5, 0)).addScaledVector(dir, 6);   // beside the stop, so it works sailing either way
@@ -192,8 +188,27 @@ export function createVoyage(root){
     if (s.slug) el.href = '#' + s.slug;
     el.innerHTML = `<b>${p ? p.title : 'Coming soon'}</b><span>${p ? (p.year || '') + ' · View project →' : 'A new experiment is on its way'}</span>`;
     ui.querySelector('.v-labels').appendChild(el);
-    return { ...s, ...isl, el, hover: 0, board: new THREE.Vector3() };
-  });
+    islands.push({ ...s, ...isl, el, hover: 0, board: new THREE.Vector3() });
+  }
+
+  // build the world one piece at a time; the loading screen updates (and repaints) after every piece
+  const steps = [
+    async () => { // environment maps for the pearl reflections (one per world, built once); the sky shader compiles in the background first
+      const pm = new THREE.PMREMGenerator(gl), envScene = new THREE.Scene(), envSky = makeSky(SUN_DIR); envScene.add(envSky.mesh);
+      await warm(envScene, envScene, true);
+      envSky.uniforms.uMix.value = 0; envSunset = pm.fromScene(envScene, 0.02).texture;
+      envSky.uniforms.uMix.value = 1; envCosmic = pm.fromScene(envScene, 0.02).texture;
+      scene.environment = envSunset; pm.dispose(); },
+    async () => { sky = touch ? makeBakedSky(await bakeSky(gl, SUN_DIR)) : makeSky(SUN_DIR); scene.add(sky.mesh); warm(sky.mesh); },   // phones: sky painted once at load, then just looked up
+    () => { stars = makeStars(touch ? 1400 : 5200); scene.add(stars.points); galaxies = makeGalaxies(touch ? 5 : 11); scene.add(galaxies.group); warm(stars.points); warm(galaxies.group); },
+    () => { ocean = makeOcean({ rings: touch ? 72 : 150, segs: touch ? 120 : 288, edgeZ: EDGE_Z, sunDir: SUN_DIR }); scene.add(ocean.mesh);
+      if (REFL) { ocean.uniforms.uRefl.value = reflRT.texture; ocean.uniforms.uReflOn.value = 1; } warm(ocean.mesh); },
+    () => { fall = makeWaterfall(EDGE_Z, 150, !touch); scene.add(fall.mesh); aura = makeAura(EDGE_Z, -L, touch ? 22 : 70); scene.add(aura.group); motes = makeMotes(touch ? 140 : 520); scene.add(motes.points);
+      for (const o of [sky.mesh, stars.points, galaxies.group, ocean.mesh, fall.mesh, aura.group, motes.points]) o.userData.noAO = true; warm(fall.mesh); warm(aura.group); warm(motes.points); },
+    ...ISLANDS.map((s, i) => () => { addIsland(s, i); warm(islands[islands.length - 1].group); })
+  ];
+  const built = (async () => { for (let i = 0; i < steps.length; i++) { await nextFrame(); await steps[i](); buildFrac = (i + 1) / steps.length; upd(); } })();
+  const shipLoaded = new Promise(r => { if (shipReady) r(); else onShip = r; });
 
   // progress rail: one button per stop
   const rail = ui.querySelector('.v-rail');
@@ -237,8 +252,10 @@ export function createVoyage(root){
   const onTM = e => { if (ty == null) return; const y = e.touches[0].clientY; tAcc += ty - y; ty = y; e.preventDefault(); if (Math.abs(tAcc) > 50) { step(Math.sign(tAcc)); tAcc = 0; ty = null; } };
   const onTE = () => { ty = null; };
   const onKey = e => {
-    if (['ArrowDown', 'PageDown', ' ', 'ArrowRight'].includes(e.key)) { e.preventDefault(); step(1); }
-    else if (['ArrowUp', 'PageUp', 'ArrowLeft'].includes(e.key)) { e.preventDefault(); step(-1); }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;          // game keys: W / D / ↑ / → sail on, S / A / ↓ / ← sail back
+    if (['ArrowUp', 'ArrowRight', 'w', 'd', 'PageDown', ' '].includes(k)) { e.preventDefault(); step(1); }
+    else if (['ArrowDown', 'ArrowLeft', 's', 'a', 'PageUp'].includes(k)) { e.preventDefault(); step(-1); }
     else if (e.key === 'Escape') location.hash = '';
   };
   const ray = new THREE.Raycaster(); let hoverI = -1;
@@ -467,16 +484,17 @@ export function createVoyage(root){
       if (active) return; active = true; root.hidden = false; resize(); if (!hasMouse) root.classList.add('v-nomouse');
       const go = async () => {
         if (loadState === 'done') { stop = 0; prog = STOPS[0].u; lastU = prog; anim = null; vel = 0; inspect = 0; arrived = performance.now(); face = faceTo = 0; turnA = null; first = true; hint(true); root.classList.add('v-ready');   /* every visit starts at the beginning */ if (!raf) { clock.getDelta(); frame(); } return; }
-        if (loadState !== 'loading') return; loadState = 'warming'; glbFrac = 1; upd(); setP(90);
+        if (loadState !== 'loading') return; loadState = 'warming'; buildFrac = glbFrac = 1; upd(); capP = 99.5;   // last stretch: shader warm-up
         ocean.mesh.visible = fall.mesh.visible = aura.group.visible = true;   // prepare every part now (hidden parts would otherwise stall the first time they appear)
-        if (!SNAP) try { await gl.compileAsync(scene, camera); } catch (e) {}      // compile shaders in parallel now, not on the first scroll
+        if (!SNAP) { await Promise.all(pend); await warm(scene); }               // finish compiling in parallel now (whatever is left: the ship), not on the first scroll
         if (!active) { loadState = 'loading'; return; }
         if (!raf) { clock.getDelta(); frame(); }                        // start drawing behind the loader
         await new Promise(r => setTimeout(r, 300));
-        setP(100); loadState = 'loaded'; root.classList.add('v-loaded');
+        setP(100); await new Promise(r => { const w = () => shownP >= 100 ? r() : setTimeout(w, 40); w(); });   // let the counter finish its count to 100
+        loadState = 'loaded'; root.classList.add('v-loaded');
         setTimeout(dismiss, 2400);                                       // instructions stay up a moment, any input skips
       };
-      shipReady ? go() : (onShip = go);
+      Promise.all([built, shipLoaded]).then(go);
       addEventListener('resize', resize); addEventListener('keydown', onKey); document.addEventListener('visibilitychange', vis);
       canvas.addEventListener('wheel', onWheel, { passive: false }); ui.addEventListener('wheel', onWheel, { passive: false });
       root.addEventListener('touchstart', onTS, { passive: true }); root.addEventListener('touchmove', onTM, { passive: false }); root.addEventListener('touchend', onTE);
