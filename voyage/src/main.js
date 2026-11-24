@@ -176,7 +176,7 @@ export function createVoyage(root){
   // ---------- islands ----------
   function addIsland(s, i){
     const p = s.slug && bySlug[s.slug];
-    const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? `media/${p.slug}/poster.jpg` : null, cosmic: s.u > EDGE_U, shadows: !touch, hq: !touch, theme: s.theme });
+    const isl = makeIsland({ seed: i + 1, title: p ? p.title : 'Coming soon', image: p ? (p.poster || `media/${p.slug}/poster.jpg`) : null, cosmic: s.u > EDGE_U, shadows: !touch, hq: !touch, theme: s.theme });
     const at = routePos(s.u), dir = routeDir(s.u);
     const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(s.side);
     isl.group.position.copy(at).addScaledVector(side, s.side > 0 ? 26 : 34).add(new THREE.Vector3(0, s.u > EDGE_U ? 3 : 5, 0)).addScaledVector(dir, 6);   // beside the stop, so it works sailing either way
