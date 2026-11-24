@@ -552,7 +552,7 @@ body.wallpage .cvbtn{padding:0; font-size:clamp(10px,.8vw,14px); -webkit-backdro
 .aphoto2 .wframe{display:none}
 body.wallpage .aphoto2{overflow:visible; border-radius:0!important; box-shadow:none!important; container-type:size}
 body.wallpage .aphoto2 .wframe{display:block; position:absolute; z-index:2; pointer-events:none; --t:10.5cqw; inset:calc(1.4cqw - var(--t)); border:var(--t) solid transparent;
-  border-image:url(media/about-frame-h.webp) 21.4% 26.1% 20.2% 27% / var(--t) stretch; filter:brightness(.3) saturate(.7) drop-shadow(0 16px 18px rgba(0,0,0,.85)) drop-shadow(0 3px 4px rgba(0,0,0,.7))}
+  border-image:url(media/about-frame-i.webp) 21.4% 26.1% 20.2% 27% / var(--t) stretch; filter:brightness(.3) saturate(.7) drop-shadow(0 16px 18px rgba(0,0,0,.85)) drop-shadow(0 3px 4px rgba(0,0,0,.7))}
 body.wallpage .aphoto2 .wframe.flit{filter:brightness(.85) saturate(.95) sepia(.12); z-index:3; -webkit-mask-image:radial-gradient(circle calc(var(--lr,0px) * 1.1) at calc(var(--lx,50%) + var(--t) - 1.4cqw) calc(var(--ly,50%) + var(--t) - 1.4cqw), #000 0%, rgba(0,0,0,.5) 45%, transparent 100%); mask-image:radial-gradient(circle calc(var(--lr,0px) * 1.1) at calc(var(--lx,50%) + var(--t) - 1.4cqw) calc(var(--ly,50%) + var(--t) - 1.4cqw), #000 0%, rgba(0,0,0,.5) 45%, transparent 100%)}
 body.wallpage .aphoto2::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:soft-light; background:radial-gradient(circle calc(var(--lr,0px) * 1.2) at var(--lx,50%) var(--ly,50%), rgba(255,140,50,.85), rgba(255,140,50,0) 100%)}
 #figGlow{display:none; pointer-events:auto; filter:drop-shadow(0 0 5px rgba(255,130,40,.85)) drop-shadow(0 0 22px rgba(255,90,20,.5)); opacity:0; transition:opacity .45s ease}
@@ -1509,7 +1509,7 @@ function layoutWall(){
     place(h, L.A, [56, 30, 0, 20]); h.style.lineHeight = h.style.height; fit(h, (L.A[3] - L.A[1]) * s * .58, 18, () => h.scrollWidth > h.clientWidth + 1);
     place(bio, L.B, [8, 0, 8, 0]); fit(bio, 26 * s / .74, 10, () => bio.scrollHeight > bio.clientHeight + 1);
     place(talk, L.C, [0, 30, 4, 20]); talk.style.lineHeight = talk.style.height; fit(talk, (L.C[3] - L.C[1]) * s * .62, 14, () => talk.scrollWidth > talk.clientWidth + 1);
-    place(ph, L.D, [22, 26, 26, 26]); place($('#cvBtn'), [2030, 1072, 2250, 1134]);
+    place(ph, L.D, [22, 26, 26, 26]); place($('#cvBtn'), [2030, 1124, 2250, 1186]);
     place(fg, L.F);
   } else {
     const hd = $('#vContact .chead'), rows = $('#vContact .crows'), form = $('#cForm');
