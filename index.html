@@ -529,7 +529,18 @@ body.wallpage .aphoto2 img{object-position:50% 30%}
 .aphoto2 .lit{display:none}
 body.wallpage .aphoto2 > img:first-child{filter:brightness(.2) saturate(.35) sepia(.45)}
 body.wallpage .aphoto2 .lit{display:block; filter:sepia(.28) saturate(1.05) brightness(1.06) contrast(1.04); -webkit-mask-image:radial-gradient(circle var(--lr,0px) at var(--lx,50%) var(--ly,50%), #000 0%, rgba(0,0,0,.55) 45%, transparent 100%); mask-image:radial-gradient(circle var(--lr,0px) at var(--lx,50%) var(--ly,50%), #000 0%, rgba(0,0,0,.55) 45%, transparent 100%)}
-body.wallpage .aphoto2::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:soft-light; background:radial-gradient(circle calc(var(--lr,0px) * 1.2) at var(--lx,50%) var(--ly,50%), rgba(255,140,50,.85), rgba(255,140,50,0) 100%)}
+/* version 3c: rough, broken edge instead of a straight one, with the stone's shadow and a lit rim along it */
+body.wallpage .aphoto2{background:transparent!important; box-shadow:none!important; -webkit-mask-image:url(media/about-mask-b.png); mask-image:url(media/about-mask-b.png); -webkit-mask-size:100% 100%; mask-size:100% 100%}
+body.wallpage .aphoto2 .edge{display:block; position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none}
+.aphoto2 .edge{display:none}
+/* 3c: embers drifting up and a warm haze along the bottom */
+.aphoto2 .emb{display:none}
+body.wallpage .aphoto2 .emb{display:block; position:absolute; bottom:-4%; width:4px; height:4px; border-radius:50%; z-index:3; pointer-events:none; background:#ffb25e; box-shadow:0 0 6px 2px rgba(255,120,30,.8); opacity:0; animation:emb 6s linear infinite}
+@keyframes emb{0%{transform:translate(0,0) scale(1); opacity:0} 10%{opacity:.95} 70%{opacity:.6} 100%{transform:translate(var(--dx,20px),-120%) scale(.3); opacity:0}}
+body.wallpage .aphoto2::after{content:""; position:absolute; left:0; right:0; bottom:0; height:30%; z-index:2; pointer-events:none; background:linear-gradient(0deg, rgba(40,14,4,.75), rgba(90,30,8,.25) 45%, rgba(0,0,0,0)); animation:haze 5s ease-in-out infinite alternate}
+@keyframes haze{from{opacity:.75} to{opacity:1}}
+@media (prefers-reduced-motion: reduce){ body.wallpage .aphoto2 .emb, body.wallpage .aphoto2::after{animation:none} }
+body.wallpage .aphoto2::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:soft-light; background:radial-gradient(circle calc(var(--lr,0px) * 1.2) at var(--gx,50%) var(--gy,50%), rgba(255,140,50,.85), rgba(255,140,50,0) 100%)}
 #figGlow{display:none; pointer-events:auto; filter:drop-shadow(0 0 5px rgba(255,130,40,.85)) drop-shadow(0 0 22px rgba(255,90,20,.5)); opacity:0; transition:opacity .45s ease}
 #figGlow i{position:absolute; inset:0; background:url(media/fig-glow2.png) 0 0/100% 100% no-repeat}
 body.wallpage.on-about #figGlow{display:block}
@@ -874,7 +885,7 @@ body.v-touch #voyage .v-mouse:after{top:auto; bottom:6px; width:8px; height:8px;
         </div>
         <span class="abar" aria-hidden="true"></span>
         <div id="figGlow" aria-hidden="true"><i></i><span class="egghint">click me!</span></div>
-        <figure class="aphoto2 has" id="aPhoto" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><span class="shield" aria-hidden="true"></span></figure>
+        <figure class="aphoto2 has" id="aPhoto" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><i class="emb" style="left:12%;animation-delay:0s;animation-duration:6.5s;--dx:18px"></i><i class="emb" style="left:24%;animation-delay:2.1s;animation-duration:5.2s;--dx:-14px"></i><i class="emb" style="left:37%;animation-delay:4.0s;animation-duration:7.0s;--dx:26px"></i><i class="emb" style="left:49%;animation-delay:1.2s;animation-duration:6.0s;--dx:-20px"></i><i class="emb" style="left:58%;animation-delay:3.3s;animation-duration:5.6s;--dx:12px"></i><i class="emb" style="left:66%;animation-delay:0.6s;animation-duration:6.8s;--dx:-28px"></i><i class="emb" style="left:74%;animation-delay:2.7s;animation-duration:5.0s;--dx:22px"></i><i class="emb" style="left:83%;animation-delay:4.6s;animation-duration:6.2s;--dx:-10px"></i><i class="emb" style="left:31%;animation-delay:5.4s;animation-duration:7.4s;--dx:30px"></i><i class="emb" style="left:90%;animation-delay:1.8s;animation-duration:5.8s;--dx:-24px"></i><img class="edge" src="media/about-edge-b.webp" alt="" aria-hidden="true" draggable="false"><span class="shield" aria-hidden="true"></span></figure>
       </div>
     </main>
 
@@ -1694,7 +1705,7 @@ setTimeout(() => { if (!alive) { useTimer = true; setInterval(frame, 33); } }, 4
 (() => { const ph = document.getElementById('aPhoto'); if (!ph) return;
   addEventListener('pointermove', e => { if (!document.body.classList.contains('wallpage') || !document.body.classList.contains('on-about')) return;
     const r = ph.getBoundingClientRect(), dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right), dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom), k = Math.max(0, 1 - Math.hypot(dx, dy) / 380);
-    ph.style.setProperty('--lx', (e.clientX - r.left).toFixed(0) + 'px'); ph.style.setProperty('--ly', (e.clientY - r.top).toFixed(0) + 'px'); ph.style.setProperty('--lr', (k * k * r.width * 1.05).toFixed(0) + 'px'); }, { passive: true });
+    const li = ph.querySelector('.lit'), lr = li ? li.getBoundingClientRect() : r; ph.style.setProperty('--lx', (e.clientX - lr.left).toFixed(0) + 'px'); ph.style.setProperty('--ly', (e.clientY - lr.top).toFixed(0) + 'px'); ph.style.setProperty('--gx', (e.clientX - r.left).toFixed(0) + 'px'); ph.style.setProperty('--gy', (e.clientY - r.top).toFixed(0) + 'px'); ph.style.setProperty('--lr', (k * k * r.width * 1.05).toFixed(0) + 'px'); }, { passive: true });
   document.addEventListener('pointerleave', () => ph.style.setProperty('--lr', '0px'));
 })();
 </script>
