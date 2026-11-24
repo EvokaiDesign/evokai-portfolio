@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes.js';
-import { RT, detail, hqBody, heightGrid, hqRock, hqTree, leafMaterial, grass, hqTorch, hqWaterfallMat, spray } from './realism.js';
+import { RT, detail, hqBody, heightGrid, hqRock, hqTree, leafMaterial, grass, hqTorch, hqWaterfallMat, spray, makeFlag } from './realism.js';
 
 // Low-poly floating islands (style reference: faceted orange grass slab, dark rock underside studded with stones,
 // a turquoise pond spilling into a waterfall, round red trees, sometimes a grey peak) carrying a notice board
@@ -332,6 +332,9 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, hq = fa
   box(bw, bh, 0.12, 0, fy, -0.12);
   for (const s of [-1, 1]) box(0.42, fy + bh / 2 + 1.4 - top, 0.42, s * (bw / 2 + 0.22), (fy + bh / 2 + 1.4 + top) / 2, -0.1);
   box(bw + 2.2, 0.16, 1.4, 0, fy + bh / 2 + 1.25, 0.25, 0, 0).rotation.x = -0.32;
+  // banner flags on both ends of the roof, blowing the same way in the wind
+  const FLAG = { ummy: ['#ff8fb5', '#ffffff'], gulag: ['#a50f18', '#1a1616'] }[theme] || (cosmic ? ['#5b2fb3', '#d8dcff'] : ['#a3161d', '#e3aa45']);
+  for (const s of [-1, 1]) { const f = makeFlag({ base: FLAG[0], trim: FLAG[1], hq, phase: seed * 1.7 + s * 0.9 }); f.position.set(s * (bw / 2 + 0.22), fy + bh / 2 + 1.1, -0.1); group.add(f); }
   const ironMat = new THREE.MeshStandardMaterial({ color: 0x1a1614, metalness: 0.8, roughness: 0.45, envMapIntensity: 0.5 });
   if (hq) detail(ironMat, { scale: 5, bump: 0.45, grain: 0.35, key: 'iron' });
   for (const [x, y] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.5), ironMat); b.position.set(x * (bw / 2 + 0.22), fy + y * (bh / 2 + 0.22), 0.02); group.add(b); }

@@ -332,3 +332,56 @@ export function spray(col){
     fragmentShader: `uniform vec3 uCol; varying float vA; void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, d); a *= a * vA; gl_FragColor = vec4(uCol, a); }` });
   const p = new THREE.Points(g, m); p.frustumCulled = false; return p;
 }
+
+// ---- banner flags: swallowtail cloth in the island's colours with the Evokai figure, rippling in the wind ----
+let logoImg = null;
+function bannerTexture(base, trim, hq){
+  const W = hq ? 512 : 256, H = W * 0.62, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const cut = () => { x.beginPath(); x.moveTo(0, 0); x.lineTo(W, 0); x.lineTo(W * 0.8, H / 2); x.lineTo(W, H); x.lineTo(0, H); x.closePath(); };   // swallowtail
+  const draw = () => {
+    x.clearRect(0, 0, W, H); x.save(); cut(); x.clip();
+    const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, base); g.addColorStop(1, shade(base, 0.7)); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < W * 1.5; i++) { x.fillStyle = `rgba(${Math.random() < .5 ? '0,0,0' : '255,255,255'},${Math.random() * 0.05})`; x.fillRect(Math.random() * W, 0, 1, H); }   // woven threads
+    x.strokeStyle = trim; x.lineWidth = W * 0.035; cut(); x.stroke();                                                      // trim along the edges
+    x.fillStyle = trim; x.fillRect(0, 0, W * 0.06, H);                                                                    // sleeve around the pole
+    if (logoImg && logoImg.complete && logoImg.naturalWidth) {                                                             // the Evokai figure from the logo
+      const sx = logoImg.naturalWidth * 0.82, sw = logoImg.naturalWidth - sx, sh = logoImg.naturalHeight, h = H * 0.66, w = h * sw / sh;
+      x.globalAlpha = 0.95; x.drawImage(logoImg, sx, 0, sw, sh, W * 0.38 - w / 2, H / 2 - h / 2, w, h); x.globalAlpha = 1;
+    }
+    x.restore();
+  };
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  if (!logoImg) { logoImg = new Image(); logoImg.src = 'media/logo-small.png'; }
+  draw(); if (!logoImg.complete) logoImg.addEventListener('load', () => { draw(); t.needsUpdate = true; });
+  return t;
+}
+const shade = (hex, k) => { const c = new THREE.Color(hex).multiplyScalar(k); return '#' + c.getHexString(); };
+let poleMat = null;
+export function makeFlag({ base, trim, hq, phase = 0, w = 2.3, h = 1.4, pole = 3.0 }){
+  const grp = new THREE.Group();
+  if (!poleMat) poleMat = new THREE.MeshStandardMaterial({ color: 0x2a2220, metalness: 0.7, roughness: 0.4 });
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, pole, hq ? 10 : 6), poleMat); p.position.y = pole / 2; grp.add(p);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.28, hq ? 10 : 6), new THREE.MeshStandardMaterial({ color: 0xd9a441, metalness: 0.9, roughness: 0.3 })); tip.position.y = pole + 0.14; grp.add(tip);
+  const g = new THREE.PlaneGeometry(w, h, hq ? 28 : 10, hq ? 12 : 4); g.translate(w / 2 + 0.05, -h / 2, 0);
+  const m = new THREE.MeshStandardMaterial({ map: bannerTexture(base, trim, hq), side: THREE.DoubleSide, alphaTest: 0.5, roughness: 0.8, metalness: 0 });
+  m.onBeforeCompile = s => {
+    Object.assign(s.uniforms, RT, { uW: { value: w }, uPh: { value: phase } });
+    const wave = `uniform float uTime, uW, uPh;
+      // travelling ripple, stronger towards the free end; returns the sideways offset
+      float clothZ(vec2 p){ float k = clamp((p.x - 0.05) / uW, 0.0, 1.0); float t = uTime + uPh; p *= 1.7 / uW;
+        return (sin(p.x * 3.2 - t * 4.2 + p.y * 0.8) * 0.16 + sin(p.x * 6.1 - t * 6.3 - p.y * 1.7) * 0.05) * k * (0.4 + 0.6 * k); }`;
+    s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\n' + wave)
+      .replace('#include <beginnormal_vertex>', `float cz = clothZ(position.xy), e = 0.02;
+        vec3 objectNormal = normalize(vec3(-(clothZ(position.xy + vec2(e, 0.0)) - cz) / e, -(clothZ(position.xy + vec2(0.0, e)) - cz) / e, 1.0));
+        #ifdef USE_TANGENT
+        vec3 objectTangent = vec3(tangent.xyz);
+        #endif`)
+      .replace('#include <begin_vertex>', `vec3 transformed = vec3(position); transformed.z += cz;
+        transformed.y -= pow(clamp((position.x - 0.05) / uW, 0.0, 1.0), 2.0) * 0.12;      // the free end droops a little`);
+    s.fragmentShader = s.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+      totalEmissiveRadiance += diffuseColor.rgb * 0.18;`);                                   // light glowing through the cloth
+  };
+  m.customProgramCacheKey = () => 'flag';
+  const cloth = new THREE.Mesh(g, m); cloth.position.y = pole - 0.06; grp.add(cloth);
+  return grp;
+}
