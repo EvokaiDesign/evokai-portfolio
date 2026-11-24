@@ -80,7 +80,7 @@ vec3 milkyWay(vec3 d){
   #ifdef LITE
   float grain = 0.0;
 #else
-  float grain = smoothstep(0.7, 1.0, vnoise(d * 180.0)) * 0.9;
+  float grain = smoothstep(0.58, 0.9, fbm3(d * 34.0)) * 0.6;            // soft star clouds (the old fine noise broke into blocky specks on screen)
 #endif               // unresolved star clumps
   return col * (band * (0.18 + clouds * 0.55) + core * 0.35 * along + grain * band * 0.5) * (1.0 - dust * 0.85);
 }

@@ -187,6 +187,22 @@ function islandBody(R, pal, scale = 1, depth = null, shape = DEF_SHAPE){
   return { geo: faceted(pos, cols), top, rim: A, under, outR: out, profile, ang, drips: SH.drips };
 }
 
+function rimAt(body, ang){ let best = 1e9, r = 7; for (const p of body.rim) { const d = Math.abs(Math.atan2(Math.sin(Math.atan2(p[2], p[0]) - ang), Math.cos(Math.atan2(p[2], p[0]) - ang))); if (d < best) { best = d; r = Math.hypot(p[0], p[2]); } } return r; }
+// one ribbon of water: runs flat along the stream, rolls over the lip in a smooth bend, then falls (no hard corner)
+function fallRibbon(rimR, top, dir, H, hq){
+  const pts = [], y0 = top + 0.21, Rb = 0.85, a0 = rimR - 1.7, a1 = rimR + 0.15;
+  for (let k = 0; k <= 8; k++) pts.push([a0 + (a1 - a0) * k / 8, y0]);
+  for (let k = 1; k <= 14; k++) { const th = k / 14 * Math.PI / 2; pts.push([a1 + Math.sin(th) * Rb, y0 - Rb + Math.cos(th) * Rb]); }
+  const fx = a1 + Rb, fy = y0 - Rb, M = hq ? 40 : 14;
+  for (let k = 1; k <= M; k++) { const t = k / M; pts.push([fx + t * t * 1.3, fy - t * (H - Rb)]); }
+  const L = [0]; for (let k = 1; k < pts.length; k++) L.push(L[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
+  const tot = L[L.length - 1], X = hq ? 8 : 3, pos = [], uv = [], idx = [], px = -dir.y, pz = dir.x;
+  pts.forEach(([a, y], k) => { const s = L[k] / tot, fall = Math.max(0, (L[k] - (a1 - a0) - Rb * 1.2) / (tot - (a1 - a0))), w = (k < 9 ? 0.9 : hq ? 1.25 : 0.95) * (1 + fall * 0.6);
+    for (let j = 0; j <= X; j++) { const u = j / X, o = (u - 0.5) * w; pos.push(dir.x * a + px * o, y, dir.y * a + pz * o); uv.push(u, 1 - s); } });
+  for (let k = 0; k < pts.length - 1; k++) for (let j = 0; j < X; j++) { const A = k * (X + 1) + j, B = A + X + 1; idx.push(A, B, A + 1, A + 1, B, B + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  return { geo: g, lip: (a1 - a0 + Rb) / tot, out: fx + 1.3 };
+}
 // carve a shallow basin under the pond and the stream, so the water never cuts through the bumpy ground
 function carve(geo, top, at, rim, pr = 2.1){
   const P = geo.attributes.position, [px, pz] = at, len = Math.hypot(px, pz), dx = px / len, dz = pz / len;
@@ -195,6 +211,9 @@ function carve(geo, top, at, rim, pr = 2.1){
     const dp = Math.hypot(x - px, (z - pz) / 0.8), along = x * dx + z * dz, lat = Math.abs(-x * dz + z * dx);
     if (dp < pr + 0.5) P.setY(i, Math.min(y, top + 0.02 + Math.max(0, dp - pr) * 0.2));
     else if (along > len && along < rim + 0.5 && lat < 0.75) P.setY(i, Math.min(y, top + 0.06));
+    if (rim > 0 && lat < 1.1 && along > rim - 0.45 && y > top - 3.2) {          // notch: pull the rock back behind the falling water
+      const back = along - (rim - 0.45) * (1 - (lat / 1.1) ** 2 * 0.1); if (back > 0) { const nx = x - dx * back, nz = z - dz * back; P.setX(i, nx); P.setZ(i, nz); }
+    }
   }
   P.needsUpdate = true; geo.computeVertexNormals();
 }
@@ -257,20 +276,19 @@ function pondMaterial(pal, cosmic){
 }
 function waterworks(group, R, pal, body, at, cosmic, shadows, hq){
   const [px, pz] = at, ang = Math.atan2(pz, px);
-  let rimR = 7; { let best = 1e9; for (const p of body.rim) { const d = Math.abs(Math.atan2(Math.sin(Math.atan2(p[2], p[0]) - ang), Math.cos(Math.atan2(p[2], p[0]) - ang))); if (d < best) { best = d; rimR = Math.hypot(p[0], p[2]) - 0.25; } } }
+  const rimR = rimAt(body, ang) - 0.25;
   const pondMat = hq ? pondMaterial(pal, cosmic) : new THREE.MeshStandardMaterial({ color: pal.water, roughness: 0.15, metalness: 0.1, flatShading: true, emissive: pal.water, emissiveIntensity: cosmic ? 0.55 : 0.12 });
   const pond = new THREE.Mesh(new THREE.CircleGeometry(2.1, hq ? 40 : 9).rotateX(-Math.PI / 2), pondMat); pond.position.set(px, body.top + 0.2, pz); pond.scale.set(1, 1, 0.8); pond.rotation.y = R() * 6; group.add(pond);
-  const dir = new THREE.Vector2(px, pz).normalize(), len = rimR - Math.hypot(px, pz) + 0.3;
+  const dir = new THREE.Vector2(px, pz).normalize(), len = rimR - Math.hypot(px, pz) - 0.6;
   const ch = new THREE.Mesh(new THREE.PlaneGeometry(0.9, len).rotateX(-Math.PI / 2), pondMat);
   ch.position.set(px + dir.x * len / 2, body.top + 0.19, pz + dir.y * len / 2); ch.rotation.y = -Math.atan2(dir.y, dir.x) + Math.PI / 2; group.add(ch);
-  const H = 9.5, fallG = new THREE.PlaneGeometry(hq ? 1.25 : 0.95, H, hq ? 8 : 3, hq ? 40 : 12); fallG.translate(0, -H / 2, 0);
-  const FP = fallG.attributes.position; for (let i = 0; i < FP.count; i++) { const y = -FP.getY(i) / H; FP.setZ(i, FP.getZ(i) + y * y * 1.4); FP.setX(i, FP.getX(i) * (1 + y * 0.6)); }
-  const fall = new THREE.Mesh(fallG, hq ? hqWaterfallMat(pal.water) : waterfallMat(pal.water)); fall.position.set(dir.x * rimR, body.top + 0.15, dir.y * rimR);
-  fall.lookAt(dir.x * 40, body.top + 0.15, dir.y * 40); group.add(fall);
+  const H = 9.5, rb = fallRibbon(rimR, body.top, dir, H, hq), fm = hq ? hqWaterfallMat(pal.water) : waterfallMat(pal.water);
+  if (hq) fm.uniforms.uLip.value = rb.lip;
+  const fall = new THREE.Mesh(rb.geo, fm); fall.renderOrder = 1; group.add(fall);
   const mist = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: new THREE.Color(pal.water).multiplyScalar(0.8), transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, fog: true }));
   mist.position.set(dir.x * (rimR + 1.6), body.top - H + 1, dir.y * (rimR + 1.6)); mist.scale.setScalar(3.2); group.add(mist);
   if (hq) { const sp = spray(pal.water); sp.position.set(dir.x * (rimR + 1.7), body.top - H + 1.6, dir.y * (rimR + 1.7)); group.add(sp);
-    const lip = spray(pal.water); lip.position.set(dir.x * (rimR + 0.1), body.top + 0.1, dir.y * (rimR + 0.1)); lip.scale.setScalar(0.35); group.add(lip); }
+    const lip = spray(pal.water); lip.position.set(dir.x * (rimR + 0.7), body.top - 0.3, dir.y * (rimR + 0.7)); lip.scale.setScalar(0.35); group.add(lip); }
 }
 
 function populate(group, R, pal, body, cosmic, opts){
@@ -313,9 +331,10 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, hq = fa
   const leafMat = hq ? leafMaterial() : null;
   const body = islandBody(R, pal, 1, null, SHAPES[seed]);
   const front = R() < 0.5 ? -1 : 1, pondAt = [front * 3.4, 3.2];
-  if (pal.water) carve(body.geo, body.top, pondAt, 7.6);
+  const rimW = rimAt(body, Math.atan2(pondAt[1], pondAt[0])) - 0.25;
+  if (pal.water) carve(body.geo, body.top, pondAt, rimW);
   const rockGeo = hq ? hqBody(body, pal, seed) : body.geo;
-  if (hq && pal.water) carve(rockGeo, body.top, pondAt, 7.6);
+  if (hq && pal.water) carve(rockGeo, body.top, pondAt, rimW);
   const heightAt = hq ? heightGrid(rockGeo, 11.5, 84) : null;
   const rock = new THREE.Mesh(rockGeo, mat); rock.castShadow = rock.receiveShadow = shadows; group.add(rock);
   if (pal.water) waterworks(group, R, pal, body, pondAt, cosmic, shadows, hq);
@@ -326,8 +345,9 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, hq = fa
     const g = hq ? hqRock(R, cols, s, L, s, 3, -9) : lowRock(R, cols, s, L, s, 1); g.translate(0, -L * 0.55, 0);
     const m = new THREE.Mesh(g, mat); m.position.set(v[0] * 0.8, v[1] + 0.4, v[2] * 0.8); m.rotation.set((R() - 0.5) * 0.25, R() * 6, (R() - 0.5) * 0.25); m.castShadow = shadows; group.add(m);
   }
+  const pl = Math.hypot(pondAt[0], pondAt[1]), sdx = pondAt[0] / pl, sdz = pondAt[1] / pl, inStream = (x, z) => { const al = x * sdx + z * sdz; return al > pl && Math.abs(-x * sdz + z * sdx) < 0.85; };
   const keepClear = pal.gummies ? [[-front * 4.3, 3.4], [-front * 5.9, 2.0], [front * 6.1, -1.0], [-front * 2.3, 4.9]] : [];   // no grass over the jelly figures
-  if (hq && !pal.noTrees) group.add(grass(heightAt, pal, R, pal.gummies ? 1600 : 2600, (x, z) => (pal.water && Math.hypot(x - pondAt[0], (z - pondAt[1]) / 0.8) < 2.5) || (Math.abs(x) < 4.6 && Math.abs(z) < 0.6) || keepClear.some(([gx, gz]) => Math.hypot(x - gx, z - gz) < 1.1)));
+  if (hq && !pal.noTrees) group.add(grass(heightAt, pal, R, pal.gummies ? 1600 : 2600, (x, z) => (pal.water && (Math.hypot(x - pondAt[0], (z - pondAt[1]) / 0.8) < 2.5 || inStream(x, z))) || (Math.abs(x) < 4.6 && Math.abs(z) < 0.6) || keepClear.some(([gx, gz]) => Math.hypot(x - gx, z - gz) < 1.1)));
 
   // a small satellite chunk drifting below and behind (like the reference)
   const chunks = [];

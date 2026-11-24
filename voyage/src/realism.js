@@ -294,25 +294,27 @@ export function hqTorch(group, x, y0, z, woodMat, ironMat, seed, R, shadows){
 // ---- island waterfall: flowing streaks, white water at the lip and the bottom, ragged edges, spray ----
 export function hqWaterfallMat(col){
   return new THREE.ShaderMaterial({
-    uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), ...RT, uCol: { value: new THREE.Color(col) } }, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: true,
+    uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), ...RT, uCol: { value: new THREE.Color(col) }, uLip: { value: 0.0 } }, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: true,
     vertexShader: `varying vec2 vUv;
       #include <fog_pars_vertex>
       void main(){ vUv = uv; vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mvPosition;
         #include <fog_vertex>
       }`,
-    fragmentShader: RNOISE + `uniform float uTime; uniform vec3 uCol; varying vec2 vUv;
+    fragmentShader: RNOISE + `uniform float uTime, uLip; uniform vec3 uCol; varying vec2 vUv;
       #include <common>
       #include <fog_pars_fragment>
       void main(){
-        float y = 1.0 - vUv.y, x = vUv.x;                                     // y: 0 at the lip, 1 at the bottom
-        float n = rf(vec3(x * 4.0, y * 1.6 - uTime * 1.5, 1.0));
-        float st = rf(vec3(x * 16.0, y * 0.9 - uTime * 2.1, 4.0));            // long vertical streaks pulled by gravity
-        float fine = rn(vec3(x * 40.0, y * 3.0 - uTime * 3.4, 9.0));
-        float foam = smoothstep(0.42, 0.72, st) * 0.9 + smoothstep(0.15, 0.0, y) * 0.9 + smoothstep(0.45, 1.0, y) * smoothstep(0.3, 0.65, n) + smoothstep(0.6, 0.95, fine) * 0.35;
+        float y = 1.0 - vUv.y, x = vUv.x;                                     // y: 0 where the stream starts, uLip at the lip, 1 at the bottom
+        float f = max(y - uLip, 0.0) / (1.0 - uLip);                           // 0..1 down the falling part
+        float n = rf(vec3(x * 4.0, y * 14.0 - uTime * 1.5, 1.0));
+        float st = rf(vec3(x * 16.0, y * 8.0 - uTime * 2.1, 4.0));            // long streaks pulled along the flow
+        float fine = rn(vec3(x * 40.0, y * 27.0 - uTime * 3.4, 9.0));
+        float lip = exp(-pow((y - uLip) / 0.035, 2.0));                         // white water rolling over the edge
+        float foam = smoothstep(0.42, 0.72, st) * (0.35 + 0.55 * smoothstep(0.0, 0.1, f)) + lip * (0.6 + 0.4 * n) + smoothstep(0.45, 1.0, f) * smoothstep(0.3, 0.65, n) + smoothstep(0.6, 0.95, fine) * 0.35;
         foam = clamp(foam, 0.0, 1.0);
         vec3 c = mix(uCol * 0.6 + vec3(0.02, 0.06, 0.08), vec3(0.95, 1.0, 1.0) * 1.2, foam) * (0.85 + 0.3 * n);
         float edge = smoothstep(0.0, 0.16 + n * 0.18, x) * smoothstep(1.0, 0.84 - n * 0.18, x);
-        float a = edge * (0.55 + 0.45 * foam) * (1.0 - smoothstep(0.7, 1.0, y + (n - 0.5) * 0.35));
+        float a = edge * (0.55 + 0.45 * foam) * (1.0 - smoothstep(0.7, 1.0, f + (n - 0.5) * 0.35)) * smoothstep(0.0, uLip * 0.5, y);   // fades in over the stream
         gl_FragColor = vec4(c, a);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
