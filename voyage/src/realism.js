@@ -142,7 +142,9 @@ export function leafMaterial(){
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         { float w = smoothstep(1.0, 4.5, position.y); transformed += vec3(sin(uTime * 1.3 + position.x * 0.9 + position.z * 0.7), sin(uTime * 2.1 + position.y * 1.7) * 0.4, cos(uTime * 1.1 + position.z * 0.8)) * 0.05 * w; }`);
     s.fragmentShader = s.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-        totalEmissiveRadiance += diffuseColor.rgb * 0.12;`);                                         // light passing through the leaves
+        totalEmissiveRadiance += diffuseColor.rgb * 0.12;`)                                          // light passing through the leaves
+      .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
+        normal = normalize(vNormal);`);                                                              // both sides of a leaf card shade the same (no dark flipped backs)
   };
   m.customProgramCacheKey = () => 'leaf';
   return m;
@@ -183,10 +185,18 @@ export function hqTree(R, pal, h){
       }
       idx.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3); vi += 4;
     }
-    // inner fill so you can't see through the middle
-    const fill = new THREE.IcosahedronGeometry(br * 0.62, 2), FP = fill.attributes.position;
-    cc.copy(leafCols[0]).multiplyScalar(0.42);
-    for (let j = 0; j < FP.count; j++) { v.fromBufferAttribute(FP, j); nn.copy(v).normalize(); v.add(bcn); pos.push(v.x, v.y, v.z); nor.push(nn.x, nn.y, nn.z); col.push(cc.r, cc.g, cc.b); uv.push(0.5, 0.5); idx.push(vi++); }
+    // inner fill: extra, darker leaf cards deep inside (a solid ball used to show through as a smooth blob)
+    for (let k = 0; k < 26; k++) {
+      const u = R() * 2 - 1, a = R() * Math.PI * 2, rr = Math.sqrt(1 - u * u), d = br * (0.1 + 0.4 * R());
+      const p = bcn.clone().add(v.set(rr * Math.cos(a) * d, u * d * 0.8, rr * Math.sin(a) * d)), s = 0.9 + R() * 0.5;
+      nn.copy(p).sub(canopy).normalize(); nn.y += 0.35; nn.normalize();
+      q.setFromEuler(e.set(R() * 6.28, R() * 6.28, R() * 6.28));
+      cc.copy(leafCols[(R() * leafCols.length) | 0]).multiplyScalar(0.5 + R() * 0.15);
+      for (const [x, y, uu, vv] of [[-1, -1, 0, 0], [1, -1, 1, 0], [1, 1, 1, 1], [-1, 1, 0, 1]]) {
+        v.set(x * s * 0.5, y * s * 0.5, 0).applyQuaternion(q).add(p); pos.push(v.x, v.y, v.z); nor.push(nn.x, nn.y, nn.z); col.push(cc.r, cc.g, cc.b); uv.push(uu, vv);
+      }
+      idx.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3); vi += 4;
+    }
   }
   const leavesG = new THREE.BufferGeometry();
   leavesG.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); leavesG.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
@@ -347,7 +357,7 @@ function bannerTexture(base, trim, hq){
     x.strokeStyle = trim; x.lineWidth = W * 0.035; cut(); x.stroke();                                                      // trim along the edges
     x.fillStyle = trim; x.fillRect(0, 0, W * 0.06, H);                                                                    // sleeve around the pole
     if (logoImg && logoImg.complete && logoImg.naturalWidth) {                                                             // the Evokai figure from the logo
-      const sx = logoImg.naturalWidth * 0.82, sw = logoImg.naturalWidth - sx, sh = logoImg.naturalHeight, h = H * 0.66, w = h * sw / sh;
+      const sx = logoImg.naturalWidth * 0.86, sw = logoImg.naturalWidth - sx, sh = logoImg.naturalHeight, h = H * 0.66, w = h * sw / sh;
       x.globalAlpha = 0.95; x.drawImage(logoImg, sx, 0, sw, sh, W * 0.38 - w / 2, H / 2 - h / 2, w, h); x.globalAlpha = 1;
     }
     x.restore();
