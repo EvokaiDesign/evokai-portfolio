@@ -529,6 +529,11 @@ body.wallpage .aphoto2 img{object-position:50% 30%}
 .aphoto2 .lit{display:none}
 body.wallpage .aphoto2 > img:first-child{filter:brightness(.2) saturate(.35) sepia(.45)}
 body.wallpage .aphoto2 .lit{display:block; filter:sepia(.28) saturate(1.05) brightness(1.06) contrast(1.04); -webkit-mask-image:radial-gradient(circle var(--lr,0px) at var(--lx,50%) var(--ly,50%), #000 0%, rgba(0,0,0,.55) 45%, transparent 100%); mask-image:radial-gradient(circle var(--lr,0px) at var(--lx,50%) var(--ly,50%), #000 0%, rgba(0,0,0,.55) 45%, transparent 100%)}
+/* version 3g: the flame-lit photo (original size) in a wooden picture frame painted to look like the wall's stone (frame generated with Gemini, drawn as a 9-slice border so its corners stay crisp) */
+.aphoto2 .wframe{display:none}
+body.wallpage .aphoto2{overflow:visible; border-radius:0!important; box-shadow:none!important; container-type:size}
+body.wallpage .aphoto2 .wframe{display:block; position:absolute; z-index:2; pointer-events:none; --t:10.5cqw; inset:calc(1.4cqw - var(--t)); border:var(--t) solid transparent;
+  border-image:url(media/about-frame-g.webp) 17.5 22.2 17.5 22.3 / var(--t) stretch; filter:brightness(.68) saturate(.85) drop-shadow(0 16px 18px rgba(0,0,0,.85)) drop-shadow(0 3px 4px rgba(0,0,0,.7))}
 body.wallpage .aphoto2::before{content:""; position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:soft-light; background:radial-gradient(circle calc(var(--lr,0px) * 1.2) at var(--lx,50%) var(--ly,50%), rgba(255,140,50,.85), rgba(255,140,50,0) 100%)}
 #figGlow{display:none; pointer-events:auto; filter:drop-shadow(0 0 5px rgba(255,130,40,.85)) drop-shadow(0 0 22px rgba(255,90,20,.5)); opacity:0; transition:opacity .45s ease}
 #figGlow i{position:absolute; inset:0; background:url(media/fig-glow2.png) 0 0/100% 100% no-repeat}
@@ -874,7 +879,7 @@ body.v-touch #voyage .v-mouse:after{top:auto; bottom:6px; width:8px; height:8px;
         </div>
         <span class="abar" aria-hidden="true"></span>
         <div id="figGlow" aria-hidden="true"><i></i><span class="egghint">click me!</span></div>
-        <figure class="aphoto2 has" id="aPhoto" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><span class="shield" aria-hidden="true"></span></figure>
+        <figure class="aphoto2 has" id="aPhoto" oncontextmenu="return false" ondragstart="return false"><img src="media/about-2.webp" alt="Fernando Cuen Pérez" width="1040" height="1264" draggable="false" decoding="async"><img class="lit" src="media/about-2.webp" alt="" aria-hidden="true" draggable="false" decoding="async"><i class="wframe" aria-hidden="true"></i><span class="shield" aria-hidden="true"></span></figure>
       </div>
     </main>
 
