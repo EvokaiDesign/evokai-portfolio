@@ -550,6 +550,9 @@ body.wallpage .cvbtn{padding:0; font-size:clamp(10px,.8vw,14px); -webkit-backdro
 @media (max-width:900px){ .aphwrap{align-items:flex-start; width:100%} }
 /* 3i: the stone frame is painted into the About wall image itself (media/wall-about-2.webp), so the wall's own light and colour apply to it */
 body.wallpage .aphoto2{border-radius:0!important; box-shadow:none!important}
+/* the photo sits inside the frame: soft shadow along all edges, deeper at the top and left where the frame blocks the light */
+body.wallpage .aphoto2::after{content:""; position:absolute; inset:0; z-index:3; pointer-events:none;
+  box-shadow:inset 0 0 6px 2px rgba(0,0,0,.95), inset 0 0 26px 6px rgba(0,0,0,.75), inset 14px 18px 26px -6px rgba(0,0,0,.8), inset -4px -4px 14px -4px rgba(0,0,0,.6)}
 /* version 3h: the flame-lit photo (original size) in a wooden picture frame painted to look like the wall's stone (frame generated with Gemini, drawn as a 9-slice border so its corners stay crisp) */
 .aphoto2 .wframe{display:none}
 body.wallpage .aphoto2{overflow:visible; border-radius:0!important; box-shadow:none!important; container-type:size}
@@ -1511,7 +1514,7 @@ function layoutWall(){
     place(h, L.A, [56, 30, 0, 20]); h.style.lineHeight = h.style.height; fit(h, (L.A[3] - L.A[1]) * s * .58, 18, () => h.scrollWidth > h.clientWidth + 1);
     place(bio, L.B, [8, 0, 8, 0]); fit(bio, 26 * s / .74, 10, () => bio.scrollHeight > bio.clientHeight + 1);
     place(talk, L.C, [0, 30, 4, 20]); talk.style.lineHeight = talk.style.height; fit(talk, (L.C[3] - L.C[1]) * s * .62, 14, () => talk.scrollWidth > talk.clientWidth + 1);
-    place(ph, L.D, [76, 82, 59, 59]); place($('#cvBtn'), [2030, 1176, 2250, 1238]);
+    place(ph, L.D, [82, 88, 65, 64]);   // just inside the frame's opening, so the frame's lip shows over the photo's edge place($('#cvBtn'), [2030, 1176, 2250, 1238]);
     place(fg, L.F);
   } else {
     const hd = $('#vContact .chead'), rows = $('#vContact .crows'), form = $('#cForm');
