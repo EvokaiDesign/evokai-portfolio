@@ -276,10 +276,10 @@ export function createVoyage(root){
   let fpsT = 0, fpsN = 0, quality = touch ? 4 : 2;
   const degrade = () => {
     if (touch) {                                       // phones: step resolution down first, then the extras
-      if (quality === 4) dpr = Math.min(dpr, 1.25);
-      else if (quality === 3) { dpr = Math.min(dpr, 1); motes.points.visible = false; }
-      else if (quality === 2) { dpr = 0.85; galaxies.group.visible = false; }
-      else if (quality === 1) { dpr = 0.7; fallOff = true; }
+      if (quality === 4) motes.points.visible = false;
+      else if (quality === 3) { galaxies.group.visible = false; dpr = Math.min(dpr, 1.3); }
+      else if (quality === 2) { fallOff = true; dpr = Math.min(dpr, 1.15); }
+      else if (quality === 1) dpr = Math.min(dpr, 1);                 // never below 1x: softer, but never pixelated
     } else if (quality === 2) { dpr = Math.max(1, dpr * 0.75); post.lower(); }
     else if (quality === 1) { post.noBloom(); motes.points.visible = false; dpr = 1; }
     quality--; resize();
@@ -304,9 +304,9 @@ export function createVoyage(root){
   const tmp = new THREE.Vector3(), right = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), fogA = new THREE.Color(0xe39a74), fogB = new THREE.Color(0x1c0f33);
   let rideY = 0, rideP = 0, rideR = 0;
   let raf = 0, active = false, lastU = prog, wasMoving = false, lastMix = -1;
-  function frame(){
+  function frame(ts){
     raf = requestAnimationFrame(frame);
-    if (touch) { const n = performance.now(); if (n - lastDraw < 15.5) return; lastDraw = n; }
+    if (touch && ts) { if (ts - lastDraw < 10.5) return; lastDraw = ts; }   // only skips frames on 120 Hz screens (draws every other one)
     const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime, now = performance.now();
     if (turnA) { const k = Math.min(1, (now - turnA.t0) / TURN_MS); face = lerp(turnA.from, turnA.to, ease(k)); if (k >= 1) turnA = null; }
     if (anim) {

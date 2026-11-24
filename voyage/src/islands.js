@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { RT, detail, hqBody, heightGrid, hqRock, hqTree, leafMaterial, grass, hqTorch, hqWaterfallMat, spray, makeFlag } from './realism.js';
 
 // Low-poly floating islands (style reference: faceted orange grass slab, dark rock underside studded with stones,
@@ -135,24 +136,42 @@ function fightRing(group, R, top, side, shadows){
     const c = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, len, 5), rope); c.position.set((ax + bx) / 2, top + y, (az + bz) / 2);
     c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(bx - ax, 0, bz - az).normalize()); group.add(c); };
   for (const y of [0.5, 0.9, 1.3]) { seg(corners[0], corners[1], y); seg(corners[0], corners[2], y); seg(corners[1], corners[3], y); }
-  // heavy bag on a post, off to one side behind the ring
-  const bx = side * 5.4, bz = -2.2;
-  add(new THREE.BoxGeometry(0.28, 5.4, 0.28), dark, bx, top + 2.7, bz);
-  add(new THREE.BoxGeometry(1.7, 0.22, 0.22), dark, bx - side * 0.75, top + 5.3, bz);
-  add(new THREE.CylinderGeometry(0.04, 0.04, 1.1, 4), dark, bx - side * 1.4, top + 4.7, bz);
-  add(new THREE.CylinderGeometry(0.55, 0.55, 2.0, 10), red, bx - side * 1.4, top + 3.1, bz);
-  add(new THREE.CylinderGeometry(0.57, 0.57, 0.12, 10), dark, bx - side * 1.4, top + 4.08, bz); add(new THREE.CylinderGeometry(0.57, 0.57, 0.12, 10), dark, bx - side * 1.4, top + 2.12, bz);
+  // heavy bag hanging in the ring, from a little gallows standing in the front corner
+  const px = side * 4.6, bx = side * 3.85, bz = 3.75;
+  add(new THREE.BoxGeometry(0.22, 4.1, 0.22), dark, px, top + 0.35 + 2.05, bz);
+  add(new THREE.BoxGeometry(1.05, 0.18, 0.18), dark, (px + bx) / 2 - side * 0.05, top + 4.3, bz);
+  add(new THREE.CylinderGeometry(0.03, 0.03, 1.0, 4), dark, bx, top + 3.75, bz);
+  add(new THREE.CylinderGeometry(0.46, 0.44, 1.8, 14), red, bx, top + 2.35, bz);
+  add(new THREE.CylinderGeometry(0.48, 0.48, 0.1, 14), dark, bx, top + 3.22, bz); add(new THREE.CylinderGeometry(0.46, 0.46, 0.1, 14), dark, bx, top + 1.48, bz);
   mergeStatic(group, red); mergeStatic(group, dark); mergeStatic(group, rope);
 }
 
+// every island has its own silhouette: outline (stretch, squareness, lobes) and the shape of the rock hanging below
+//   under: [depth below the top, width] for each ring going down; drips: stalactites hanging from the underside
+const SHAPES = {
+  1: { n: 18, sx: 1.12, sz: 1.0, sq: 2, lobes: 3, lobe: 0.06, under: [[1.3, 0.97], [2.8, 0.88], [4.6, 0.64], [6.3, 0.34]], depth: 7.6, drips: 0 },          // Ummy: plump gumdrop
+  2: { n: 20, sx: 1.06, sz: 0.96, sq: 4.5, lobes: 0, lobe: 0, under: [[1.2, 0.98], [3.4, 0.92], [6.6, 0.6], [9.6, 0.26]], depth: 13.5, drips: 3 },       // Gulag: square fortress block, deep keel
+  3: { n: 18, sx: 1.3, sz: 0.82, sq: 2, lobes: 2, lobe: 0.1, ph: 0.6, under: [[1.8, 0.84], [3.6, 0.52], [5.6, 0.3], [8.4, 0.12]], depth: 12.5, drips: 1, apexX: 2.6 },   // long kidney, one bent spike
+  4: { n: 20, sx: 1.04, sz: 1.04, sq: 2, lobes: 5, lobe: 0.13, under: [[1.6, 0.9], [3.8, 0.7], [7.0, 0.4], [10.6, 0.16]], depth: 15, drips: 4 },        // star-shaped, deep spire
+  5: { n: 18, sx: 0.98, sz: 1.18, sq: 2.6, lobes: 4, lobe: 0.07, ph: 0.4, under: [[0.9, 1.0], [1.8, 0.82], [2.8, 0.5], [4.0, 0.22]], depth: 5.6, drips: 5 }, // flat floating disc
+};
+const DEF_SHAPE = { n: 14, sx: 1, sz: 1, sq: 2, lobes: 0, lobe: 0, under: [[1.6, 0.9], [3.6, 0.68], [6.0, 0.42], [8.3, 0.17]], depth: 10.5, drips: 0 };
+
 // slab + underside as one faceted mesh. Returns geometry and helpers to sample the ground.
-function islandBody(R, pal, scale = 1, depth = 10.5){
-  const N = 14, out = [], ring = (y, s, jr, jy) => Array.from({ length: N }, (_, k) => { const a = k / N * Math.PI * 2 + (R() - 0.5) * 0.18, r = out[k] * s * (1 + (R() - 0.5) * jr); return [Math.cos(a) * r, y + (R() - 0.5) * jy, Math.sin(a) * r]; });
-  for (let k = 0; k < N; k++) out.push(7.2 * scale * (0.86 + R() * 0.26));
-  const top = 0.9 * scale;
+function islandBody(R, pal, scale = 1, depth = null, shape = DEF_SHAPE){
+  const SH = { ...DEF_SHAPE, ...shape }, N = SH.n, out = [], ang = [];
+  for (let k = 0; k < N; k++) {
+    const a = k / N * Math.PI * 2 + (R() - 0.5) * 0.12; ang.push(a);
+    const se = Math.pow(Math.pow(Math.abs(Math.cos(a)), SH.sq) + Math.pow(Math.abs(Math.sin(a)), SH.sq), -1 / SH.sq) / (SH.sq > 2.5 ? 1.1 : 1);   // squareness
+    out.push(7.2 * scale * se * (1 + SH.lobe * Math.cos(SH.lobes * a + (SH.ph || 0) * 6.28)) * (0.93 + R() * 0.14));
+  }
+  // rings: the outline stretched by sx/sz at the top, getting rounder towards the bottom
+  const ring = (y, s, jr, jy, round = 0) => Array.from({ length: N }, (_, k) => { const a = ang[k], r = out[k] * s * (1 + (R() - 0.5) * jr);
+    const kx = SH.sx + (1 - SH.sx) * round, kz = SH.sz + (1 - SH.sz) * round; return [Math.cos(a) * r * kx, y + (R() - 0.5) * jy, Math.sin(a) * r * kz]; });
+  const top = 0.9 * scale, dep = depth != null ? depth : SH.depth;
   const inner = ring(top + 0.12, 0.55, 0.15, 0.22), A = ring(top, 1, 0.02, 0.12), B = ring(top - 1.0 * scale, 1.04, 0.03, 0.15);
-  const under = [ring(top - 1.6 * scale, 0.9, 0.08, 0.3), ring(top - 3.6 * scale, 0.68, 0.14, 0.5), ring(top - 6.0 * scale, 0.42, 0.2, 0.6), ring(top - 8.3 * scale, 0.17, 0.3, 0.5)];
-  const apex = [(R() - 0.5) * 1.5 * scale, top - depth * scale, (R() - 0.5) * 1.5 * scale], centre = [0, top + 0.2, 0];
+  const nU = SH.under.length, under = SH.under.map(([d, w], i) => ring(top - d * scale * dep / SH.depth, w, 0.06 + i * 0.07, 0.3 + i * 0.1, (i + 1) / nU * 0.6));
+  const apex = [((SH.apexX || 0) + (R() - 0.5) * 1.5) * scale, top - dep * scale, (R() - 0.5) * 1.5 * scale], centre = [0, top + 0.2, 0];
   const pos = [], cols = [], nx = k => (k + 1) % N;
   for (let k = 0; k < N; k++) {                                     // grassy top: centre fan + bumpy inner ring
     tri(pos, cols, centre, inner[nx(k)], inner[k], C(pal.top[k % 3], R));
@@ -161,11 +180,11 @@ function islandBody(R, pal, scale = 1, depth = 10.5){
   const band = (U, D, col) => { for (let k = 0; k < N; k++) { tri(pos, cols, U[k], U[nx(k)], D[k], col(k, 0)); tri(pos, cols, U[nx(k)], D[nx(k)], D[k], col(k, 1)); } };
   band(A, B, () => C(pal.side, R, 0.08));                           // the thick orange rim of the slab
   band(B, under[0], () => C(pal.soil[(R() * 3) | 0], R));
-  for (let i = 0; i < under.length - 1; i++) { const d = i / 3; band(under[i], under[i + 1], () => { const c = new THREE.Color(pal.soil[(R() * 3) | 0]).lerp(new THREE.Color(pal.deep), d * 0.8 + R() * 0.15); return [c.r, c.g, c.b]; }); }
+  for (let i = 0; i < under.length - 1; i++) { const d = i / (nU - 1); band(under[i], under[i + 1], () => { const c = new THREE.Color(pal.soil[(R() * 3) | 0]).lerp(new THREE.Color(pal.deep), d * 0.8 + R() * 0.15); return [c.r, c.g, c.b]; }); }
   const last = under[under.length - 1]; for (let k = 0; k < N; k++) tri(pos, cols, last[k], last[nx(k)], apex, C(pal.deep, R));
   const avgR = r => r.reduce((s, p) => s + Math.hypot(p[0], p[2]), 0) / r.length, avgY = r => r.reduce((s, p) => s + p[1], 0) / r.length;
   const profile = [[apex[1], 0], ...[...under].reverse().map(r => [avgY(r), avgR(r)]), [avgY(B), avgR(B)], [avgY(A), avgR(A)]];   // bottom to top
-  return { geo: faceted(pos, cols), top, rim: A, under, outR: out, profile };
+  return { geo: faceted(pos, cols), top, rim: A, under, outR: out, profile, ang, drips: SH.drips };
 }
 
 // carve a shallow basin under the pond and the stream, so the water never cuts through the bumpy ground
@@ -238,7 +257,7 @@ function pondMaterial(pal, cosmic){
 }
 function waterworks(group, R, pal, body, at, cosmic, shadows, hq){
   const [px, pz] = at, ang = Math.atan2(pz, px);
-  let rimR = 7; { const k = Math.round(((ang / (Math.PI * 2)) % 1 + 1) % 1 * 14) % 14; rimR = Math.hypot(body.rim[k][0], body.rim[k][2]) - 0.25; }
+  let rimR = 7; { let best = 1e9; for (const p of body.rim) { const d = Math.abs(Math.atan2(Math.sin(Math.atan2(p[2], p[0]) - ang), Math.cos(Math.atan2(p[2], p[0]) - ang))); if (d < best) { best = d; rimR = Math.hypot(p[0], p[2]) - 0.25; } } }
   const pondMat = hq ? pondMaterial(pal, cosmic) : new THREE.MeshStandardMaterial({ color: pal.water, roughness: 0.15, metalness: 0.1, flatShading: true, emissive: pal.water, emissiveIntensity: cosmic ? 0.55 : 0.12 });
   const pond = new THREE.Mesh(new THREE.CircleGeometry(2.1, hq ? 40 : 9).rotateX(-Math.PI / 2), pondMat); pond.position.set(px, body.top + 0.2, pz); pond.scale.set(1, 1, 0.8); pond.rotation.y = R() * 6; group.add(pond);
   const dir = new THREE.Vector2(px, pz).normalize(), len = rimR - Math.hypot(px, pz) + 0.3;
@@ -292,21 +311,27 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, hq = fa
                  : new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.92, metalness: 0, envMapIntensity: 0.35 });
   const barkMat = hq ? detail(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }), { scale: 2.2, bump: 0.8, grain: 0.35, stretch: [3, 0.35, 3], key: 'bark' }) : null;
   const leafMat = hq ? leafMaterial() : null;
-  const body = islandBody(R, pal);
+  const body = islandBody(R, pal, 1, null, SHAPES[seed]);
   const front = R() < 0.5 ? -1 : 1, pondAt = [front * 3.4, 3.2];
   if (pal.water) carve(body.geo, body.top, pondAt, 7.6);
   const rockGeo = hq ? hqBody(body, pal, seed) : body.geo;
   if (hq && pal.water) carve(rockGeo, body.top, pondAt, 7.6);
-  const heightAt = hq ? heightGrid(rockGeo) : null;
+  const heightAt = hq ? heightGrid(rockGeo, 11.5, 84) : null;
   const rock = new THREE.Mesh(rockGeo, mat); rock.castShadow = rock.receiveShadow = shadows; group.add(rock);
   if (pal.water) waterworks(group, R, pal, body, pondAt, cosmic, shadows, hq);
   populate(group, R, pal, body, cosmic, { mat, shadows, hq, barkMat, leafMat, peak: seed % 2 === 1 });
+  for (let d = 0; d < body.drips; d++) {
+    const ring = body.under[Math.min(body.under.length - 1, 1 + (d % 2))], v = ring[(d * 5 + 2) % ring.length], s = 0.55 + R() * 0.5, L = 2.2 + R() * 2.6;
+    const cols = [pal.deep, pal.soil[0], pal.stone[1]];
+    const g = hq ? hqRock(R, cols, s, L, s, 3, -9) : lowRock(R, cols, s, L, s, 1); g.translate(0, -L * 0.55, 0);
+    const m = new THREE.Mesh(g, mat); m.position.set(v[0] * 0.8, v[1] + 0.4, v[2] * 0.8); m.rotation.set((R() - 0.5) * 0.25, R() * 6, (R() - 0.5) * 0.25); m.castShadow = shadows; group.add(m);
+  }
   const keepClear = pal.gummies ? [[-front * 4.3, 3.4], [-front * 5.9, 2.0], [front * 6.1, -1.0], [-front * 2.3, 4.9]] : [];   // no grass over the jelly figures
   if (hq && !pal.noTrees) group.add(grass(heightAt, pal, R, pal.gummies ? 1600 : 2600, (x, z) => (pal.water && Math.hypot(x - pondAt[0], (z - pondAt[1]) / 0.8) < 2.5) || (Math.abs(x) < 4.6 && Math.abs(z) < 0.6) || keepClear.some(([gx, gz]) => Math.hypot(x - gx, z - gz) < 1.1)));
 
   // a small satellite chunk drifting below and behind (like the reference)
   const chunks = [];
-  { const s = 0.42, cb = islandBody(R, pal, s, 9); const cg = new THREE.Group();
+  if (cosmic) { const s = 0.42, cb = islandBody(R, pal, s, 9); const cg = new THREE.Group();
     if (pal.water) carve(cb.geo, cb.top, [-0.5, 0.6], 0, 1.0);
     const cgeo = hq ? hqBody(cb, pal, seed + 7) : cb.geo; if (hq && pal.water) carve(cgeo, cb.top, [-0.5, 0.6], 0, 1.0);
     const cm = new THREE.Mesh(cgeo, mat); cm.castShadow = cm.receiveShadow = shadows; cg.add(cm);
@@ -326,18 +351,36 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, hq = fa
   const wt = wood(hq);
   const woodMat = rimmed(new THREE.MeshStandardMaterial({ map: wt, color: pal.wood || (cosmic ? 0xb7a3d8 : 0xffffff), roughness: 0.82, ...(hq ? { bumpMap: wt, bumpScale: 2.5 } : {}) }), 0.7);
   const bw = 7.2, bh = 4.05, fy = top + 1.4 + bh / 2;
-  const box = (w, h, d, x, y, z, ry = 0, rz = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), woodMat); m.position.set(x, y, z); m.rotation.set(0, ry, rz); m.castShadow = m.receiveShadow = shadows; group.add(m); return m; };
-  box(bw + 0.9, 0.45, 0.45, 0, fy + bh / 2 + 0.22, 0); box(bw + 0.9, 0.45, 0.45, 0, fy - bh / 2 - 0.22, 0);
-  box(0.45, bh + 0.9, 0.45, -bw / 2 - 0.22, fy, 0); box(0.45, bh + 0.9, 0.45, bw / 2 + 0.22, fy, 0);
+  const box = (w, h, d, x, y, z, ry = 0, rz = 0) => { const m = new THREE.Mesh(hq ? new RoundedBoxGeometry(w, h, d, 2, Math.min(0.07, w * 0.3, h * 0.3, d * 0.3)) : new THREE.BoxGeometry(w, h, d), woodMat); m.position.set(x, y, z); m.rotation.set(0, ry, rz); m.castShadow = m.receiveShadow = shadows; group.add(m); return m; };
+  const roofY = fy + bh / 2 + 1.35;
+  box(bw + 1.7, 0.42, 0.5, 0, fy + bh / 2 + 0.22, 0.04); box(bw + 1.7, 0.42, 0.5, 0, fy - bh / 2 - 0.22, 0.04);   // beams run past the posts, like real joinery
+  box(0.34, bh + 0.2, 0.36, -bw / 2 - 0.05, fy, 0.02); box(0.34, bh + 0.2, 0.36, bw / 2 + 0.05, fy, 0.02);         // inner frame stiles
   box(bw, bh, 0.12, 0, fy, -0.12);
-  for (const s of [-1, 1]) box(0.42, fy + bh / 2 + 1.4 - top, 0.42, s * (bw / 2 + 0.22), (fy + bh / 2 + 1.4 + top) / 2, -0.1);
-  box(bw + 2.2, 0.16, 1.4, 0, fy + bh / 2 + 1.25, 0.25, 0, 0).rotation.x = -0.32;
+  for (const s of [-1, 1]) { box(0.46, roofY - top + 0.2, 0.46, s * (bw / 2 + 0.3), (roofY + 0.2 + top) / 2, -0.02);   // posts
+    box(0.62, 0.16, 0.62, s * (bw / 2 + 0.3), roofY + 0.28, -0.02); box(0.3, 0.3, 0.3, s * (bw / 2 + 0.3), roofY + 0.5, -0.02); }   // post caps
+  // gabled roof: two boards meeting at a ridge, shingle steps on top
+  for (const s of [-1, 1]) {
+    const r = box(bw + 2.4, 0.14, 1.25, 0, roofY + 0.25, s * 0.5); r.rotation.x = s * 0.42;
+    if (hq) for (let k = 0; k < 3; k++) { const sh = box(bw + 2.5, 0.07, 0.42, 0, roofY + 0.25 + 0.08 - k * 0.15, s * (0.18 + k * 0.33)); sh.rotation.x = s * 0.42; }
+  }
+  box(bw + 2.6, 0.18, 0.18, 0, roofY + 0.52, 0);                   // ridge beam
+  const stoneMat = mat;                                             // stone footings round the posts
+  for (const s of [-1, 1]) for (let k = 0; k < 3; k++) { const g = hq ? hqRock(R, pal.stone, 0.32 + R() * 0.15, 0.24, 0.3 + R() * 0.15, 2) : lowRock(R, pal.stone, 0.32, 0.22, 0.3);
+    const a = k * 2.1 + R(), m = new THREE.Mesh(g, stoneMat); m.position.set(s * (bw / 2 + 0.3) + Math.cos(a) * 0.38, top + 0.08, -0.02 + Math.sin(a) * 0.38); m.receiveShadow = shadows; group.add(m); }
   // banner flags on both ends of the roof, blowing the same way in the wind
   const FLAG = { ummy: ['#ff8fb5', '#ffffff'], gulag: ['#a50f18', '#1a1616'] }[theme] || (cosmic ? ['#5b2fb3', '#d8dcff'] : ['#a3161d', '#e3aa45']);
-  for (const s of [-1, 1]) { const f = makeFlag({ base: FLAG[0], trim: FLAG[1], hq, phase: seed * 1.7 + s * 0.9 }); f.position.set(s * (bw / 2 + 0.22), fy + bh / 2 + 1.1, -0.1); group.add(f); }
+  for (const s of [-1, 1]) { const f = makeFlag({ base: FLAG[0], trim: FLAG[1], hq, phase: seed * 1.7 + s * 0.9 }); f.position.set(s * (bw / 2 + 0.3), roofY + 0.6, -0.02); f.scale.setScalar(0.85); group.add(f); }
   const ironMat = new THREE.MeshStandardMaterial({ color: 0x1a1614, metalness: 0.8, roughness: 0.45, envMapIntensity: 0.5 });
   if (hq) detail(ironMat, { scale: 5, bump: 0.45, grain: 0.35, key: 'iron' });
-  for (const [x, y] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.5), ironMat); b.position.set(x * (bw / 2 + 0.22), fy + y * (bh / 2 + 0.22), 0.02); group.add(b); }
+  // thin iron L-brackets with rivets on the four corners of the frame
+  const bracketMat = new THREE.MeshStandardMaterial({ color: 0x24201d, metalness: 0.75, roughness: 0.4, envMapIntensity: 0.6 });
+  for (const [x, y] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
+    const cx = x * (bw / 2 + 0.05), cy = fy + y * (bh / 2 + 0.22), z = 0.32;
+    for (const [w, h, ox, oy] of [[0.95, 0.2, -x * 0.38, 0], [0.2, 0.95, 0, -y * 0.38]]) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.05), bracketMat); b.position.set(cx + ox, cy + oy, z); group.add(b);
+      if (hq) for (const t of [0.25, 0.75]) { const rv = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), bracketMat); rv.position.set(cx + ox + (w > h ? (t - 0.5) * w * 0.8 : 0), cy + oy + (h > w ? (t - 0.5) * h * 0.8 : 0), z + 0.03); group.add(rv); }
+    }
+  }
   const tex = image ? tl.load(image) : soonTexture(title); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   const imgMat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6 });
   const img = new THREE.Mesh(new THREE.PlaneGeometry(bw, bh), imgMat); img.position.set(0, fy, 0.0); img.receiveShadow = shadows; group.add(img);
@@ -366,10 +409,10 @@ export function makeIsland({ seed, title, image, cosmic, shadows = true, hq = fa
     gl.position.set(x, top + 3.5, 0.8); gl.scale.set(5, 5, 1); group.add(gl);
     torches.push({ fl, gl, off: R() * 24 | 0 });
   }
-  mergeStatic(group, mat); mergeStatic(group, woodMat, true); mergeStatic(group, ironMat); if (hq) { mergeStatic(group, barkMat); mergeStatic(group, leafMat, true); }
+  mergeStatic(group, mat); mergeStatic(group, woodMat, true); mergeStatic(group, ironMat); mergeStatic(group, bracketMat); if (hq) { mergeStatic(group, barkMat); mergeStatic(group, leafMat, true); }
   const baseY = { v: null };
   return {
-    group, profile: body.profile, hit: img, labelAnchor: new THREE.Vector3(0, fy + bh / 2 + 1.9, 0), boardCenter: new THREE.Vector3(0, fy, 0),
+    group, profile: body.profile, hit: img, labelAnchor: new THREE.Vector3(0, fy + bh / 2 + 2.3, 0), boardCenter: new THREE.Vector3(0, fy, 0),
     update(t, hover, mix){
       shared.uMix.value = mix; waterU.uTime.value = t; RT.uTime.value = t; for (const c of chunks) c.position.y = c.userData.y + Math.sin(t * 0.6 + c.userData.ph) * 0.35; shared.uRim.value.setRGB(1.0 - mix * 0.5, 0.55 - mix * 0.15, 0.3 + mix * 0.7);
       if (baseY.v == null) baseY.v = group.position.y;

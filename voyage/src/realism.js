@@ -222,7 +222,7 @@ export function grass(heightAt, pal, R, count, avoid){
   const tops = pal.top.map(hh => new THREE.Color(hh));
   let n = 0;
   for (let tries = 0; tries < count * 4 && n < count; tries++) {
-    const a = R() * Math.PI * 2, r = Math.sqrt(R()) * 7.6, x = Math.cos(a) * r, z = Math.sin(a) * r;
+    const a = R() * Math.PI * 2, r = Math.sqrt(R()) * 10.2, x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (avoid(x, z)) continue; const y = heightAt(x, z); if (y == null) continue;
     q.setFromAxisAngle(p.set(0, 1, 0), R() * 6.28); const k = 0.7 + R() * 0.7; sc.set(k, k * (0.8 + R() * 0.5), k);
     M.compose(p.set(x, y - 0.03, z), q, sc); im.setMatrixAt(n, M);
