@@ -22,7 +22,7 @@ const KEY_DIR = new THREE.Vector3(-0.5, 0.42, -1).normalize();   // light comes 
 const ISLANDS = [
   { u: 0.12, side: 1,  slug: 'ummy', theme: 'ummy' },
   { u: 0.27, side: -1, slug: 'the-gulag', theme: 'gulag' },
-  { u: 0.42, side: 1,  slug: null, theme: 'grove' },
+  { u: 0.42, side: 1,  slug: 'making-of', theme: 'grove' },
   { u: 0.80, side: -1, slug: null },
   { u: 0.93, side: 1,  slug: null },
 ];
@@ -263,7 +263,8 @@ export function createVoyage(root){
   const glowEl = ui.querySelector('.v-glow');
   const onMove = e => { if (!hasMouse) root.classList.remove('v-nomouse'); hasMouse = true; mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); if (glowEl) glowEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`; };
   const onClick = () => {
-    if (hoverI < 0) return; const s = islands[hoverI];
+    if (hoverI < 0) return; const s = islands[hoverI], si = STOPS.findIndex(x => x.island === hoverI);
+    if (si >= 0 && (si !== stop || anim)) { goTo(si); return; }        // not there yet: sail to the island first
     if (s.slug) location.hash = '#' + s.slug; else { s.el.classList.add('pulse'); setTimeout(() => s.el.classList.remove('pulse'), 700); }
   };
 
@@ -454,7 +455,7 @@ export function createVoyage(root){
     if (nearest) { nearest.group.localToWorld(islandLight.position.set(0, 4.5, 5)); islandLight.intensity = (0.35 + nearest.hover) * 45 * (1 - smooth(0.04, 0.1, nd)); islandLight.color.setRGB(1, lerp(0.62, 0.5, mix), lerp(0.3, 0.6, mix)); }
     cap.classList.toggle('on', !anim && !!st.edge);
     if (stop > 0) beenOut = true;
-    if (quoteEl) quoteEl.classList.toggle('on', beenOut && stop === 0 && !anim);   // back at the first dot, looking at the horizon: Einstein fades in; gone as soon as you sail off
+    if (quoteEl) quoteEl.classList.toggle('on', beenOut && stop === 0 && !anim && now - arrived < 12000);   // back at the first dot, looking at the horizon: Einstein fades in; gone as soon as you sail off
     const moving = !!anim || Math.abs(vel) > 0.004; if (moving !== wasMoving) { wasMoving = moving; root.classList.toggle('v-moving', moving); }
     if (glowEl && Math.abs(mix - lastMix) > 0.01) { lastMix = mix;
       glowEl.style.setProperty('--c1', `${lerp(255, 200, mix) | 0},${lerp(214, 190, mix) | 0},${lerp(150, 255, mix) | 0}`);
