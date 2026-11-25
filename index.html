@@ -1394,21 +1394,14 @@ $('#cForm').addEventListener('submit', async e => {
   e.preventDefault(); const f = e.target, d = Object.fromEntries(new FormData(f)), note = $('#cNote'), btn = f.querySelector('.csend');
   if (d._honey) return;                                                        // a bot filled the hidden field
   if (!d.name || !d.email || !d.msg || !f.email.checkValidity()) { note.textContent = 'Please fill in your name, a valid email and a message.'; (!d.name ? f.name : !d.email || !f.email.checkValidity() ? f.email : f.msg).focus(); return; }
-  const subject = `Hello from ${d.name}`, label = btn.textContent;
-  // sent straight from the page (FormSubmit delivers it to the inbox); if that fails, fall back to opening the visitor's email app
-  btn.disabled = true; btn.textContent = 'Sending…'; note.textContent = '';
-  try {
-    const r = await fetch(`https://formsubmit.co/ajax/${LINKS.email}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ name: d.name, email: d.email, message: d.msg, _subject: subject, _replyto: d.email, _template: 'box', _captcha: 'false' }) });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || String(j.success) !== 'true') throw new Error(j.message || 'send failed');
-    f.reset(); btn.textContent = 'Sent ✓'; note.textContent = 'Thanks! Your message is on its way. I’ll get back to you soon.';
-    setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 4000);
-  } catch (err) {
-    btn.textContent = label; btn.disabled = false;
-    const body = `${d.msg}\n\n${d.name}\n${d.email}`, a = document.createElement('a'); a.href = `mailto:${LINKS.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
-    note.innerHTML = `Couldn’t send it from here, so your email app should open with the message ready. Or write to <b>${LINKS.email}</b>.`;
-  }
+  // opens the visitor's email with everything filled in: Gmail's compose page on computers, the phone's mail app on phones
+  const subject = `Hello from ${d.name}`, body = `${d.msg}
+
+${d.name}
+${d.email}`, q = encodeURIComponent;
+  if (matchMedia('(hover:none)').matches) location.href = `mailto:${LINKS.email}?subject=${q(subject)}&body=${q(body)}`;
+  else open(`https://mail.google.com/mail/?view=cm&fs=1&to=${q(LINKS.email)}&su=${q(subject)}&body=${q(body)}`, '_blank', 'noopener');
+  note.innerHTML = `Your email is ready to go, just press Send. Or write to <b>${LINKS.email}</b>.`;
 });
 
 
