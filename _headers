@@ -2,3 +2,9 @@
   Cache-Control: public, max-age=2592000
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
+/media/cv/Fernando_Cuen_Perez_CV_EN.pdf
+  Content-Type: application/pdf
+  Content-Disposition: attachment; filename="Fernando_Cuen_Perez_CV_EN.pdf"
+/media/cv/Fernando_Cuen_Perez_CV_ES.pdf
+  Content-Type: application/pdf
+  Content-Disposition: attachment; filename="Fernando_Cuen_Perez_CV_ES.pdf"

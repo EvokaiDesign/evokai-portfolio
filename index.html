@@ -862,6 +862,9 @@ body.in-proj.pcur-on, body.in-proj.pcur-on *{cursor:none!important}
 #pcur span{font:600 10px/1.25 var(--f-body); letter-spacing:.16em; text-transform:uppercase; color:#000; text-align:center; opacity:0; transition:opacity .2s}
 #pcur.view span{opacity:1; transition-delay:.08s}
 #pcur.off{opacity:0}
+/* About / Contact walls: hidden until the wall image has loaded and everything is placed on it (first visits) */
+body.wallpage #proj{transition:opacity .35s ease}
+body.wallpage.wallwait #proj{opacity:0; transition:none}
 </style>
 </head>
 <body>
@@ -920,7 +923,7 @@ body.in-proj.pcur-on, body.in-proj.pcur-on *{cursor:none!important}
       </div>
     </main>
 
-    <div id="cvPop" hidden><div class="cvcard" role="dialog" aria-modal="true" aria-labelledby="cvT"><button type="button" class="cvx" aria-label="Close">×</button><b id="cvT">Download CV</b><span>Which language?</span><div class="cvopts"><a href="media/cv/Fernando_Cuen_Perez_CV_EN.pdf" download>English</a><a href="media/cv/Fernando_Cuen_Perez_CV_ES.pdf" download>Español</a></div></div></div>
+    <div id="cvPop" hidden><div class="cvcard" role="dialog" aria-modal="true" aria-labelledby="cvT"><button type="button" class="cvx" aria-label="Close">×</button><b id="cvT">Download CV</b><span>Which language?</span><div class="cvopts"><a href="media/cv/Fernando_Cuen_Perez_CV_EN.pdf?v=2" download="Fernando_Cuen_Perez_CV_EN.pdf" type="application/pdf">English</a><a href="media/cv/Fernando_Cuen_Perez_CV_ES.pdf?v=2" download="Fernando_Cuen_Perez_CV_ES.pdf" type="application/pdf">Español</a></div></div></div>
     <main class="view" id="vContact">
       <div class="cgrid2">
         <div class="chead">
@@ -1562,6 +1565,7 @@ const lightC = document.createElement('canvas'), lightX = lightC.getContext('2d'
 const LS = 4; // light map downscale
 let W = 0, H = 0, dpr = 1, cover = null, phoneFade = null, phoneWordY = 0;
 function size(){
+  document.body.classList.toggle('wallwait', wallOn && wallKey !== 'home' && !stone.naturalWidth);   // stone wall not loaded yet: keep the page hidden instead of showing it unplaced
   dpr = Math.min(devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
   wall.width = litC.width = Math.round(W * dpr); wall.height = litC.height = Math.round(H * dpr);
   lightC.width = Math.ceil(W / LS); lightC.height = Math.ceil(H / LS);
@@ -1769,7 +1773,7 @@ setTimeout(() => { if (!alive) { useTimer = true; setInterval(frame, 33); } }, 4
   ph.addEventListener('click', li); ph.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); li(); } });
   const close = () => { pop.hidden = true; btn.focus(); };
   btn.addEventListener('click', () => { pop.hidden = false; pop.querySelector('.cvopts a').focus(); });
-  pop.addEventListener('click', e => { if (e.target === pop || e.target.closest('.cvx') || e.target.closest('.cvopts a')) setTimeout(close, 0); });
+  pop.addEventListener('click', e => { if (e.target === pop || e.target.closest('.cvx') || e.target.closest('.cvopts a')) setTimeout(close, 400); });
   addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) close(); });
 })();
 
