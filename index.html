@@ -587,7 +587,8 @@ body.wallpage .cform2 > *{width:100%; max-width:none; box-sizing:border-box}
 body.wallpage .cform2 input, body.wallpage .cform2 textarea{background:rgba(10,12,15,.72); border-color:rgba(236,230,216,.07); font-size:calc(var(--fs) * .62); padding:.9em 1.1em}
 body.wallpage .cform2 textarea{flex:1; min-height:0; resize:none}
 body.wallpage .csend{height:auto; padding:.85em 0; font-size:calc(var(--fs) * .7); margin-top:auto; border-radius:8px}
-body.wallpage .cform2 .fnote{position:absolute; bottom:100%; left:6%; font-size:13px}
+body.wallpage .cform2 .fnote{position:absolute; top:100%; left:calc(var(--fs) * 1.1); right:calc(var(--fs) * 1.1); width:auto!important; margin-top:14px; padding:10px 14px; font-size:14px; line-height:1.5; color:var(--fg); background:rgba(4,5,7,.78); border-radius:6px}
+.fnote .copyMail{margin-left:6px; vertical-align:middle}
 
 /* ===================== PHONE VERSION (≤760px) — desktop untouched ===================== */
 @media (max-width:760px), (hover:none) and (max-width:1100px) and (orientation:portrait){
@@ -1016,6 +1017,7 @@ GAL['extras'] = ["§Animation|Sketches, tests and loops",["v-sketch-2.mp4",1280,
 if (/[?&]galtest/.test(location.search)) try { Object.assign(GAL, JSON.parse(localStorage.getItem('galtest') || '{}')); } catch (e) {}   // ?galtest: preview a layout from the local layout editor
 GAL['the-gulag'] = ["§Props & merch|Branded gear that never existed until the deck needed it",["01.webp",1536,1024],["02.webp",1536,1024],["03.webp",1024,1536],["04b.webp",1266,832],["07b.webp",1600,873],["08b.webp",1408,768],["09b.webp",1408,768],"§Venue & stands|Where the sponsors would live on fight night",["10b.webp",1600,1226],["12.webp",1536,1024],["15b.webp",1600,519],["18.webp",1536,1024],["19b.webp",1600,1066],"§Fighters|Sponsor gear, worn where it counts",["23.webp",1536,1024],["25.webp",1122,1402],["26.webp",1448,1086],["27b.webp",1600,893],"§Sponsors, media & social|The numbers, made tangible",["28.webp",1536,1024],["32.webp",1600,900],["39.webp",1600,900],["40b.webp",1600,1226],"§Collages|Torn paper, polaroids and tape: the deck’s visual voice",["41.webp",1600,893],["43b.webp",1600,893],["45.webp",1600,893],["47b.webp",1600,893],["48.webp",1600,900]]; // '§Heading|subtitle' starts a group, {iter:[...]} is a small strip of earlier versions
 // Contact details: placeholders until the fill-in doc comes back
+const FORM_KEY = '';  // Web3Forms access key for the contact form (public by design; delivers to LINKS.email)
 const LINKS = {"email": "evokaidesign@gmail.com", "phone": {"tel": "+34619002857", "label": "+34 619 00 28 57"}, "instagram": {"url": "https://www.instagram.com/evokaidesign/", "handle": "@evokaidesign"}, "youtube": {"url": "https://www.youtube.com/@EVOKAI_DESIGN", "handle": "@EVOKAI_DESIGN"}, "linkedin": {"url": "https://www.linkedin.com/in/fernando-cuen-perez-17a3a936a/", "handle": "Fernando Cuen Pérez"}, "where": "Madrid, Spain"};
 const BIO = ["What up! I’m Fernando, a visual designer and aspiring animator from Madrid, currently studying Digital Design at U-TAD and working at ILLION Studios in Madrid.", "I’m passionate about creating memorable visuals, especially when motion and music come together. I love experimenting with different mediums, from 3D and motion graphics to animation and visual storytelling, always looking for new ways to bring ideas to life. I’m always excited by projects that let me explore motion, 3D and push creative boundaries.", "Beyond design, I have a lifelong ambition: to create stories that leave a lasting impact. Through compelling characters, immersive worlds, beautiful visuals and music, I hope to create something that resonates with people, brings them together and maybe even changes the way they see the world, long after the screen goes dark."];
 const TOOLS = ["Blender", "Cinema 4D", "After Effects", "Procreate", "Procreate Dreams", "Photoshop", "Illustrator", "Learning to bring AI tools like Claude and Gemini into my workflow"];
@@ -1395,19 +1397,21 @@ $('#cForm').addEventListener('submit', async e => {
   if (d._honey) return;                                                        // a bot filled the hidden field
   if (!d.name || !d.email || !d.msg || !f.email.checkValidity()) { note.textContent = 'Please fill in your name, a valid email and a message.'; (!d.name ? f.name : !d.email || !f.email.checkValidity() ? f.email : f.msg).focus(); return; }
   const subject = `Hello from ${d.name}`, label = btn.textContent;
-  // sent straight from the page (FormSubmit delivers it to the inbox); if that fails, fall back to opening the visitor's email app
+  // sent straight from the page through Web3Forms (delivers to LINKS.email); no email app involved
   btn.disabled = true; btn.textContent = 'Sending…'; note.textContent = '';
   try {
-    const r = await fetch(`https://formsubmit.co/ajax/${LINKS.email}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ name: d.name, email: d.email, message: d.msg, _subject: subject, _replyto: d.email, _template: 'box', _captcha: 'false' }) });
+    if (!FORM_KEY) throw new Error('no form key');
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000);
+    const r = await fetch('https://api.web3forms.com/submit', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ access_key: FORM_KEY, subject, from_name: 'Evokai portfolio', name: d.name, email: d.email, replyto: d.email, message: d.msg }) });
+    clearTimeout(t);
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || String(j.success) !== 'true') throw new Error(j.message || 'send failed');
+    if (!r.ok || !j.success) throw new Error(j.message || 'send failed');
     f.reset(); btn.textContent = 'Sent ✓'; note.textContent = 'Thanks! Your message is on its way. I’ll get back to you soon.';
     setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 4000);
   } catch (err) {
-    btn.textContent = label; btn.disabled = false;
-    const body = `${d.msg}\n\n${d.name}\n${d.email}`, a = document.createElement('a'); a.href = `mailto:${LINKS.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
-    note.innerHTML = `Couldn’t send it from here, so your email app should open with the message ready. Or write to <b>${LINKS.email}</b>.`;
+    btn.textContent = label; btn.disabled = false;               // the message stays in the form so nothing is lost
+    note.innerHTML = `Sorry, the message couldn’t be sent. Please try again, or write to <b>${LINKS.email}</b> <button type="button" class="pill copyMail">Copy</button>`;
   }
 });
 
