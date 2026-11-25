@@ -262,8 +262,14 @@ export function createVoyage(root){
   const ray = new THREE.Raycaster(); let hoverI = -1;
   const glowEl = ui.querySelector('.v-glow');
   const onMove = e => { if (!hasMouse) root.classList.remove('v-nomouse'); hasMouse = true; mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); if (glowEl) glowEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`; };
+  const _ra = new THREE.Vector3(), _rb = new THREE.Vector3();
   const onClick = () => {
-    if (hoverI < 0) return; const s = islands[hoverI], si = STOPS.findIndex(x => x.island === hoverI);
+    if (hoverI < 0) {                                                   // empty space beside an island: sail that way (whichever screen side the route runs to)
+      if (anim || inspect < 0.5 || STOPS[stop].island == null || Math.abs(mouse.x) < 0.22) return;
+      routePos(Math.min(1, prog + 0.02), _ra).project(camera); routePos(Math.max(0, prog - 0.02), _rb).project(camera);
+      step(Math.sign(mouse.x) === Math.sign(_ra.x - _rb.x) ? 1 : -1); return;
+    }
+    const s = islands[hoverI], si = STOPS.findIndex(x => x.island === hoverI);
     if (si >= 0 && (si !== stop || anim)) { goTo(si); return; }        // not there yet: sail to the island first
     if (s.slug) location.hash = '#' + s.slug; else { s.el.classList.add('pulse'); setTimeout(() => s.el.classList.remove('pulse'), 700); }
   };
