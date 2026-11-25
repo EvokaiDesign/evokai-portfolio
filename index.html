@@ -1495,6 +1495,9 @@ function setWallPage(slug){
   size();
 }
 window.setWallPage = setWallPage;
+// fetch and decode the About and Contact walls in the background once the site is up, so opening those pages never waits or stutters
+const warmWalls = () => { if (!wallCapable()) return; for (const k of ['about', 'contact']) { const im = WALLS[k]; if (!im.src) im.src = ({ about: 'media/wall-about-2.webp' })[k] || `media/wall-${k}.webp`; (im.decode ? im.decode() : Promise.resolve()).then(() => { if (view === 'home') { litX.drawImage(im, 0, 0, 1, 1); wx.drawImage(im, 0, 0, 1, 1); } }).catch(() => {}); } };   // a 1-pixel draw uploads it to the graphics card while nothing depends on it (the next frame paints over it)
+addEventListener('load', () => setTimeout(() => (window.requestIdleCallback || setTimeout)(warmWalls, { timeout: 4000 }), 1500));
 // the figure lights up only while the mouse is over the carved figure itself (its glow image's shape), not the whole box around it
 const figMask = { a: null, w: 0, h: 0 };
 { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = figMask.w = 160; c.height = figMask.h = 360; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, 160, 360); figMask.a = x.getImageData(0, 0, 160, 360).data; }; im.src = 'media/fig-glow2.png'; }
@@ -1557,7 +1560,7 @@ function layoutWall(){
     const hd = $('#vContact .chead'), rows = $('#vContact .crows'), form = $('#cForm');
     place(hd, L.A, [10, 0, 10, 0]); const ch = $('#proj h1.ch'); fit(hd, (L.A[3] - L.A[1]) * s * .3, 16, () => hd.scrollHeight > hd.clientHeight + 1 || ch.getBoundingClientRect().height > parseFloat(hd.style.getPropertyValue('--fs')) * 2.3);
     place(rows, L.T, [30, 0, 30, 0]); fit(rows, (L.T[3] - L.T[1]) * s / 9.5, 12, () => rows.scrollHeight > rows.clientHeight + 1 || [...rows.querySelectorAll('a')].some(a => a.getBoundingClientRect().right > rows.getBoundingClientRect().right - 8));
-    place(form, L.B, [-40, 0, 70, 0]); form.style.setProperty('--fs', Math.max(18, Math.min(34, (L.B[3] - L.B[1]) * s * .07)) + 'px');
+    place(form, L.B, [-40, 0, 70, 0]); { const fl = parseFloat(form.style.left), fw = parseFloat(form.style.width); if (fl + fw > W - 16) form.style.width = Math.max(260, W - 16 - fl) + 'px'; }   /* narrower screens (tablets) crop the wall's sides: keep the form fully on screen */ form.style.setProperty('--fs', Math.max(18, Math.min(34, (L.B[3] - L.B[1]) * s * .07)) + 'px');
   }
 }
 const litC = document.createElement('canvas'), litX = litC.getContext('2d');   // the image, masked by light
